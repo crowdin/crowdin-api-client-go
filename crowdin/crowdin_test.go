@@ -36,9 +36,9 @@ func TestNewEnterpriseClient(t *testing.T) {
 	var (
 		token        = "access_token"
 		organization = "demo"
-		apiURL       = "https://demo.api.crowdin.com/api/v2"
+		apiURL       = "https://demo.api.crowdin.com/"
 	)
-	c, _ := NewEnterpriseClient(token, organization)
+	c, _ := NewClient(token, WithOrganization(organization))
 	if c.token != token {
 		t.Errorf("Enterprise client token is %v, want %v", c.token, token)
 	}
@@ -46,6 +46,6 @@ func TestNewEnterpriseClient(t *testing.T) {
 		t.Errorf("Enterprise client userAgent is %v, want %v", c.userAgent, userAgent)
 	}
 	if c.baseURL.String() != apiURL {
-		t.Errorf("Enterprise client baseURL is %v, want %v", c.baseURL.String(), baseURL)
+		t.Errorf("Enterprise client baseURL is %v, want %v", c.baseURL.String(), apiURL)
 	}
 }
