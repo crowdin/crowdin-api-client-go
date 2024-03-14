@@ -3,103 +3,82 @@ package crowdin
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
 )
 
-// LanguagesService handle communication with Languages methods.
+// Crowdin supports more than 300 world languages and custom languages created in the system.
+// Use API to get the list of all supported languages and retrieve additional details
+// (e.g. text direction, internal code) on specific language.
+//
+// https://developer.crowdin.com/api/v2/#tag/Languages
 type LanguagesService struct {
 	client *Client
 }
 
 // List returns a list of all supported languages.
+//
+// Query parameters:
+//
+//	limit: A maximum number of items to retrieve (default 25, max 500).
+//	offset: A starting offset in the collection of items (default 0).
+//
 // https://developer.crowdin.com/api/v2/#operation/api.languages.getMany
 func (s *LanguagesService) List(ctx context.Context, opts *model.ListOptions) ([]*model.Language, *Response, error) {
-	path := "languages?" + opts.Values().Encode()
-	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	body := new(model.LanguagesListResponse)
-	resp, err := s.client.Do(req, body)
+	res := new(model.LanguagesListResponse)
+	resp, err := s.client.Get(ctx, "/api/v2/languages", opts, res)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	langs := make([]*model.Language, 0, len(body.Data))
-	for _, lang := range body.Data {
+	langs := make([]*model.Language, 0, len(res.Data))
+	for _, lang := range res.Data {
 		langs = append(langs, lang.Data)
 	}
+
 	return langs, resp, nil
 }
 
 // Get returns a language by its identifier.
+//
 // https://developer.crowdin.com/api/v2/#operation/api.languages.get
-func (s *LanguagesService) Get(ctx context.Context, langID string) (*model.Language, *Response, error) {
-	path := fmt.Sprintf("languages/%s", langID)
-	req, err := s.client.NewRequest(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, nil, err
-	}
+func (s *LanguagesService) Get(ctx context.Context, id string) (*model.Language, *Response, error) {
+	res := new(model.LanguagesGetResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/languages/%s", id), nil, res)
 
-	body := new(model.LanguagesGetResponse)
-	resp, err := s.client.Do(req, body)
-	if err != nil {
-		return nil, resp, err
-	}
-	return body.Data, resp, nil
+	return res.Data, resp, err
 }
 
 // Add adds a new custom language.
+//
 // https://developer.crowdin.com/api/v2/#operation/api.languages.post
-func (s *LanguagesService) Add(ctx context.Context, r *model.AddLanguageRequest) (*model.Language, *Response, error) {
-	if err := r.Validate(); err != nil {
-		return nil, nil, err
-	}
+func (s *LanguagesService) Add(ctx context.Context, req *model.AddLanguageRequest) (*model.Language, *Response, error) {
+	res := new(model.LanguagesGetResponse)
+	resp, err := s.client.Post(ctx, "/api/v2/languages", req, res)
 
-	req, err := s.client.NewRequest(ctx, http.MethodPost, "languages", r)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	body := new(model.LanguagesAddResponse)
-	resp, err := s.client.Do(req, body)
-	if err != nil {
-		return nil, resp, err
-	}
-	return body.Data, resp, nil
+	return res.Data, resp, err
 }
 
 // Edit updates a custom language by its identifier.
+//
+// Request body:
+//
+//		op: The operation to perform. Enum: replace, test
+//		path: A JSON Pointer as defined in RFC 6901.
+//	          Enum: "/name" "/textDirection" "/pluralCategoryNames" "/threeLettersCode" "/localeCode" "/dialectOf"
+//		value: The value to be used within the operations. The value must be one of string or array of strings.
+//
 // https://developer.crowdin.com/api/v2/#operation/api.languages.patch
-func (s *LanguagesService) Edit(ctx context.Context, langID string, r *model.EditLanguageRequest) (*model.Language, *Response, error) {
-	if err := r.Validate(); err != nil {
-		return nil, nil, err
-	}
+func (s *LanguagesService) Edit(ctx context.Context, id string, req []*model.UpdateRequest) (*model.Language, *Response, error) {
+	res := new(model.LanguagesGetResponse)
+	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/languages/%s", id), req, res)
 
-	path := fmt.Sprintf("languages/%s", langID)
-	req, err := s.client.NewRequest(ctx, http.MethodPatch, path, r)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	body := new(model.LanguagesEditResponse)
-	resp, err := s.client.Do(req, body)
-	if err != nil {
-		return nil, resp, err
-	}
-	return body.Data, resp, nil
+	return res.Data, resp, err
 }
 
 // Delete deletes a custom language by its identifier.
+//
 // https://developer.crowdin.com/api/v2/#operation/api.languages.delete
-func (s *LanguagesService) Delete(ctx context.Context, langID string) (*Response, error) {
-	path := fmt.Sprintf("languages/%s", langID)
-	req, err := s.client.NewRequest(ctx, http.MethodDelete, path, nil)
-	if err != nil {
-		return nil, err
-	}
-	return s.client.Do(req, nil)
+func (s *LanguagesService) Delete(ctx context.Context, id string) (*Response, error) {
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/languages/%s", id))
 }

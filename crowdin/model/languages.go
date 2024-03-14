@@ -36,61 +36,31 @@ type LanguagesGetResponse struct {
 	Data *Language `json:"data"`
 }
 
-// EditLanguageRequest defines the structure of a request
-// to edit a custome language.
-type EditLanguageRequest struct {
-	Op   string `json:"op"`
-	Path string `json:"path"`
-	// string or array of strings
-	Value any `json:"value"`
-}
-
-// Validate checks if the edit request is valid.
-func (r *EditLanguageRequest) Validate() error {
-	const (
-		opReplace = "replace"
-		opTest    = "test"
-	)
-	if r.Op == "" {
-		return errors.New("op is required")
-	}
-	if r.Op != opReplace && r.Op != opTest {
-		return fmt.Errorf("op must be %q or %q", opReplace, opTest)
-	}
-	if r.Path == "" {
-		return errors.New("path is required")
-	}
-	if r.Value == nil {
-		return errors.New("value is required")
-	}
-	if _, ok := r.Value.(string); !ok {
-		if _, ok := r.Value.([]string); !ok {
-			return errors.New("value must be a string or an array of strings")
-		}
-	}
-	return nil
-}
-
-// LanguagesEditResponse defines the structure of a response
-// when updating a custom language.
-type LanguagesEditResponse struct {
-	Data *Language `json:"data"`
-}
-
 // AddLanguageRequest defines the structure of a request
 // to add a new custom language.
 type AddLanguageRequest struct {
-	Name                string   `json:"name"`
-	Code                string   `json:"code"`
-	LocaleCode          string   `json:"localeCode"`
-	TextDirection       string   `json:"textDirection"`
+	// Language name.
+	Name string `json:"name"`
+	// Custom language code.
+	Code string `json:"code"`
+	// Custom language locale code.
+	LocaleCode string `json:"localeCode"`
+	// Text direction in custom language. Enum: "ltr" "rtl".
+	//  "ltr" - left-to-right
+	//  "rtl" - right-to-left
+	TextDirection string `json:"textDirection"`
+	// Array with category names.
 	PluralCategoryNames []string `json:"pluralCategoryNames"`
-	ThreeLettersCode    string   `json:"threeLettersCode"`
-	TwoLettersCode      string   `json:"twoLettersCode"`
-	DialectOf           string   `json:"dialectOf"`
+	// Custom language 3 letters code. Format: ISO 6393 code.
+	ThreeLettersCode string `json:"threeLettersCode"`
+	// Custom language 2 letters code. Format: ISO 6391 code.
+	TwoLettersCode string `json:"twoLettersCode"`
+	// Use if custom language is a dialect.
+	DialectOf string `json:"dialectOf"`
 }
 
 // Validate checks if the add request is valid.
+// It implements the RequestValidator interface.
 func (r *AddLanguageRequest) Validate() error {
 	if r.Name == "" {
 		return errors.New("name is required")
@@ -120,10 +90,4 @@ func (r *AddLanguageRequest) Validate() error {
 	}
 
 	return nil
-}
-
-// LanguagesAddResponse defines the structure of a response
-// when adding a new custom language.
-type LanguagesAddResponse struct {
-	Data *Language `json:"data"`
 }
