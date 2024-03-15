@@ -245,7 +245,7 @@ func handleErrorResponse(r *http.Response) error {
 
 	var respBody error
 	if r.StatusCode == http.StatusBadRequest {
-		respBody = &ValidationErrorResponse{Response: r}
+		respBody = &ValidationErrorResponse{Response: r, Status: r.StatusCode}
 	} else {
 		respBody = &ErrorResponse{Response: r}
 	}
@@ -322,16 +322,25 @@ type ValidationErrorResponse struct {
 	Response *http.Response `json:"-"`
 
 	Errors []ValidationError `json:"errors"`
+	Status int
 }
 
 // Error implements the Error interface.
 func (r *ValidationErrorResponse) Error() string {
-	errors := make([]string, 0, len(r.Errors))
-	for _, e := range r.Errors {
-		errors = append(errors, fmt.Sprintf("%s: %s (%s)",
-			e.Error.Key, e.Error.Errors[0].Message, e.Error.Errors[0].Code))
+	var sb strings.Builder
+	for i, err := range r.Errors {
+		if i != 0 {
+			sb.WriteString("; ")
+		}
+		sb.WriteString(fmt.Sprintf("%s: ", err.Error.Key))
+		for j, e := range err.Error.Errors {
+			if j != 0 {
+				sb.WriteString(", ")
+			}
+			sb.WriteString(fmt.Sprintf("%s (%s)", e.Message, e.Code))
+		}
 	}
-	return strings.Join(errors, ", ")
+	return sb.String()
 }
 
 type ListOptionsProvider interface {
