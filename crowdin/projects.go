@@ -85,6 +85,9 @@ func (s *ProjectsService) Delete(ctx context.Context, id int64) (*Response, erro
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d", id))
 }
 
+// DownloadFileFormatSettingsCustomSegmentation returns a download link for custom segmentations
+// by project and file format settings identifiers.
+//
 // https://developer.crowdin.com/api/v2/#operation/api.projects.file-format-settings.custom-segmentations.get
 func (s *ProjectsService) DownloadFileFormatSettingsCustomSegmentation(ctx context.Context, projectID, settingsID int64) (
 	*model.DownloadCustomSegmentations, *Response, error) {
@@ -97,6 +100,9 @@ func (s *ProjectsService) DownloadFileFormatSettingsCustomSegmentation(ctx conte
 	return res.Data, resp, err
 }
 
+// ResetFileFormatSettingsCustomSegmentation resets custom segmentations by project
+// and file format settings identifiers.
+//
 // https://developer.crowdin.com/api/v2/#operation/api.projects.file-format-settings.custom-segmentations.delete
 func (s *ProjectsService) ResetFileFormatSettingsCustomSegmentation(ctx context.Context, projectID, settingsID int64) (*Response, error) {
 	path := fmt.Sprintf("/api/v2/projects/%d/file-format-settings/%d/custom-segmentations", projectID, settingsID)

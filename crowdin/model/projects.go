@@ -221,7 +221,7 @@ type ProjectsAddRequest struct {
 	MTPreTranslate ProjectMTPreTranslate `json:"mtPreTranslate,omitempty"`
 	// Context and max.length added in Crowdin will be visible in the downloaded files.
 	SaveMetaInfoInSource bool `json:"saveMetaInfoInSource,omitempty"`
-	// Defines the project type. To create a file-based project, type should be set to 0.
+	// Defines the project type. Use 0 for a file-based project and 1 for a string-based project.
 	// Enum: 0, 1. Default: 0.
 	Type int `json:"type,omitempty"`
 	// Defines whether to export only translated file.
