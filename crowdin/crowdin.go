@@ -27,10 +27,11 @@ type Client struct {
 	userAgent    string
 	httpClient   *http.Client
 
-	Storages  *StorageService
-	Languages *LanguagesService
-	Groups    *GroupsService
-	Projects  *ProjectsService
+	Storages     *StorageService
+	Languages    *LanguagesService
+	Groups       *GroupsService
+	Projects     *ProjectsService
+	Translations *TranslationsService
 }
 
 // NewClient creates a new Crowdin API client with provided options (ex. WithHTTPClient).
@@ -70,6 +71,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.Languages = &LanguagesService{client: c}
 	c.Groups = &GroupsService{client: c}
 	c.Projects = &ProjectsService{client: c}
+	c.Translations = &TranslationsService{client: c}
 
 	return c, nil
 }
@@ -107,7 +109,9 @@ type RequestOption func(*http.Request) error
 // Header sets a header as an option for the request.
 func Header(key, value string) RequestOption {
 	return func(r *http.Request) error {
-		r.Header.Set(key, value)
+		if value != "" {
+			r.Header.Set(key, value)
+		}
 		return nil
 	}
 }
