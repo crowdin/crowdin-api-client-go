@@ -31,6 +31,7 @@ type Client struct {
 	Languages    *LanguagesService
 	Groups       *GroupsService
 	Projects     *ProjectsService
+	SourceFiles  *SourceFilesService
 	Translations *TranslationsService
 }
 
@@ -71,6 +72,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.Languages = &LanguagesService{client: c}
 	c.Groups = &GroupsService{client: c}
 	c.Projects = &ProjectsService{client: c}
+	c.SourceFiles = &SourceFilesService{client: c}
 	c.Translations = &TranslationsService{client: c}
 
 	return c, nil
@@ -202,7 +204,7 @@ func (c *Client) Post(ctx context.Context, path string, body, v any, opts ...Req
 	return c.do(req, v)
 }
 
-// Put makes a PATCH request to the specified path.
+// Patch makes a PATCH request to the specified path.
 func (c *Client) Patch(ctx context.Context, path string, body, v any) (*Response, error) {
 	if body == nil {
 		return nil, errors.New("body cannot be nil")
@@ -213,6 +215,23 @@ func (c *Client) Patch(ctx context.Context, path string, body, v any) (*Response
 		}
 	}
 	req, err := c.newRequest(ctx, "PATCH", path, body)
+	if err != nil {
+		return nil, err
+	}
+	return c.do(req, v)
+}
+
+// Put makes a PUT request to the specified path.
+func (c *Client) Put(ctx context.Context, path string, body, v any) (*Response, error) {
+	if body == nil {
+		return nil, errors.New("body cannot be nil")
+	}
+	if rv, ok := body.(RequestValidator); ok {
+		if err := rv.Validate(); err != nil {
+			return nil, err
+		}
+	}
+	req, err := c.newRequest(ctx, "PUT", path, body)
 	if err != nil {
 		return nil, err
 	}
