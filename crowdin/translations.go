@@ -19,10 +19,10 @@ type TranslationsService struct {
 	client *Client
 }
 
-// PreTranslation returns a pre-translation status for project by its identifier.
+// PreTranslationStatus returns a pre-translation status for project by its identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.pre-translations.get
-func (s *TranslationsService) PreTranslation(ctx context.Context, projectID int64, preTranslationID string) (
+func (s *TranslationsService) PreTranslationStatus(ctx context.Context, projectID int64, preTranslationID string) (
 	*model.PreTranslation, *Response, error,
 ) {
 	res := new(model.PreTranslationsResponse)
@@ -144,10 +144,10 @@ func (s *TranslationsService) DownloadProjectTranslations(ctx context.Context, p
 	return res.Data, resp, err
 }
 
-// GetBuild checks the status of a project build by its identifier.
+// CheckBuildStatus checks the status of a project build by its identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.get
-func (s *TranslationsService) GetBuild(ctx context.Context, projectID, buildID int64) (*model.TranslationsProjectBuild, *Response, error) {
+func (s *TranslationsService) CheckBuildStatus(ctx context.Context, projectID, buildID int64) (*model.TranslationsProjectBuild, *Response, error) {
 	res := new(model.TranslationsProjectBuildResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/builds/%d", projectID, buildID), nil, res)
 
