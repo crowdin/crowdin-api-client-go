@@ -85,10 +85,12 @@ type Directory struct {
 	UpdatedAt     string `json:"updatedAt"`
 }
 
+// DirectoryGetResponse describes a response with a single directory.
 type DirectoryGetResponse struct {
 	Data *Directory `json:"data"`
 }
 
+// DirectoryListResponse describes a response with a list of directories.
 type DirectoryListResponse struct {
 	Data []*DirectoryGetResponse `json:"data"`
 }
@@ -554,4 +556,50 @@ type FileRevisionResponse struct {
 // a list of file revisions.
 type FileRevisionListResponse struct {
 	Data []*FileRevisionResponse `json:"data"`
+}
+
+// ReviewedBuild represents a reviewed source file build.
+type ReviewedBuild struct {
+	ID         int64  `json:"id"`
+	ProjectID  int64  `json:"projectId"`
+	Status     string `json:"status"`
+	Progress   int    `json:"progress"`
+	Attributes struct {
+		BranchID         *int64 `json:"branchId,omitempty"`
+		TargetLanguageID string `json:"targetLanguageId"`
+	} `json:"attributes"`
+}
+
+// ReviewedBuildResponse describes a response with a single reviewed build.
+type ReviewedBuildResponse struct {
+	Data *ReviewedBuild `json:"data"`
+}
+
+// ReviewedBuildListResponse describes a response with a list of reviewed builds.
+type ReviewedBuildListResponse struct {
+	Data []*ReviewedBuildResponse `json:"data"`
+}
+
+// ReviewedBuildListOptions specifies the optional parameters to the
+// SourceFilesService.ListReviewedBuilds method.
+type ReviewedBuildListOptions struct {
+	// BranchID is the ID of the branch to filter reviewed builds by.
+	BranchID int64 `json:"branchId,omitempty"`
+
+	ListOptions
+}
+
+// Values returns the url.Values representation of ReviewedBuildListOptions.
+func (o *ReviewedBuildListOptions) Values() url.Values {
+	v := o.ListOptions.Values()
+	if o.BranchID > 0 {
+		v.Add("branchId", fmt.Sprintf("%d", o.BranchID))
+	}
+	return v
+}
+
+// ReviewedBuildRequest defines the structure of a request to create a new reviewed build.
+type ReviewedBuildRequest struct {
+	// Branch Identifier.
+	BranchID int64 `json:"branchId,omitempty"`
 }

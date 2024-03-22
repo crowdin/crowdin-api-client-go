@@ -206,13 +206,13 @@ func (s *SourceFilesService) AddFile(ctx context.Context, projectID int64, req *
 	return res.Data, resp, err
 }
 
-// UpdateRestoreFile updates a file in the project or restores it to one
+// UpdateOrRestoreFile updates a file in the project or restores it to one
 // of the previous revisions.
 // For updating the file, use the `storageId` body parameter.
 // For restoring the file, use the `revisionId` body parameter.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.put
-func (s *SourceFilesService) UpdateRestoreFile(ctx context.Context, projectID, fileID int64, req *model.FileUpdateRestoreRequest) (
+func (s *SourceFilesService) UpdateOrRestoreFile(ctx context.Context, projectID, fileID int64, req *model.FileUpdateRestoreRequest) (
 	*model.File, *Response, error,
 ) {
 	res := new(model.FileGetResponse)
@@ -283,6 +283,55 @@ func (s *SourceFilesService) ListFileRevisions(ctx context.Context, projectID, f
 func (s *SourceFilesService) GetFileRevision(ctx context.Context, projectID, fileID, revisionID int64) (*model.FileRevision, *Response, error) {
 	res := new(model.FileRevisionResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d/revisions/%d", projectID, fileID, revisionID), nil, res)
+
+	return res.Data, resp, err
+}
+
+// ListReviewedBuilds returns a list of reviewed source files builds.
+//
+// https://developer.crowdin.com/enterprise/api/v2/#operation/api.projects.strings.reviewed-builds.getMany
+func (s *SourceFilesService) ListReviewedBuilds(ctx context.Context, projectID int64, opts *model.ReviewedBuildListOptions) (
+	[]*model.ReviewedBuild, *Response, error,
+) {
+	res := new(model.ReviewedBuildListResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/reviewed-builds", projectID), opts, res)
+
+	builds := make([]*model.ReviewedBuild, 0, len(res.Data))
+	for _, b := range res.Data {
+		builds = append(builds, b.Data)
+	}
+
+	return builds, resp, err
+}
+
+// CheckReviewedBuildStatus checks the status of a specific reviewed source files build.
+//
+// https://developer.crowdin.com/enterprise/api/v2/#operation/api.projects.strings.reviewed-builds.get
+func (s *SourceFilesService) CheckReviewedBuildStatus(ctx context.Context, projectID, buildID int64) (*model.ReviewedBuild, *Response, error) {
+	res := new(model.ReviewedBuildResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/reviewed-builds/%d", projectID, buildID), nil, res)
+
+	return res.Data, resp, err
+}
+
+// BuildReviewedFiles starts a new build of reviewed source files.
+//
+// https://developer.crowdin.com/enterprise/api/v2/#operation/api.projects.strings.reviewed-builds.post
+func (s *SourceFilesService) BuildReviewedFiles(ctx context.Context, projectID int64, req *model.ReviewedBuildRequest) (
+	*model.ReviewedBuild, *Response, error,
+) {
+	res := new(model.ReviewedBuildResponse)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/reviewed-builds", projectID), req, res)
+
+	return res.Data, resp, err
+}
+
+// DownloadReviewedBuild returns a download link for a specific reviewed source files build.
+//
+// https://developer.crowdin.com/enterprise/api/v2/#operation/api.projects.strings.reviewed-builds.download.download
+func (s *SourceFilesService) DownloadReviewedBuild(ctx context.Context, projectID, buildID int64) (*model.DownloadLink, *Response, error) {
+	res := new(model.DownloadLinkResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/reviewed-builds/%d/download", projectID, buildID), nil, res)
 
 	return res.Data, resp, err
 }
