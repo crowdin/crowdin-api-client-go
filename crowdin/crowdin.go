@@ -240,6 +240,10 @@ func (c *Client) Put(ctx context.Context, path string, body, v any) (*Response, 
 	return c.do(req, v)
 }
 
+type ListOptionsProvider interface {
+	Values() url.Values
+}
+
 // Get makes a GET request to the specified path.
 func (c *Client) Get(ctx context.Context, path string, params ListOptionsProvider, v any) (*Response, error) {
 	if params != nil {
@@ -366,26 +370,4 @@ func (r *ValidationErrorResponse) Error() string {
 		}
 	}
 	return sb.String()
-}
-
-type ListOptionsProvider interface {
-	Values() url.Values
-}
-
-// ListOptions specifies the optional parameters to methods that support pagination.
-type ListOptions struct {
-	Limit  int `json:"limit,omitempty"`
-	Offset int `json:"offset,omitempty"`
-}
-
-// Values returns the ListOptions as url.Values for use in query strings.
-func (o *ListOptions) Values() url.Values {
-	v := url.Values{}
-	if o.Limit > 0 {
-		v.Add("limit", fmt.Sprintf("%d", o.Limit))
-	}
-	if o.Offset > 0 {
-		v.Add("offset", fmt.Sprintf("%d", o.Offset))
-	}
-	return v
 }

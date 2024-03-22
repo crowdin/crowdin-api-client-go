@@ -25,7 +25,7 @@ func (s *BranchesService) List(ctx context.Context, projectID int64, opts *model
 	[]*model.Branch, *Response, error,
 ) {
 	res := new(model.BranchesListResponse)
-	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/branches", projectID), nil, res)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/branches", projectID), opts, res)
 
 	branches := make([]*model.Branch, 0, len(res.Data))
 	for _, b := range res.Data {
