@@ -31,6 +31,7 @@ type Client struct {
 	Languages    *LanguagesService
 	Groups       *GroupsService
 	Projects     *ProjectsService
+	Branches     *BranchesService
 	SourceFiles  *SourceFilesService
 	Translations *TranslationsService
 }
@@ -72,6 +73,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.Languages = &LanguagesService{client: c}
 	c.Groups = &GroupsService{client: c}
 	c.Projects = &ProjectsService{client: c}
+	c.Branches = &BranchesService{client: c}
 	c.SourceFiles = &SourceFilesService{client: c}
 	c.Translations = &TranslationsService{client: c}
 
