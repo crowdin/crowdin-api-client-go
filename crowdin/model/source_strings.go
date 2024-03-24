@@ -153,9 +153,6 @@ func (r *SourceStringsAddRequest) Validate() error {
 	if r == nil {
 		return errors.New("request cannot be nil")
 	}
-	if r.Text == nil {
-		return errors.New("text is required")
-	}
 
 	// check if `text` is a string or map of strings
 	switch text := r.Text.(type) {
