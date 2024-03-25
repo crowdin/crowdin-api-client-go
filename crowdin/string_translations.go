@@ -21,7 +21,7 @@ func (s *StringTranslationsService) ListApprovals(ctx context.Context, projectId
 	[]*model.Approval, *Response, error,
 ) {
 	res := new(model.ApprovalsListResponse)
-	resp, err := s.client.Get(ctx, fmt.Sprintf("projects/%d/approvals", projectId), opts, res)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/approvals", projectId), opts, res)
 	if err != nil {
 		return nil, resp, err
 	}
@@ -39,7 +39,7 @@ func (s *StringTranslationsService) ListApprovals(ctx context.Context, projectId
 // https://developer.crowdin.com/api/v2/#operation/api.projects.approvals.get
 func (s *StringTranslationsService) GetApproval(ctx context.Context, projectID, approvalID int) (*model.Approval, *Response, error) {
 	res := new(model.ApprovalsGetResponse)
-	resp, err := s.client.Get(ctx, fmt.Sprintf("projects/%d/approvals/%d", projectID, approvalID), nil, res)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/approvals/%d", projectID, approvalID), nil, res)
 
 	return res.Data, resp, err
 }
@@ -55,7 +55,7 @@ func (s *StringTranslationsService) AddApproval(ctx context.Context, projectID, 
 	}{TranslationID: translationID}
 
 	res := new(model.ApprovalsGetResponse)
-	resp, err := s.client.Post(ctx, fmt.Sprintf("projects/%d/approvals", projectID), req, res)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/approvals", projectID), req, res)
 
 	return res.Data, resp, err
 }
@@ -64,7 +64,7 @@ func (s *StringTranslationsService) AddApproval(ctx context.Context, projectID, 
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.approvals.delete
 func (s *StringTranslationsService) RemoveApproval(ctx context.Context, projectID, approvalID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("projects/%d/approvals/%d", projectID, approvalID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/approvals/%d", projectID, approvalID))
 }
 
 // TranslationAlignment aligns translations.
@@ -74,7 +74,7 @@ func (s *StringTranslationsService) TranslationAlignment(ctx context.Context, pr
 	*model.TranslationAlignment, *Response, error,
 ) {
 	res := new(model.TranslationAlignmentResponse)
-	resp, err := s.client.Post(ctx, fmt.Sprintf("projects/%d/translations/alignment", projectID), req, res)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/alignment", projectID), req, res)
 
 	return res.Data, resp, err
 }
@@ -93,7 +93,7 @@ func (s *StringTranslationsService) ListLanguageTranslations(
 	[]*model.LanguageTranslation, *Response, error,
 ) {
 	res := new(model.LanguageTranslationsListResponse)
-	resp, err := s.client.Get(ctx, fmt.Sprintf("projects/%d/languages/%s/translations", projectID, languageID), opts, res)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/languages/%s/translations", projectID, languageID), opts, res)
 	if err != nil {
 		return nil, resp, err
 	}
@@ -116,7 +116,7 @@ func (s *StringTranslationsService) ListStringTranslations(ctx context.Context, 
 	[]*model.Translation, *Response, error,
 ) {
 	res := new(model.TranslationsListResponse)
-	resp, err := s.client.Get(ctx, fmt.Sprintf("projects/%d/translations", projectID), opts, res)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/translations", projectID), opts, res)
 	if err != nil {
 		return nil, resp, err
 	}
@@ -135,7 +135,7 @@ func (s *StringTranslationsService) ListStringTranslations(ctx context.Context, 
 func (s *StringTranslationsService) DeleteStringTranslations(ctx context.Context, projectID, stringID int, languageID string) (
 	*Response, error,
 ) {
-	path := fmt.Sprintf("projects/%d/translations?stringId=%d&languageId=%s", projectID, stringID, languageID)
+	path := fmt.Sprintf("/api/v2/projects/%d/translations?stringId=%d&languageId=%s", projectID, stringID, languageID)
 	return s.client.Delete(ctx, path)
 }
 
@@ -146,7 +146,7 @@ func (s *StringTranslationsService) GetTranslation(ctx context.Context, projectI
 	*model.Translation, *Response, error,
 ) {
 	res := new(model.TranslationGetResponse)
-	resp, err := s.client.Get(ctx, fmt.Sprintf("projects/%d/translations/%d", projectID, translationID), opts, res)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/%d", projectID, translationID), opts, res)
 
 	return res.Data, resp, err
 }
@@ -158,7 +158,7 @@ func (s *StringTranslationsService) AddTranslation(ctx context.Context, projectI
 	*model.Translation, *Response, error,
 ) {
 	res := new(model.TranslationGetResponse)
-	resp, err := s.client.Post(ctx, fmt.Sprintf("projects/%d/translations", projectID), req, res)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/translations", projectID), req, res)
 
 	return res.Data, resp, err
 }
@@ -170,7 +170,7 @@ func (s *StringTranslationsService) RestoreTranslation(ctx context.Context, proj
 	*model.Translation, *Response, error,
 ) {
 	res := new(model.TranslationGetResponse)
-	resp, err := s.client.Put(ctx, fmt.Sprintf("projects/%d/translations/%d", projectID, translationID), nil, res)
+	resp, err := s.client.Put(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/%d", projectID, translationID), nil, res)
 
 	return res.Data, resp, err
 }
@@ -179,7 +179,7 @@ func (s *StringTranslationsService) RestoreTranslation(ctx context.Context, proj
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.delete
 func (s *StringTranslationsService) DeleteTranslation(ctx context.Context, projectID, translationID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("projects/%d/translations/%d", projectID, translationID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/%d", projectID, translationID))
 }
 
 // ListVotes lists translation votes.
@@ -192,7 +192,7 @@ func (s *StringTranslationsService) ListVotes(ctx context.Context, projectID int
 	[]*model.Vote, *Response, error,
 ) {
 	res := new(model.VotesListResponse)
-	resp, err := s.client.Get(ctx, fmt.Sprintf("projects/%d/votes", projectID), opts, res)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/votes", projectID), opts, res)
 	if err != nil {
 		return nil, resp, err
 	}
@@ -210,7 +210,7 @@ func (s *StringTranslationsService) ListVotes(ctx context.Context, projectID int
 // https://developer.crowdin.com/api/v2/#operation/api.projects.votes.get
 func (s *StringTranslationsService) GetVote(ctx context.Context, projectID, voteID int) (*model.Vote, *Response, error) {
 	res := new(model.VoteGetResponse)
-	resp, err := s.client.Get(ctx, fmt.Sprintf("projects/%d/votes/%d", projectID, voteID), nil, res)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/votes/%d", projectID, voteID), nil, res)
 
 	return res.Data, resp, err
 }
@@ -222,7 +222,7 @@ func (s *StringTranslationsService) AddVote(ctx context.Context, projectID int, 
 	*model.Vote, *Response, error,
 ) {
 	res := new(model.VoteGetResponse)
-	resp, err := s.client.Post(ctx, fmt.Sprintf("projects/%d/votes", projectID), req, res)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/votes", projectID), req, res)
 
 	return res.Data, resp, err
 }
@@ -231,5 +231,5 @@ func (s *StringTranslationsService) AddVote(ctx context.Context, projectID int, 
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.votes.delete
 func (s *StringTranslationsService) CancelVote(ctx context.Context, projectID, voteID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("projects/%d/votes/%d", projectID, voteID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/votes/%d", projectID, voteID))
 }
