@@ -34,6 +34,7 @@ type Client struct {
 	Branches           *BranchesService
 	SourceFiles        *SourceFilesService
 	SourceStrings      *SourceStringsService
+	StringTranslations *StringTranslationsService
 	Translations       *TranslationsService
 	TranslationStatus  *TranslationStatusService
 }
@@ -80,6 +81,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.Translations = &TranslationsService{client: c}
 	c.TranslationStatus = &TranslationStatusService{client: c}
 	c.SourceStrings = &SourceStringsService{client: c}
+	c.StringTranslations = &StringTranslationsService{client: c}
 
 	return c, nil
 }
@@ -229,9 +231,6 @@ func (c *Client) Patch(ctx context.Context, path string, body, v any) (*Response
 
 // Put makes a PUT request to the specified path.
 func (c *Client) Put(ctx context.Context, path string, body, v any) (*Response, error) {
-	if body == nil {
-		return nil, errors.New("body cannot be nil")
-	}
 	if rv, ok := body.(RequestValidator); ok {
 		if err := rv.Validate(); err != nil {
 			return nil, err
