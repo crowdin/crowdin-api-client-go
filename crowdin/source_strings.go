@@ -26,7 +26,7 @@ func (s *SourceStringsService) List(ctx context.Context, projectID int64, opts *
 	[]*model.SourceString, *Response, error,
 ) {
 	res := new(model.SourceStringsListResponse)
-	resp, err := s.client.Get(ctx, fmt.Sprintf("projects/%d/strings", projectID), opts, res)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/strings", projectID), opts, res)
 	if err != nil {
 		return nil, resp, err
 	}
@@ -46,7 +46,7 @@ func (s *SourceStringsService) Get(ctx context.Context, projectID, stringID int6
 	*model.SourceString, *Response, error,
 ) {
 	res := new(model.SourceStringsGetResponse)
-	resp, err := s.client.Get(ctx, fmt.Sprintf("projects/%d/strings/%d", projectID, stringID), opts, res)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/%d", projectID, stringID), opts, res)
 
 	return res.Data, resp, err
 }
@@ -58,7 +58,7 @@ func (s *SourceStringsService) Add(ctx context.Context, projectID int64, req *mo
 	*model.SourceString, *Response, error,
 ) {
 	res := new(model.SourceStringsGetResponse)
-	resp, err := s.client.Post(ctx, fmt.Sprintf("projects/%d/strings", projectID), req, res)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/strings", projectID), req, res)
 
 	return res.Data, resp, err
 }
@@ -78,7 +78,7 @@ func (s *SourceStringsService) BatchOperations(ctx context.Context, projectID in
 	[]*model.SourceString, *Response, error,
 ) {
 	res := new(model.SourceStringsListResponse)
-	resp, err := s.client.Patch(ctx, fmt.Sprintf("projects/%d/strings", projectID), req, res)
+	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/projects/%d/strings", projectID), req, res)
 	if err != nil {
 		return nil, resp, err
 	}
@@ -106,7 +106,7 @@ func (s *SourceStringsService) Edit(ctx context.Context, projectID, stringID int
 	*model.SourceString, *Response, error,
 ) {
 	res := new(model.SourceStringsGetResponse)
-	resp, err := s.client.Patch(ctx, fmt.Sprintf("projects/%d/strings/%d", projectID, stringID), req, res)
+	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/%d", projectID, stringID), req, res)
 
 	return res.Data, resp, err
 }
@@ -115,7 +115,7 @@ func (s *SourceStringsService) Edit(ctx context.Context, projectID, stringID int
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.strings.delete
 func (s *SourceStringsService) Delete(ctx context.Context, projectID, stringID int64) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("projects/%d/strings/%d", projectID, stringID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/%d", projectID, stringID))
 }
 
 // GetUploadStatus returns the status of the uploaded strings.
@@ -125,7 +125,7 @@ func (s *SourceStringsService) GetUploadStatus(ctx context.Context, projectID in
 	*model.SourceStringsUpload, *Response, error,
 ) {
 	res := new(model.SourceStringsUploadResponse)
-	resp, err := s.client.Get(ctx, fmt.Sprintf("projects/%d/strings/uploads/%s", projectID, uploadID), nil, res)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/uploads/%s", projectID, uploadID), nil, res)
 
 	return res.Data, resp, err
 }
@@ -137,7 +137,7 @@ func (s *SourceStringsService) Upload(ctx context.Context, projectID int64, req 
 	*model.SourceStringsUpload, *Response, error,
 ) {
 	res := new(model.SourceStringsUploadResponse)
-	resp, err := s.client.Post(ctx, fmt.Sprintf("projects/%d/strings/uploads", projectID), req, res)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/uploads", projectID), req, res)
 
 	return res.Data, resp, err
 }

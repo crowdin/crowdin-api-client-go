@@ -2,7 +2,7 @@ package model
 
 // Storage defines the structure of a storage.
 type Storage struct {
-	ID       int64  `json:"id"`
+	ID       int    `json:"id"`
 	FileName string `json:"fileName"`
 }
 

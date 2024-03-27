@@ -69,7 +69,7 @@ func (s *StorageService) List(ctx context.Context, opts *model.ListOptions) ([]*
 
 // Get returns a file in the storage by its identifier.
 // https://developer.crowdin.com/api/v2/#operation/api.storages.get
-func (s *StorageService) Get(ctx context.Context, id int64) (*model.Storage, *Response, error) {
+func (s *StorageService) Get(ctx context.Context, id int) (*model.Storage, *Response, error) {
 	res := new(model.StorageGetResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/storages/%d", id), nil, res)
 
@@ -78,6 +78,6 @@ func (s *StorageService) Get(ctx context.Context, id int64) (*model.Storage, *Re
 
 // Delete deletes a file from the storage by its identifier.
 // https://developer.crowdin.com/api/v2/#operation/api.storages.delete
-func (s *StorageService) Delete(ctx context.Context, id int64) (*Response, error) {
+func (s *StorageService) Delete(ctx context.Context, id int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/storages/%d", id))
 }

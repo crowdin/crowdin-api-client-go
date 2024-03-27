@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Language defines the structure of a language.
+// Language represents a language in Crowdin.
 type Language struct {
 	ID                  string   `json:"id"`
 	Name                string   `json:"name"`
@@ -14,8 +14,8 @@ type Language struct {
 	ThreeLettersCode    string   `json:"threeLettersCode"`
 	Locale              string   `json:"locale"`
 	AndroidCode         string   `json:"androidCode"`
-	OsxCode             string   `json:"osxCode"`
-	OsxLocale           string   `json:"osxLocale"`
+	OSXCode             string   `json:"osxCode"`
+	OSXLocale           string   `json:"osxLocale"`
 	PluralCategoryNames []string `json:"pluralCategoryNames"`
 	PluralRules         string   `json:"pluralRules"`
 	PluralExamples      []string `json:"pluralExamples"`
@@ -62,6 +62,9 @@ type AddLanguageRequest struct {
 // Validate checks if the add request is valid.
 // It implements the RequestValidator interface.
 func (r *AddLanguageRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
 	if r.Name == "" {
 		return errors.New("name is required")
 	}
