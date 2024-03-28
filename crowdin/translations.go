@@ -22,7 +22,7 @@ type TranslationsService struct {
 // PreTranslationStatus returns a pre-translation status for project by its identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.pre-translations.get
-func (s *TranslationsService) PreTranslationStatus(ctx context.Context, projectID int64, preTranslationID string) (
+func (s *TranslationsService) PreTranslationStatus(ctx context.Context, projectID int, preTranslationID string) (
 	*model.PreTranslation, *Response, error,
 ) {
 	res := new(model.PreTranslationsResponse)
@@ -34,7 +34,7 @@ func (s *TranslationsService) PreTranslationStatus(ctx context.Context, projectI
 // ApplyPreTranslation applies pre-translation to the project.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.pre-translations.post
-func (s *TranslationsService) ApplyPreTranslation(ctx context.Context, projectID int64, req *model.PreTranslationRequest) (
+func (s *TranslationsService) ApplyPreTranslation(ctx context.Context, projectID int, req *model.PreTranslationRequest) (
 	*model.PreTranslation, *Response, error,
 ) {
 	res := new(model.PreTranslationsResponse)
@@ -48,13 +48,14 @@ func (s *TranslationsService) ApplyPreTranslation(ctx context.Context, projectID
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.directories.post
 func (s *TranslationsService) BuildProjectDirectoryTranslation(
 	ctx context.Context,
-	projectID, directoryID int64,
+	projectID, directoryID int,
 	req *model.BuildProjectDirectoryTranslationRequest,
 ) (*model.BuildProjectDirectoryTranslation, *Response, error) {
 	res := struct {
 		Data *model.BuildProjectDirectoryTranslation `json:"data"`
 	}{}
-	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/builds/directories/%d", projectID, directoryID), req, &res)
+	path := fmt.Sprintf("/api/v2/projects/%d/translations/builds/directories/%d", projectID, directoryID)
+	resp, err := s.client.Post(ctx, path, req, &res)
 
 	return res.Data, resp, err
 }
@@ -68,7 +69,7 @@ func (s *TranslationsService) BuildProjectDirectoryTranslation(
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.files.post
 func (s *TranslationsService) BuildProjectFileTranslation(
 	ctx context.Context,
-	projectID, fileID int64,
+	projectID, fileID int,
 	req *model.BuildProjectFileTranslationRequest,
 	etag string,
 ) (*model.DownloadLink, *Response, error) {
@@ -87,7 +88,7 @@ func (s *TranslationsService) BuildProjectFileTranslation(
 // - offset: A starting offset in the collection of items (default 0).
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.getMany
-func (s *TranslationsService) ListProjectBuilds(ctx context.Context, projectID int64, opts *model.TranslationsBuildsListOptions) (
+func (s *TranslationsService) ListProjectBuilds(ctx context.Context, projectID int, opts *model.TranslationsBuildsListOptions) (
 	[]*model.TranslationsProjectBuild, *Response, error,
 ) {
 	res := new(model.TranslationsProjectBuildsListResponse)
@@ -108,7 +109,7 @@ func (s *TranslationsService) ListProjectBuilds(ctx context.Context, projectID i
 // Request body can be either `model.BuildProjectRequest` or `model.PseudoBuildProjectRequest`.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.post
-func (s *TranslationsService) BuildProjectTranslation(ctx context.Context, projectID int64, req model.BuildProjectTranslationRequest) (
+func (s *TranslationsService) BuildProjectTranslation(ctx context.Context, projectID int, req model.BuildProjectTranslationRequest) (
 	*model.TranslationsProjectBuild, *Response, error,
 ) {
 	res := new(model.TranslationsProjectBuildResponse)
@@ -123,19 +124,19 @@ func (s *TranslationsService) BuildProjectTranslation(ctx context.Context, proje
 // UploadTranslations uploads translations for a specific language in the project.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.postOnLanguage
-func (s *TranslationsService) UploadTranslations(ctx context.Context, projectID int64, languageID string, req *model.UploadTranslationsRequest) (
+func (s *TranslationsService) UploadTranslations(ctx context.Context, projectID int, languageID string, req *model.UploadTranslationsRequest) (
 	*model.UploadTranslations, *Response, error,
 ) {
 	res := new(model.UploadTranslationsResponse)
 	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/%s", projectID, languageID), req, res)
 
-	return &res.Data, resp, err
+	return res.Data, resp, err
 }
 
 // DownloadProjectTranslations returns a download link for a specific build.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.download.download
-func (s *TranslationsService) DownloadProjectTranslations(ctx context.Context, projectID, buildID int64) (
+func (s *TranslationsService) DownloadProjectTranslations(ctx context.Context, projectID, buildID int) (
 	*model.DownloadLink, *Response, error,
 ) {
 	res := new(model.DownloadLinkResponse)
@@ -147,7 +148,9 @@ func (s *TranslationsService) DownloadProjectTranslations(ctx context.Context, p
 // CheckBuildStatus checks the status of a project build by its identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.get
-func (s *TranslationsService) CheckBuildStatus(ctx context.Context, projectID, buildID int64) (*model.TranslationsProjectBuild, *Response, error) {
+func (s *TranslationsService) CheckBuildStatus(ctx context.Context, projectID, buildID int) (
+	*model.TranslationsProjectBuild, *Response, error,
+) {
 	res := new(model.TranslationsProjectBuildResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/builds/%d", projectID, buildID), nil, res)
 
@@ -157,7 +160,7 @@ func (s *TranslationsService) CheckBuildStatus(ctx context.Context, projectID, b
 // CancelBuild cancels a build by its identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.delete
-func (s *TranslationsService) CancelBuild(ctx context.Context, projectID, buildID int64) (*Response, error) {
+func (s *TranslationsService) CancelBuild(ctx context.Context, projectID, buildID int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/builds/%d", projectID, buildID))
 }
 
@@ -167,7 +170,7 @@ func (s *TranslationsService) CancelBuild(ctx context.Context, projectID, buildI
 // it is recommended to use OTA.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.exports.post
-func (s *TranslationsService) ExportProjectTranslation(ctx context.Context, projectID int64, req *model.ExportTranslationRequest) (
+func (s *TranslationsService) ExportProjectTranslation(ctx context.Context, projectID int, req *model.ExportTranslationRequest) (
 	*model.DownloadLink, *Response, error,
 ) {
 	res := new(model.DownloadLinkResponse)

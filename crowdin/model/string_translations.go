@@ -61,8 +61,8 @@ type ApprovalsListOptions struct {
 
 // Values returns the url.Values representation of the ApprovalsListOptions.
 // It implements the crowdin.ListOptionsProvider interface.
-func (o *ApprovalsListOptions) Values() url.Values {
-	v := o.ListOptions.Values()
+func (o *ApprovalsListOptions) Values() (url.Values, bool) {
+	v, _ := o.ListOptions.Values()
 	if o.FileID > 0 {
 		v.Add("fileId", fmt.Sprintf("%d", o.FileID))
 	}
@@ -82,7 +82,7 @@ func (o *ApprovalsListOptions) Values() url.Values {
 		v.Add("translationId", fmt.Sprintf("%d", o.TranslationID))
 	}
 
-	return v
+	return v, len(v) > 0
 }
 
 // TranslationAlignment represents a translation alignment.
@@ -203,8 +203,8 @@ type LanguageTranslationsListOptions struct {
 
 // Values returns the url.Values representation of the LanguageTranslationsListOptions.
 // It implements the crowdin.ListOptionsProvider interface.
-func (o *LanguageTranslationsListOptions) Values() url.Values {
-	v := o.ListOptions.Values()
+func (o *LanguageTranslationsListOptions) Values() (url.Values, bool) {
+	v, _ := o.ListOptions.Values()
 	if len(o.StringIDs) > 0 {
 		v.Add("stringIds", joinIntSlice(o.StringIDs))
 	}
@@ -228,7 +228,7 @@ func (o *LanguageTranslationsListOptions) Values() url.Values {
 		v.Add("denormalizePlaceholders", fmt.Sprintf("%d", *o.DenormalizePlaceholders))
 	}
 
-	return v
+	return v, len(v) > 0
 }
 
 // Translation represents a Crowdin translation.
@@ -265,13 +265,13 @@ type TranslationGetOptions struct {
 
 // Values returns the url.Values representation of the TranslationGetOptions.
 // It implements the crowdin.ListOptionsProvider interface.
-func (o *TranslationGetOptions) Values() url.Values {
+func (o *TranslationGetOptions) Values() (url.Values, bool) {
 	v := url.Values{}
 	if o.DenormalizePlaceholders != nil &&
 		(*o.DenormalizePlaceholders == 0 || *o.DenormalizePlaceholders == 1) {
 		v.Add("denormalizePlaceholders", fmt.Sprintf("%d", *o.DenormalizePlaceholders))
 	}
-	return v
+	return v, len(v) > 0
 }
 
 // StringTranslationsListOptions specifies the optional parameters to the
@@ -292,8 +292,8 @@ type StringTranslationsListOptions struct {
 
 // Values returns the url.Values representation of the StringTranslationsListOptions.
 // It implements the crowdin.ListOptionsProvider interface.
-func (o *StringTranslationsListOptions) Values() url.Values {
-	v := o.ListOptions.Values()
+func (o *StringTranslationsListOptions) Values() (url.Values, bool) {
+	v, _ := o.ListOptions.Values()
 	if o.StringID > 0 {
 		v.Add("stringId", fmt.Sprintf("%d", o.StringID))
 	}
@@ -305,7 +305,7 @@ func (o *StringTranslationsListOptions) Values() url.Values {
 		v.Add("denormalizePlaceholders", fmt.Sprintf("%d", *o.DenormalizePlaceholders))
 	}
 
-	return v
+	return v, len(v) > 0
 }
 
 // TranslationAddRequest defines the structure of the request
@@ -390,8 +390,8 @@ type VotesListOptions struct {
 
 // Values returns the url.Values representation of the VotesListOptions.
 // It implements the crowdin.ListOptionsProvider interface.
-func (o *VotesListOptions) Values() url.Values {
-	v := o.ListOptions.Values()
+func (o *VotesListOptions) Values() (url.Values, bool) {
+	v, _ := o.ListOptions.Values()
 	if o.StringID > 0 {
 		v.Add("stringId", fmt.Sprintf("%d", o.StringID))
 	}
@@ -411,7 +411,7 @@ func (o *VotesListOptions) Values() url.Values {
 		v.Add("excludeLabelIds", joinIntSlice(o.EcludeLabelIDs))
 	}
 
-	return v
+	return v, len(v) > 0
 }
 
 // VoteType represents a translation vote type.

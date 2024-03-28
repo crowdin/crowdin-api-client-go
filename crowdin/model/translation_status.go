@@ -33,12 +33,14 @@ type ProjectProgressListOptions struct {
 }
 
 // Values returns the url.Values representation of ProjectProgressListOptions.
-func (o *ProjectProgressListOptions) Values() url.Values {
-	v := o.ListOptions.Values()
+// It implements the crowdin.ListOptionsProvider interface.
+func (o *ProjectProgressListOptions) Values() (url.Values, bool) {
+	v, _ := o.ListOptions.Values()
 	if o.LanguageIDs != "" {
 		v.Add("languageIds", o.LanguageIDs)
 	}
-	return v
+
+	return v, len(v) > 0
 }
 
 // QACheck represents a QA check issue.
@@ -90,8 +92,9 @@ type QACheckListOptions struct {
 }
 
 // Values returns the url.Values representation of QACheckListOptions.
-func (o *QACheckListOptions) Values() url.Values {
-	v := o.ListOptions.Values()
+// It implements the crowdin.ListOptionsProvider interface.
+func (o *QACheckListOptions) Values() (url.Values, bool) {
+	v, _ := o.ListOptions.Values()
 	if o.Category != "" {
 		v.Add("category", o.Category)
 	}
@@ -101,5 +104,6 @@ func (o *QACheckListOptions) Values() url.Values {
 	if o.LanguageIDs != "" {
 		v.Add("languageIds", o.LanguageIDs)
 	}
-	return v
+
+	return v, len(v) > 0
 }

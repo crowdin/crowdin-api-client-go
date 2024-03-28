@@ -21,7 +21,7 @@ type BranchesService struct {
 // - offset: A starting offset in the collection of items (default 0).
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.branches.getMany
-func (s *BranchesService) List(ctx context.Context, projectID int64, opts *model.BranchesListOptions) (
+func (s *BranchesService) List(ctx context.Context, projectID int, opts *model.BranchesListOptions) (
 	[]*model.Branch, *Response, error,
 ) {
 	res := new(model.BranchesListResponse)
@@ -38,7 +38,7 @@ func (s *BranchesService) List(ctx context.Context, projectID int64, opts *model
 // Get returns a single project branch.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.branches.get
-func (s *BranchesService) Get(ctx context.Context, projectID, branchID int64) (*model.Branch, *Response, error) {
+func (s *BranchesService) Get(ctx context.Context, projectID, branchID int) (*model.Branch, *Response, error) {
 	res := new(model.BranchesGetResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/branches/%d", projectID, branchID), nil, res)
 
@@ -48,7 +48,7 @@ func (s *BranchesService) Get(ctx context.Context, projectID, branchID int64) (*
 // Add creates a new project branch.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.branches.post
-func (s *BranchesService) Add(ctx context.Context, projectID int64, req *model.BranchesAddRequest) (
+func (s *BranchesService) Add(ctx context.Context, projectID int, req *model.BranchesAddRequest) (
 	*model.Branch, *Response, error,
 ) {
 	res := new(model.BranchesGetResponse)
@@ -65,7 +65,7 @@ func (s *BranchesService) Add(ctx context.Context, projectID int64, req *model.B
 // - value: The value to be used within the operations. The value must be one of string.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.branches.patch
-func (s *BranchesService) Edit(ctx context.Context, projectID, branchID int64, req []*model.UpdateRequest) (
+func (s *BranchesService) Edit(ctx context.Context, projectID, branchID int, req []*model.UpdateRequest) (
 	*model.Branch, *Response, error,
 ) {
 	res := new(model.BranchesGetResponse)
@@ -77,14 +77,14 @@ func (s *BranchesService) Edit(ctx context.Context, projectID, branchID int64, r
 // Delete deletes a project branch.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.branches.delete
-func (s *BranchesService) Delete(ctx context.Context, projectID, branchID int64) (*Response, error) {
+func (s *BranchesService) Delete(ctx context.Context, projectID, branchID int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/branches/%d", projectID, branchID))
 }
 
 // Merge merges a project branch.
 //
 // https://developer.crowdin.com/api/v2/string-based/#operation/api.projects.branches.merges.post
-func (s *BranchesService) Merge(ctx context.Context, projectID, branchID int64, req *model.BranchesMergeRequest) (
+func (s *BranchesService) Merge(ctx context.Context, projectID, branchID int, req *model.BranchesMergeRequest) (
 	*model.BranchMerge, *Response, error,
 ) {
 	res := new(model.BranchesMergeResponse)
@@ -96,7 +96,7 @@ func (s *BranchesService) Merge(ctx context.Context, projectID, branchID int64, 
 // CheckMergeStatus checks the status of a branch merge.
 //
 // https://developer.crowdin.com/api/v2/string-based/#operation/api.projects.branches.merges.get
-func (s *BranchesService) CheckMergeStatus(ctx context.Context, projectID, branchID int64, mergeID string) (
+func (s *BranchesService) CheckMergeStatus(ctx context.Context, projectID, branchID int, mergeID string) (
 	*model.BranchMerge, *Response, error,
 ) {
 	res := new(model.BranchesMergeResponse)
@@ -108,7 +108,7 @@ func (s *BranchesService) CheckMergeStatus(ctx context.Context, projectID, branc
 // GetMergeSummary returns a summary of a branch merge.
 //
 // https://developer.crowdin.com/api/v2/string-based/#operation/api.projects.branches.merges.summary.get
-func (s *BranchesService) GetMergeSummary(ctx context.Context, projectID, branchID int64, mergeID string) (
+func (s *BranchesService) GetMergeSummary(ctx context.Context, projectID, branchID int, mergeID string) (
 	*model.BranchMergeSummary, *Response, error,
 ) {
 	path := fmt.Sprintf("/api/v2/projects/%d/branches/%d/merges/%s/summary", projectID, branchID, mergeID)
@@ -122,7 +122,7 @@ func (s *BranchesService) GetMergeSummary(ctx context.Context, projectID, branch
 // Note: Only the main branch (oldest branch) can be cloned.
 //
 // https://developer.crowdin.com/api/v2/string-based/#operation/api.projects.branches.clones.post
-func (s *BranchesService) Clone(ctx context.Context, projectID, branchID int64, req *model.BranchesCloneRequest) (
+func (s *BranchesService) Clone(ctx context.Context, projectID, branchID int, req *model.BranchesCloneRequest) (
 	*model.BranchMerge, *Response, error,
 ) {
 	path := fmt.Sprintf("/api/v2/projects/%d/branches/%d/clones", projectID, branchID)
@@ -135,7 +135,7 @@ func (s *BranchesService) Clone(ctx context.Context, projectID, branchID int64, 
 // GetClone returns a cloned project branch.
 //
 // https://developer.crowdin.com/api/v2/string-based/#operation/api.projects.branches.clones.branch.get
-func (s *BranchesService) GetClone(ctx context.Context, projectID, branchID int64, cloneID string) (*model.Branch, *Response, error) {
+func (s *BranchesService) GetClone(ctx context.Context, projectID, branchID int, cloneID string) (*model.Branch, *Response, error) {
 	path := fmt.Sprintf("/api/v2/projects/%d/branches/%d/clones/%s/branch", projectID, branchID, cloneID)
 	res := new(model.BranchesGetResponse)
 	resp, err := s.client.Get(ctx, path, nil, res)
@@ -146,7 +146,7 @@ func (s *BranchesService) GetClone(ctx context.Context, projectID, branchID int6
 // CheckCloneStatus checks the status of a branch clone.
 //
 // https://developer.crowdin.com/api/v2/string-based/#operation/api.projects.branches.clones.get
-func (s *BranchesService) CheckCloneStatus(ctx context.Context, projectID, branchID int64, cloneID string) (
+func (s *BranchesService) CheckCloneStatus(ctx context.Context, projectID, branchID int, cloneID string) (
 	*model.BranchMerge, *Response, error,
 ) {
 	path := fmt.Sprintf("/api/v2/projects/%d/branches/%d/clones/%s", projectID, branchID, cloneID)

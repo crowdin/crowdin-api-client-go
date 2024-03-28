@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 )
 
 // SourceString represents the text units for translation.
@@ -47,7 +48,7 @@ type SourceStringsListOptions struct {
 	DenormalizePlaceholders *int `json:"denormalizePlaceholders,omitempty"`
 	// Filter strings by labelIds (Label Identifiers).
 	// Example: labelIds=1,2,3,4,5.
-	LabelIDs string `json:"labelIds,omitempty"`
+	LabelIDs []string `json:"labelIds,omitempty"`
 	// File Identifier.
 	// Note: Can't be used with `directoryId` or `branchId` in same request.
 	FileID int `json:"fileId,omitempty"`
@@ -71,34 +72,36 @@ type SourceStringsListOptions struct {
 }
 
 // Values returns the url.Values representation of SourceStringListOptions.
-func (o *SourceStringsListOptions) Values() url.Values {
-	u := o.ListOptions.Values()
+// It implements the crowdin.ListOptionsProvider interface.
+func (o *SourceStringsListOptions) Values() (url.Values, bool) {
+	v, _ := o.ListOptions.Values()
 	if o.DenormalizePlaceholders != nil &&
 		(*o.DenormalizePlaceholders == 0 || *o.DenormalizePlaceholders == 1) {
-		u.Add("denormalizePlaceholders", fmt.Sprintf("%d", *o.DenormalizePlaceholders))
+		v.Add("denormalizePlaceholders", fmt.Sprintf("%d", *o.DenormalizePlaceholders))
 	}
-	if o.LabelIDs != "" {
-		u.Add("labelIds", o.LabelIDs)
+	if len(o.LabelIDs) > 0 {
+		v.Add("labelIds", strings.Join(o.LabelIDs, ","))
 	}
 	if o.FileID > 0 {
-		u.Add("fileId", fmt.Sprintf("%d", o.FileID))
+		v.Add("fileId", fmt.Sprintf("%d", o.FileID))
 	}
 	if o.BranchID > 0 {
-		u.Add("branchId", fmt.Sprintf("%d", o.BranchID))
+		v.Add("branchId", fmt.Sprintf("%d", o.BranchID))
 	}
 	if o.DirectoryID > 0 {
-		u.Add("directoryId", fmt.Sprintf("%d", o.DirectoryID))
+		v.Add("directoryId", fmt.Sprintf("%d", o.DirectoryID))
 	}
 	if o.CroQL != "" {
-		u.Add("croql", o.CroQL)
+		v.Add("croql", o.CroQL)
 	}
 	if o.Filter != "" {
-		u.Add("filter", o.Filter)
+		v.Add("filter", o.Filter)
 	}
 	if o.Scope != "" {
-		u.Add("scope", o.Scope)
+		v.Add("scope", o.Scope)
 	}
-	return u
+
+	return v, len(v) > 0
 }
 
 // SourceStringsGetOptions specifies the optional parameters
@@ -109,13 +112,14 @@ type SourceStringsGetOptions struct {
 }
 
 // Values returns the url.Values representation of SourceStringsGetOptions.
-func (o *SourceStringsGetOptions) Values() url.Values {
-	u := url.Values{}
+func (o *SourceStringsGetOptions) Values() (url.Values, bool) {
+	v := url.Values{}
 	if o.DenormalizePlaceholders != nil &&
 		(*o.DenormalizePlaceholders == 0 || *o.DenormalizePlaceholders == 1) {
-		u.Add("denormalizePlaceholders", fmt.Sprintf("%d", *o.DenormalizePlaceholders))
+		v.Add("denormalizePlaceholders", fmt.Sprintf("%d", *o.DenormalizePlaceholders))
 	}
-	return u
+
+	return v, len(v) > 0
 }
 
 // SourcseStringsAddRequest defines the structure of a request
@@ -151,7 +155,7 @@ type SourceStringsAddRequest struct {
 // It implements the crowdin.RequestValidator interface.
 func (r *SourceStringsAddRequest) Validate() error {
 	if r == nil {
-		return errors.New("request cannot be nil")
+		return ErrNilRequest
 	}
 
 	// check if `text` is a string or map of strings
@@ -255,7 +259,7 @@ type SourceStringsImportOptions struct {
 // It implements the crowdin.RequestValidator interface.
 func (o *SourceStringsUploadRequest) Validate() error {
 	if o == nil {
-		return errors.New("request cannot be nil")
+		return ErrNilRequest
 	}
 	if o.StorageID == 0 {
 		return errors.New("storageId is required")
