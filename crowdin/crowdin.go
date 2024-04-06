@@ -9,8 +9,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
+
+	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
 )
 
 const (
@@ -195,7 +196,7 @@ func (c *Client) do(r *http.Request, v any) (*Response, error) {
 	}
 
 	if v != nil {
-		err = json.NewDecoder(resp.Body).Decode(v)
+		err = json.NewDecoder(bytes.NewReader(body)).Decode(v)
 	}
 
 	return response, err
@@ -216,27 +217,40 @@ func (c *Client) Post(ctx context.Context, path string, body, v any, opts ...Req
 			return nil, err
 		}
 	}
+
 	req, err := c.newRequest(ctx, "POST", path, body, opts...)
 	if err != nil {
 		return nil, err
 	}
+
 	return c.do(req, v)
 }
 
 // Patch makes a PATCH request to the specified path.
 func (c *Client) Patch(ctx context.Context, path string, body, v any) (*Response, error) {
-	if body == nil {
-		return nil, errors.New("body cannot be nil")
-	}
-	if rv, ok := body.(RequestValidator); ok {
-		if err := rv.Validate(); err != nil {
+	// Body can be a single object or a slice of objects.
+	// Check if the body is a slice of RequestValidator and validate each item.
+	switch body := body.(type) {
+	case []*model.UpdateRequest:
+		if len(body) == 0 {
+			return nil, errors.New("body cannot be empty or nil")
+		}
+		for _, req := range body {
+			if err := req.Validate(); err != nil {
+				return nil, err
+			}
+		}
+	case RequestValidator:
+		if err := body.Validate(); err != nil {
 			return nil, err
 		}
 	}
+
 	req, err := c.newRequest(ctx, "PATCH", path, body)
 	if err != nil {
 		return nil, err
 	}
+
 	return c.do(req, v)
 }
 
@@ -247,26 +261,35 @@ func (c *Client) Put(ctx context.Context, path string, body, v any) (*Response, 
 			return nil, err
 		}
 	}
+
 	req, err := c.newRequest(ctx, "PUT", path, body)
 	if err != nil {
 		return nil, err
 	}
+
 	return c.do(req, v)
 }
 
+// ListOptionsProvider interface provides query parameters for list methods.
+// The Values method returns the url.Values representation of the optional
+// query parameters and a boolean indicating whether they are set.
 type ListOptionsProvider interface {
-	Values() url.Values
+	Values() (url.Values, bool)
 }
 
 // Get makes a GET request to the specified path.
 func (c *Client) Get(ctx context.Context, path string, params ListOptionsProvider, v any) (*Response, error) {
 	if params != nil {
-		path += "?" + params.Values().Encode()
+		if opts, ok := params.Values(); ok {
+			path += "?" + opts.Encode()
+		}
 	}
+
 	req, err := c.newRequest(ctx, "GET", path, nil)
 	if err != nil {
 		return nil, err
 	}
+
 	return c.do(req, v)
 }
 
@@ -281,107 +304,40 @@ func (c *Client) Delete(ctx context.Context, path string) (*Response, error) {
 
 // handleErrorResponse checks the API response for errors and returns
 // them if they are found.
-func handleErrorResponse(r *http.Response) error {
-	if code := r.StatusCode; http.StatusOK <= code && code <= 299 {
-		return nil
-	}
-
-	var respBody error
+func handleErrorResponse(r *http.Response, body []byte) error {
+	var errorResponse error
 	if r.StatusCode == http.StatusBadRequest {
-		respBody = &ValidationErrorResponse{Response: r, Status: r.StatusCode}
+		errorResponse = &model.ValidationErrorResponse{Response: r, Status: r.StatusCode}
 	} else {
-		respBody = &ErrorResponse{Response: r}
+		errorResponse = &model.ErrorResponse{Response: r}
 	}
 
-	data, err := io.ReadAll(r.Body)
-	if err == nil && len(data) > 0 {
-		err = json.Unmarshal(data, respBody)
-		if err != nil {
-			respBody = &ErrorResponse{
-				Response: r,
-				Err: Error{
-					Code:    r.StatusCode,
-					Message: err.Error(),
-				},
-			}
-		}
+	if err := json.Unmarshal(body, errorResponse); err != nil {
+		return fmt.Errorf("client: server returned %d status code", r.StatusCode)
 	}
-	return respBody
+	return errorResponse
 }
 
 // Response is a Crowdin response that wraps http.Response.
 type Response struct {
 	*http.Response
 
-	Pagination *Pagination
+	Pagination model.Pagination
 }
 
-func (r *Response) ParsePagination(body []byte) error {
-	if strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
-		var p Pagination
-		if err := json.Unmarshal(body, &p); err != nil {
-			return err
-		}
-		r.Pagination = &p
+// populatePagination reads the pagination information from the response
+// body and sets it to the Response struct.
+func (r *Response) populatePagination(body []byte) error {
+	p := new(model.PaginationResponse)
+	if err := json.Unmarshal(body, p); err != nil {
+		return err
 	}
+	r.Pagination = p.Pagination
 	return nil
 }
 
-// Pagination represents the pagination information.
-type Pagination struct {
-	Offset int `json:"offset"`
-	Limit  int `json:"limit"`
-}
-
-type Error struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-// ErrorResponse is the error response structure from the API.
-type ErrorResponse struct {
-	Response *http.Response `json:"-"`
-
-	Err Error `json:"error"`
-}
-
-// Error implements the Error interface.
-func (r *ErrorResponse) Error() string {
-	return fmt.Sprintf("%d %s", r.Err.Code, r.Err.Message)
-}
-
-type ValidationError struct {
-	Error struct {
-		Key    string `json:"key"`
-		Errors []struct {
-			Code    string `json:"code"`
-			Message string `json:"message"`
-		} `json:"errors"`
-	} `json:"error"`
-}
-
-// ValidationErrorResponse
-type ValidationErrorResponse struct {
-	Response *http.Response `json:"-"`
-
-	Errors []ValidationError `json:"errors"`
-	Status int
-}
-
-// Error implements the Error interface.
-func (r *ValidationErrorResponse) Error() string {
-	var sb strings.Builder
-	for i, err := range r.Errors {
-		if i != 0 {
-			sb.WriteString("; ")
-		}
-		sb.WriteString(fmt.Sprintf("%s: ", err.Error.Key))
-		for j, e := range err.Error.Errors {
-			if j != 0 {
-				sb.WriteString(", ")
-			}
-			sb.WriteString(fmt.Sprintf("%s (%s)", e.Message, e.Code))
-		}
-	}
-	return sb.String()
+// ToPtr is a helper function that returns a pointer
+// to the provided input.
+func ToPtr[T any](v T) *T {
+	return &v
 }

@@ -45,7 +45,7 @@ func (s *ProjectsService) List(ctx context.Context, opts *model.ProjectsListOpti
 // Get returns a project by its identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.get
-func (s *ProjectsService) Get(ctx context.Context, id int64) (*model.Project, *Response, error) {
+func (s *ProjectsService) Get(ctx context.Context, id int) (*model.Project, *Response, error) {
 	res := new(model.ProjectsGetResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d", id), nil, res)
 
@@ -71,7 +71,7 @@ func (s *ProjectsService) Add(ctx context.Context, req *model.ProjectsAddRequest
 //	value: The value to be used within the operations. The value must be one of string, integer, boolean and object
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.patch
-func (s *ProjectsService) Edit(ctx context.Context, id int64, req *model.UpdateRequest) (*model.Project, *Response, error) {
+func (s *ProjectsService) Edit(ctx context.Context, id int, req []*model.UpdateRequest) (*model.Project, *Response, error) {
 	res := new(model.ProjectsGetResponse)
 	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/projects/%d", id), req, res)
 
@@ -81,7 +81,7 @@ func (s *ProjectsService) Edit(ctx context.Context, id int64, req *model.UpdateR
 // Delete deletes a project by its identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.delete
-func (s *ProjectsService) Delete(ctx context.Context, id int64) (*Response, error) {
+func (s *ProjectsService) Delete(ctx context.Context, id int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d", id))
 }
 
@@ -89,12 +89,10 @@ func (s *ProjectsService) Delete(ctx context.Context, id int64) (*Response, erro
 // by project and file format settings identifiers.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.file-format-settings.custom-segmentations.get
-func (s *ProjectsService) DownloadFileFormatSettingsCustomSegmentation(ctx context.Context, projectID, settingsID int64) (
-	*model.DownloadCustomSegmentations, *Response, error) {
+func (s *ProjectsService) DownloadFileFormatSettingsCustomSegmentation(ctx context.Context, projectID, settingsID int) (
+	*model.DownloadLink, *Response, error) {
 	path := fmt.Sprintf("/api/v2/projects/%d/file-format-settings/%d/custom-segmentations", projectID, settingsID)
-	res := struct {
-		Data *model.DownloadCustomSegmentations `json:"data"`
-	}{}
+	res := new(model.DownloadLinkResponse)
 	resp, err := s.client.Get(ctx, path, nil, res)
 
 	return res.Data, resp, err
@@ -104,7 +102,7 @@ func (s *ProjectsService) DownloadFileFormatSettingsCustomSegmentation(ctx conte
 // and file format settings identifiers.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.file-format-settings.custom-segmentations.delete
-func (s *ProjectsService) ResetFileFormatSettingsCustomSegmentation(ctx context.Context, projectID, settingsID int64) (*Response, error) {
+func (s *ProjectsService) ResetFileFormatSettingsCustomSegmentation(ctx context.Context, projectID, settingsID int) (*Response, error) {
 	path := fmt.Sprintf("/api/v2/projects/%d/file-format-settings/%d/custom-segmentations", projectID, settingsID)
 	return s.client.Delete(ctx, path)
 }
@@ -112,7 +110,9 @@ func (s *ProjectsService) ResetFileFormatSettingsCustomSegmentation(ctx context.
 // ListFileFormatSettings returns a list of project file format settings by project identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.file-format-settings.getMany
-func (s *ProjectsService) ListFileFormatSettings(ctx context.Context, projectID int64) ([]*model.ProjectsFileFormatSettings, *Response, error) {
+func (s *ProjectsService) ListFileFormatSettings(ctx context.Context, projectID int) (
+	[]*model.ProjectsFileFormatSettings, *Response, error,
+) {
 	path := fmt.Sprintf("/api/v2/projects/%d/file-format-settings", projectID)
 	res := new(model.ProjectsFileFormatSettingsListResponse)
 	resp, err := s.client.Get(ctx, path, nil, res)
@@ -131,7 +131,9 @@ func (s *ProjectsService) ListFileFormatSettings(ctx context.Context, projectID 
 // GetFileFormatSettings returns a project file format settings by project and file format settings identifiers.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.file-format-settings.get
-func (s *ProjectsService) GetFileFormatSettings(ctx context.Context, projectID, settingsID int64) (*model.ProjectsFileFormatSettings, *Response, error) {
+func (s *ProjectsService) GetFileFormatSettings(ctx context.Context, projectID, settingsID int) (
+	*model.ProjectsFileFormatSettings, *Response, error,
+) {
 	path := fmt.Sprintf("/api/v2/projects/%d/file-format-settings/%d", projectID, settingsID)
 	res := new(model.ProjectsFileFormatSettingsResponse)
 	resp, err := s.client.Get(ctx, path, nil, res)
@@ -142,7 +144,7 @@ func (s *ProjectsService) GetFileFormatSettings(ctx context.Context, projectID, 
 // AddFileFormatSettings adds a new project file format settings by its project identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.file-format-settings.post
-func (s *ProjectsService) AddFileFormatSettings(ctx context.Context, projectID int64, req *model.ProjectsAddFileFormatSettingsRequest) (
+func (s *ProjectsService) AddFileFormatSettings(ctx context.Context, projectID int, req *model.ProjectsAddFileFormatSettingsRequest) (
 	*model.ProjectsFileFormatSettings, *Response, error) {
 	path := fmt.Sprintf("/api/v2/projects/%d/file-format-settings", projectID)
 	res := new(model.ProjectsFileFormatSettingsResponse)
@@ -160,9 +162,9 @@ func (s *ProjectsService) AddFileFormatSettings(ctx context.Context, projectID i
 //	value: The value to be used within the operations. The value must be one of string or array of strings.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.file-format-settings.patch
-func (s *ProjectsService) EditFileFormatSettings(ctx context.Context, projectID, settingsID int64, req *model.UpdateRequest) (
-	*model.ProjectsFileFormatSettings, *Response, error) {
-
+func (s *ProjectsService) EditFileFormatSettings(ctx context.Context, projectID, settingsID int, req []*model.UpdateRequest) (
+	*model.ProjectsFileFormatSettings, *Response, error,
+) {
 	path := fmt.Sprintf("/api/v2/projects/%d/file-format-settings/%d", projectID, settingsID)
 	res := new(model.ProjectsFileFormatSettingsResponse)
 	resp, err := s.client.Patch(ctx, path, req, res)
@@ -173,7 +175,7 @@ func (s *ProjectsService) EditFileFormatSettings(ctx context.Context, projectID,
 // DeleteFileFormatSettings deletes a project file format settings by project and file format settings identifiers.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.file-format-settings.delete
-func (s *ProjectsService) DeleteFileFormatSettings(ctx context.Context, projectID, settingsID int64) (*Response, error) {
+func (s *ProjectsService) DeleteFileFormatSettings(ctx context.Context, projectID, settingsID int) (*Response, error) {
 	path := fmt.Sprintf("/api/v2/projects/%d/file-format-settings/%d", projectID, settingsID)
 	return s.client.Delete(ctx, path)
 }
@@ -181,9 +183,9 @@ func (s *ProjectsService) DeleteFileFormatSettings(ctx context.Context, projectI
 // ListStringsExporterSettings returns a list of project strings exporter settings by project identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.strings-exporter-settings.getMany
-func (s *ProjectsService) ListStringsExporterSettings(ctx context.Context, projectID int64) (
-	[]*model.ProjectsStringsExporterSettings, *Response, error) {
-
+func (s *ProjectsService) ListStringsExporterSettings(ctx context.Context, projectID int) (
+	[]*model.ProjectsStringsExporterSettings, *Response, error,
+) {
 	path := fmt.Sprintf("/api/v2/projects/%d/strings-exporter-settings", projectID)
 	res := new(model.ProjectsStringsExporterSettingsListResponse)
 	resp, err := s.client.Get(ctx, path, nil, res)
@@ -203,9 +205,9 @@ func (s *ProjectsService) ListStringsExporterSettings(ctx context.Context, proje
 // and strings exporter settings identifiers.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.strings-exporter-settings.get
-func (s *ProjectsService) GetStringsExporterSettings(ctx context.Context, projectID, settingsID int64) (
-	*model.ProjectsStringsExporterSettings, *Response, error) {
-
+func (s *ProjectsService) GetStringsExporterSettings(ctx context.Context, projectID, settingsID int) (
+	*model.ProjectsStringsExporterSettings, *Response, error,
+) {
 	path := fmt.Sprintf("/api/v2/projects/%d/strings-exporter-settings/%d", projectID, settingsID)
 	res := new(model.ProjectsStringsExporterSettingsResponse)
 	resp, err := s.client.Get(ctx, path, nil, res)
@@ -223,10 +225,10 @@ func (s *ProjectsService) GetStringsExporterSettings(ctx context.Context, projec
 // https://developer.crowdin.com/api/v2/#operation/api.projects.strings-exporter-settings.post
 func (s *ProjectsService) AddStringsExporterSettings(
 	ctx context.Context,
-	projectID int64,
+	projectID int,
 	req *model.ProjectsStringsExporterSettingsRequest,
-) (*model.ProjectsStringsExporterSettings, *Response, error) {
-
+) (*model.ProjectsStringsExporterSettings, *Response, error,
+) {
 	path := fmt.Sprintf("/api/v2/projects/%d/strings-exporter-settings", projectID)
 	res := new(model.ProjectsStringsExporterSettingsResponse)
 	resp, err := s.client.Post(ctx, path, req, res)
@@ -245,10 +247,10 @@ func (s *ProjectsService) AddStringsExporterSettings(
 // https://developer.crowdin.com/api/v2/#operation/api.projects.strings-exporter-settings.patch
 func (s *ProjectsService) EditStringsExporterSettings(
 	ctx context.Context,
-	projectID, settingsID int64,
+	projectID, settingsID int,
 	req *model.ProjectsStringsExporterSettingsRequest,
-) (*model.ProjectsStringsExporterSettings, *Response, error) {
-
+) (*model.ProjectsStringsExporterSettings, *Response, error,
+) {
 	path := fmt.Sprintf("/api/v2/projects/%d/strings-exporter-settings/%d", projectID, settingsID)
 	res := new(model.ProjectsStringsExporterSettingsResponse)
 	resp, err := s.client.Patch(ctx, path, req, res)
@@ -260,7 +262,7 @@ func (s *ProjectsService) EditStringsExporterSettings(
 // and strings exporter settings identifiers.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.strings-exporter-settings.delete
-func (s *ProjectsService) DeleteStringsExporterSettings(ctx context.Context, projectID, settingsID int64) (*Response, error) {
+func (s *ProjectsService) DeleteStringsExporterSettings(ctx context.Context, projectID, settingsID int) (*Response, error) {
 	path := fmt.Sprintf("/api/v2/projects/%d/strings-exporter-settings/%d", projectID, settingsID)
 	return s.client.Delete(ctx, path)
 }

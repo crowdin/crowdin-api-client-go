@@ -17,11 +17,11 @@ type StringTranslationsService struct {
 // ListApprovals returns a list of translation approvals.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.approvals.getMany
-func (s *StringTranslationsService) ListApprovals(ctx context.Context, projectId int, opts *model.ApprovalsListOptions) (
+func (s *StringTranslationsService) ListApprovals(ctx context.Context, projectID int, opts *model.ApprovalsListOptions) (
 	[]*model.Approval, *Response, error,
 ) {
 	res := new(model.ApprovalsListResponse)
-	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/approvals", projectId), opts, res)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/approvals", projectID), opts, res)
 	if err != nil {
 		return nil, resp, err
 	}

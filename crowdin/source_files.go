@@ -30,7 +30,7 @@ type SourceFilesService struct {
 // - offset: A starting offset in the collection of items (default 0).
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.directories.getMany
-func (s *SourceFilesService) ListDirectories(ctx context.Context, projectID int64, opts *model.DirectoryListOptions) (
+func (s *SourceFilesService) ListDirectories(ctx context.Context, projectID int, opts *model.DirectoryListOptions) (
 	[]*model.Directory, *Response, error,
 ) {
 	res := new(model.DirectoryListResponse)
@@ -47,7 +47,7 @@ func (s *SourceFilesService) ListDirectories(ctx context.Context, projectID int6
 // GetDirectory returns a single directory in the project.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.directories.get
-func (s *SourceFilesService) GetDirectory(ctx context.Context, projectID, directoryID int64) (*model.Directory, *Response, error) {
+func (s *SourceFilesService) GetDirectory(ctx context.Context, projectID, directoryID int) (*model.Directory, *Response, error) {
 	res := new(model.DirectoryGetResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/directories/%d", projectID, directoryID), nil, res)
 
@@ -57,7 +57,7 @@ func (s *SourceFilesService) GetDirectory(ctx context.Context, projectID, direct
 // AddDirectory creates a new directory in the project.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.directories.post
-func (s *SourceFilesService) AddDirectory(ctx context.Context, projectID int64, req *model.DirectoryAddRequest) (
+func (s *SourceFilesService) AddDirectory(ctx context.Context, projectID int, req *model.DirectoryAddRequest) (
 	*model.Directory, *Response, error,
 ) {
 	res := new(model.DirectoryGetResponse)
@@ -75,7 +75,7 @@ func (s *SourceFilesService) AddDirectory(ctx context.Context, projectID int64, 
 //   - value: The value to be used within the operations. The value must be one of string or integer.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.directories.patch
-func (s *SourceFilesService) EditDirectory(ctx context.Context, projectID, directoryID int64, req []*model.UpdateRequest) (
+func (s *SourceFilesService) EditDirectory(ctx context.Context, projectID, directoryID int, req []*model.UpdateRequest) (
 	*model.Directory, *Response, error,
 ) {
 	res := new(model.DirectoryGetResponse)
@@ -87,7 +87,7 @@ func (s *SourceFilesService) EditDirectory(ctx context.Context, projectID, direc
 // DeleteDirectory deletes a directory in the project.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.directories.delete
-func (s *SourceFilesService) DeleteDirectory(ctx context.Context, projectID, directoryID int64) (*Response, error) {
+func (s *SourceFilesService) DeleteDirectory(ctx context.Context, projectID, directoryID int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/directories/%d", projectID, directoryID))
 }
 
@@ -102,7 +102,7 @@ func (s *SourceFilesService) DeleteDirectory(ctx context.Context, projectID, dir
 // - offset: A starting offset in the collection of items (default 0).
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.getMany
-func (s *SourceFilesService) ListFiles(ctx context.Context, projectID int64, opts *model.FileListOptions) (
+func (s *SourceFilesService) ListFiles(ctx context.Context, projectID int, opts *model.FileListOptions) (
 	[]*model.File, *Response, error,
 ) {
 	res := new(model.FileListResponse)
@@ -119,7 +119,7 @@ func (s *SourceFilesService) ListFiles(ctx context.Context, projectID int64, opt
 // GetFile returns a single file in the project.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.get
-func (s *SourceFilesService) GetFile(ctx context.Context, projectID, fileID int64) (*model.File, *Response, error) {
+func (s *SourceFilesService) GetFile(ctx context.Context, projectID, fileID int) (*model.File, *Response, error) {
 	res := new(model.FileGetResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d", projectID, fileID), nil, res)
 
@@ -129,7 +129,7 @@ func (s *SourceFilesService) GetFile(ctx context.Context, projectID, fileID int6
 // AddFile adds a new file to the project.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.post
-func (s *SourceFilesService) AddFile(ctx context.Context, projectID int64, req *model.FileAddRequest) (
+func (s *SourceFilesService) AddFile(ctx context.Context, projectID int, req *model.FileAddRequest) (
 	*model.File, *Response, error,
 ) {
 	res := new(model.FileGetResponse)
@@ -144,7 +144,7 @@ func (s *SourceFilesService) AddFile(ctx context.Context, projectID int64, req *
 // For restoring the file, use the `revisionId` body parameter.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.put
-func (s *SourceFilesService) UpdateOrRestoreFile(ctx context.Context, projectID, fileID int64, req *model.FileUpdateRestoreRequest) (
+func (s *SourceFilesService) UpdateOrRestoreFile(ctx context.Context, projectID, fileID int, req *model.FileUpdateRestoreRequest) (
 	*model.File, *Response, error,
 ) {
 	res := new(model.FileGetResponse)
@@ -156,7 +156,7 @@ func (s *SourceFilesService) UpdateOrRestoreFile(ctx context.Context, projectID,
 // EditFile updates a file in the project.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.patch
-func (s *SourceFilesService) EditFile(ctx context.Context, projectID, fileID int64, req []*model.UpdateRequest) (
+func (s *SourceFilesService) EditFile(ctx context.Context, projectID, fileID int, req []*model.UpdateRequest) (
 	*model.File, *Response, error,
 ) {
 	res := new(model.FileGetResponse)
@@ -168,14 +168,14 @@ func (s *SourceFilesService) EditFile(ctx context.Context, projectID, fileID int
 // DeleteFile deletes a file in the project.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.delete
-func (s *SourceFilesService) DeleteFile(ctx context.Context, projectID, fileID int64) (*Response, error) {
+func (s *SourceFilesService) DeleteFile(ctx context.Context, projectID, fileID int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d", projectID, fileID))
 }
 
 // DownloadFilePreview returns a download link for a specific file preview.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.preview.get
-func (s *SourceFilesService) DownloadFilePreview(ctx context.Context, projectID, fileID int64) (*model.DownloadLink, *Response, error) {
+func (s *SourceFilesService) DownloadFilePreview(ctx context.Context, projectID, fileID int) (*model.DownloadLink, *Response, error) {
 	res := new(model.DownloadLinkResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d/preview", projectID, fileID), nil, res)
 
@@ -185,7 +185,7 @@ func (s *SourceFilesService) DownloadFilePreview(ctx context.Context, projectID,
 // DownloadFile returns a download link for a specific file.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.download.get
-func (s *SourceFilesService) DownloadFile(ctx context.Context, projectID, fileID int64) (*model.DownloadLink, *Response, error) {
+func (s *SourceFilesService) DownloadFile(ctx context.Context, projectID, fileID int) (*model.DownloadLink, *Response, error) {
 	res := new(model.DownloadLinkResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d/download", projectID, fileID), nil, res)
 
@@ -195,7 +195,7 @@ func (s *SourceFilesService) DownloadFile(ctx context.Context, projectID, fileID
 // ListFileRevisions returns a list of file revisions.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.revisions.getMany
-func (s *SourceFilesService) ListFileRevisions(ctx context.Context, projectID, fileID int64, opts *model.ListOptions) (
+func (s *SourceFilesService) ListFileRevisions(ctx context.Context, projectID, fileID int, opts *model.ListOptions) (
 	[]*model.FileRevision, *Response, error,
 ) {
 	res := new(model.FileRevisionListResponse)
@@ -212,7 +212,7 @@ func (s *SourceFilesService) ListFileRevisions(ctx context.Context, projectID, f
 // GetFileRevision returns a single file revision.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.revisions.get
-func (s *SourceFilesService) GetFileRevision(ctx context.Context, projectID, fileID, revisionID int64) (*model.FileRevision, *Response, error) {
+func (s *SourceFilesService) GetFileRevision(ctx context.Context, projectID, fileID, revisionID int) (*model.FileRevision, *Response, error) {
 	res := new(model.FileRevisionResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d/revisions/%d", projectID, fileID, revisionID), nil, res)
 
@@ -222,7 +222,7 @@ func (s *SourceFilesService) GetFileRevision(ctx context.Context, projectID, fil
 // ListReviewedBuilds returns a list of reviewed source files builds.
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.projects.strings.reviewed-builds.getMany
-func (s *SourceFilesService) ListReviewedBuilds(ctx context.Context, projectID int64, opts *model.ReviewedBuildListOptions) (
+func (s *SourceFilesService) ListReviewedBuilds(ctx context.Context, projectID int, opts *model.ReviewedBuildListOptions) (
 	[]*model.ReviewedBuild, *Response, error,
 ) {
 	res := new(model.ReviewedBuildListResponse)
@@ -239,7 +239,7 @@ func (s *SourceFilesService) ListReviewedBuilds(ctx context.Context, projectID i
 // CheckReviewedBuildStatus checks the status of a specific reviewed source files build.
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.projects.strings.reviewed-builds.get
-func (s *SourceFilesService) CheckReviewedBuildStatus(ctx context.Context, projectID, buildID int64) (*model.ReviewedBuild, *Response, error) {
+func (s *SourceFilesService) CheckReviewedBuildStatus(ctx context.Context, projectID, buildID int) (*model.ReviewedBuild, *Response, error) {
 	res := new(model.ReviewedBuildResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/reviewed-builds/%d", projectID, buildID), nil, res)
 
@@ -249,7 +249,7 @@ func (s *SourceFilesService) CheckReviewedBuildStatus(ctx context.Context, proje
 // BuildReviewedFiles starts a new build of reviewed source files.
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.projects.strings.reviewed-builds.post
-func (s *SourceFilesService) BuildReviewedFiles(ctx context.Context, projectID int64, req *model.ReviewedBuildRequest) (
+func (s *SourceFilesService) BuildReviewedFiles(ctx context.Context, projectID int, req *model.ReviewedBuildRequest) (
 	*model.ReviewedBuild, *Response, error,
 ) {
 	res := new(model.ReviewedBuildResponse)
@@ -261,7 +261,7 @@ func (s *SourceFilesService) BuildReviewedFiles(ctx context.Context, projectID i
 // DownloadReviewedBuild returns a download link for a specific reviewed source files build.
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.projects.strings.reviewed-builds.download.download
-func (s *SourceFilesService) DownloadReviewedBuild(ctx context.Context, projectID, buildID int64) (*model.DownloadLink, *Response, error) {
+func (s *SourceFilesService) DownloadReviewedBuild(ctx context.Context, projectID, buildID int) (*model.DownloadLink, *Response, error) {
 	res := new(model.DownloadLinkResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/reviewed-builds/%d/download", projectID, buildID), nil, res)
 

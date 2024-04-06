@@ -4,14 +4,14 @@ import "errors"
 
 // Group represents a Crowdin group.
 type Group struct {
-	ID             int64  `json:"id"`
+	ID             int    `json:"id"`
 	Name           string `json:"name"`
 	Description    string `json:"description"`
-	ParentID       int64  `json:"parentId"`
-	OrganizationID int64  `json:"organizationId"`
-	UserID         int64  `json:"userId"`
-	SubgroupsCount int64  `json:"subgroupsCount"`
-	ProjectsCount  int64  `json:"projectsCount"`
+	ParentID       int    `json:"parentId"`
+	OrganizationID int    `json:"organizationId"`
+	UserID         int    `json:"userId"`
+	SubgroupsCount int    `json:"subgroupsCount"`
+	ProjectsCount  int    `json:"projectsCount"`
 	CreatedAt      string `json:"createdAt"`
 	UpdatedAt      string `json:"updatedAt"`
 }
@@ -20,7 +20,7 @@ type Group struct {
 type GroupsListOptions struct {
 	ListOptions
 
-	ParentID int64 `json:"parentId,omitempty"`
+	ParentID int `json:"parentId,omitempty"`
 }
 
 // GroupsGetResponse defines the structure of a response when retrieving a group.
@@ -39,7 +39,7 @@ type GroupsAddRequest struct {
 	// Group Name (required).
 	Name string `json:"name"`
 	// Parent Group Identifier.
-	ParentID int64 `json:"parentId,omitempty"`
+	ParentID int `json:"parentId,omitempty"`
 	// Group description.
 	Description string `json:"description,omitempty"`
 }
@@ -47,6 +47,9 @@ type GroupsAddRequest struct {
 // Validate checks if the add request is valid.
 // It implements the crowdin.RequestValidator interface.
 func (r *GroupsAddRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
 	if r.Name == "" {
 		return errors.New("name is required")
 	}

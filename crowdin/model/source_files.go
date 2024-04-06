@@ -7,10 +7,10 @@ import (
 
 // Directory represents a project directory.
 type Directory struct {
-	ID            int64  `json:"id"`
-	ProjectID     int64  `json:"projectId"`
-	BranchID      int64  `json:"branchId"`
-	DirectoryID   int64  `json:"directoryId"`
+	ID            int    `json:"id"`
+	ProjectID     int    `json:"projectId"`
+	BranchID      int    `json:"branchId"`
+	DirectoryID   int    `json:"directoryId"`
 	Name          string `json:"name"`
 	Title         string `json:"title"`
 	ExportPattern string `json:"exportPattern"`
@@ -37,12 +37,12 @@ type DirectoryListOptions struct {
 	// Note: Can't be used with `directoryID` in the same request.
 	// To list the directories from all the nested levels within the branch,
 	// ensure to use the `recursion` parameter with the `branchID` parameter.
-	BranchID int64 `json:"branchId,omitempty"`
+	BranchID int `json:"branchId,omitempty"`
 	// DirectoryID is the ID of the directory to filter directories by.
 	// Note: Can't be used with `branchID` in the same request.
 	// To list the directories from all the nested levels within the directory,
 	// ensure to use the `recursion` parameter with the `directoryID` parameter.
-	DirectoryID int64 `json:"directoryId,omitempty"`
+	DirectoryID int `json:"directoryId,omitempty"`
 	// Filter directories by name.
 	Filter string `json:"filter,omitempty"`
 	// Recursion is used to list directories recursively.
@@ -53,8 +53,8 @@ type DirectoryListOptions struct {
 }
 
 // Values returns the url.Values representation of DirectoryListOptions.
-func (o *DirectoryListOptions) Values() url.Values {
-	v := o.ListOptions.Values()
+func (o *DirectoryListOptions) Values() (url.Values, bool) {
+	v, _ := o.ListOptions.Values()
 	if o.BranchID > 0 {
 		v.Add("branchId", fmt.Sprintf("%d", o.BranchID))
 	}
@@ -67,7 +67,8 @@ func (o *DirectoryListOptions) Values() url.Values {
 	if o.Recursion != nil {
 		v.Add("recursion", o.Recursion.(string))
 	}
-	return v
+
+	return v, len(v) > 0
 }
 
 // DirectoryAddRequest defines the structure of a request
@@ -78,10 +79,10 @@ type DirectoryAddRequest struct {
 	Name string `json:"name"`
 	// Branch identifier.
 	// Note: Can't be used with `directoryId` in same request.
-	BranchID int64 `json:"branchId,omitempty"`
+	BranchID int `json:"branchId,omitempty"`
 	// Parent Directory Identifier.
 	// Note: Can't be used with `branchId` in same request.
-	DirectoryID int64 `json:"directoryId,omitempty"`
+	DirectoryID int `json:"directoryId,omitempty"`
 	// Title is used to provide more details for translators.
 	// It is available in UI only.
 	Title string `json:"title,omitempty"`
@@ -97,6 +98,9 @@ type DirectoryAddRequest struct {
 // Validate checks if the request is valid.
 // It implements the crowdin.RequestValidator interface.
 func (r *DirectoryAddRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
 	if r.Name == "" {
 		return fmt.Errorf("name is required")
 	}
@@ -108,10 +112,10 @@ func (r *DirectoryAddRequest) Validate() error {
 
 // File represents a project file.
 type File struct {
-	ID          int64   `json:"id"`
-	ProjectID   int64   `json:"projectId"`
-	BranchID    *int64  `json:"branchId,omitempty"`
-	DirectoryID *int64  `json:"directoryId,omitempty"`
+	ID          int     `json:"id"`
+	ProjectID   int     `json:"projectId"`
+	BranchID    *int    `json:"branchId,omitempty"`
+	DirectoryID *int    `json:"directoryId,omitempty"`
 	Name        string  `json:"name"`
 	Title       *string `json:"title,omitempty"`
 	Context     *string `json:"context,omitempty"`
@@ -119,7 +123,7 @@ type File struct {
 	Path        string  `json:"path"`
 	Status      string  `json:"status"`
 
-	RevisionID             int64          `json:"revisionId"`
+	RevisionID             int            `json:"revisionId"`
 	Priority               string         `json:"priority"`
 	ImportOptions          map[string]any `json:"importOptions,omitempty"`
 	ExportOptions          map[string]any `json:"exportOptions,omitempty"`
@@ -146,12 +150,12 @@ type FileListOptions struct {
 	// Note: Can't be used with `directoryId` in the same request.
 	// To list the files from all the nested levels within the branch,
 	// ensure to use the `recursion` parameter with the `branchId` parameter.
-	BranchID int64 `json:"branchId,omitempty"`
+	BranchID int `json:"branchId,omitempty"`
 	// DirectoryID is the ID of the directory to filter files by.
 	// Note: Can't be used with `branchId` in the same request.
 	// To list the files from all the nested levels within the directory,
 	// ensure to use the `recursion` parameter with the `directoryId` parameter.
-	DirectoryID int64 `json:"directoryId,omitempty"`
+	DirectoryID int `json:"directoryId,omitempty"`
 	// Filter files by name.
 	Filter string `json:"filter,omitempty"`
 	// Recursion is used to list files recursively.
@@ -162,8 +166,8 @@ type FileListOptions struct {
 }
 
 // Values returns the url.Values representation of FileListOptions.
-func (o *FileListOptions) Values() url.Values {
-	v := o.ListOptions.Values()
+func (o *FileListOptions) Values() (url.Values, bool) {
+	v, _ := o.ListOptions.Values()
 	if o.BranchID > 0 {
 		v.Add("branchId", fmt.Sprintf("%d", o.BranchID))
 	}
@@ -176,22 +180,23 @@ func (o *FileListOptions) Values() url.Values {
 	if o.Recursion != nil {
 		v.Add("recursion", o.Recursion.(string))
 	}
-	return v
+
+	return v, len(v) > 0
 }
 
 // FileAddRequest defines the structure of a request to create a new file.
 type FileAddRequest struct {
 	// Storage Identifier.
-	StorageID int64 `json:"storageId"`
+	StorageID int `json:"storageId"`
 	// File name.
 	// Note: Can't contain \ / : * ? " < > | symbols. ZIP files are not allowed.
 	Name string `json:"name"`
 	// Branch Identifier — defines branch to which file will be added.
 	// Note: Can't be used with directoryId in same request.
-	BranchID int64 `json:"branchId,omitempty"`
+	BranchID int `json:"branchId,omitempty"`
 	// Directory Identifier — defines directory to which file will be added.
 	// Note: Can't be used with branchId in same request.
-	DirectoryID int64 `json:"directoryId,omitempty"`
+	DirectoryID int `json:"directoryId,omitempty"`
 	// Title is used to provide more details for translators.
 	// It is available in UI only.
 	Title string `json:"title,omitempty"`
@@ -217,12 +222,15 @@ type FileAddRequest struct {
 	// Do not use this option if the file should be available for all project languages.
 	ExcludedTargetLanguages []string `json:"excludedTargetLanguages,omitempty"`
 	// Attach labels to strings.
-	AttachLabelIDs []int64 `json:"attachLabelIds,omitempty"`
+	AttachLabelIDs []int `json:"attachLabelIds,omitempty"`
 }
 
 // Validate checks if the request is valid.
 // It implements the crowdin.RequestValidator interface.
 func (r *FileAddRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
 	if r.StorageID == 0 {
 		return fmt.Errorf("storageId is required")
 	}
@@ -242,11 +250,11 @@ type (
 	SpreadsheetFileImportOptions struct {
 		// Defines whether the file includes a first-row header that should not be imported.
 		// Default: false.
-		FirstLineContainsHeader bool `json:"firstLineContainsHeader,omitempty"`
+		FirstLineContainsHeader *bool `json:"firstLineContainsHeader,omitempty"`
 		// Defines whether hidden sheets that should be imported. Default: true.
-		ImportHiddenSheets bool `json:"importHiddenSheets,omitempty"`
+		ImportHiddenSheets *bool `json:"importHiddenSheets,omitempty"`
 		// Defines whether to import translations from the file. Default: false.
-		ImportTranslations bool `json:"importTranslations,omitempty"`
+		ImportTranslations *bool `json:"importTranslations,omitempty"`
 		// Defines data columns mapping. The column numbering starts at 0.
 		// Acceptable values are: none, identifier, sourcePhrase, sourceOrTranslation,
 		// translation, context, maxLength, labels and specified languages (ex. "en", "uk").
@@ -260,9 +268,9 @@ type (
 	// XMLFileImportOptions implements the FileImportOptions interface.
 	XMLFileImportOptions struct {
 		// Defines whether to translate texts placed inside the tags. Default: true.
-		TranslateContent bool `json:"translateContent,omitempty"`
+		TranslateContent *bool `json:"translateContent,omitempty"`
 		// Defines whether to translate tags attributes. Default: true.
-		TranslateAttributes bool `json:"translateAttributes,omitempty"`
+		TranslateAttributes *bool `json:"translateAttributes,omitempty"`
 		// This is an array of strings, where each item is the XPaths to DOM element that should be imported.
 		TranslatableElements []string `json:"translatableElements,omitempty"`
 
@@ -276,23 +284,23 @@ type (
 		// When checked, strips additional formatting tags related to text spacing. Default: false
 		// Note: Works only for files with the following extensions: *.docx, *.dotx, *.docm,
 		//       *.dotm, *.xlsx, *.xltx, *.xlsm, *.xltm, *.pptx, *.potx, *.ppsx, *.pptm, *.potm, *.ppsm.
-		CleanTagsAggressively bool `json:"cleanTagsAggressively,omitempty"`
+		CleanTagsAggressively *bool `json:"cleanTagsAggressively,omitempty"`
 		// When checked, exposes hidden text for translation. Default: false
 		// Note: Works only for files with the following extensions: *.docx, *.dotx, *.docm, *.dotm.
-		TranslateHiddenText bool `json:"translateHiddenText,omitempty"`
+		TranslateHiddenText *bool `json:"translateHiddenText,omitempty"`
 		// When checked, exposes hidden hyperlinks for translation. Default: false
 		// Note: Works only for files with the following extensions: *.docx, *.dotx, *.docm, *.dotm,
 		//       *.pptx, *.potx, *.ppsx, *.pptm, *.potm, *.ppsm.
-		TranslateHyperlinkURLs bool `json:"translateHyperlinkUrls,omitempty"`
+		TranslateHyperlinkURLs *bool `json:"translateHyperlinkUrls,omitempty"`
 		// When checked, exposes hidden rows and columns for translation. Default: false
 		// Note: Works only for files with the following extensions: *.xlsx, *.xltx, *.xlsm, *.xltm.
-		TranslateHiddenRowsAndColumns bool `json:"translateHiddenRowsAndColumns,omitempty"`
+		TranslateHiddenRowsAndColumns *bool `json:"translateHiddenRowsAndColumns,omitempty"`
 		// When checked, expose slide notes for translation. Default: true
 		// Note: Works only for files with the following extensions: *.pptx, *.potx, *.ppsx, *.pptm, *.potm, *.ppsm.
-		ImportNotes bool `json:"importNotes,omitempty"`
+		ImportNotes *bool `json:"importNotes,omitempty"`
 		// When checked, exposes hidden slides for translation. Default: false
 		// Note: Works only for files with the following extensions: *.pptx, *.potx, *.ppsx, *.pptm, *.potm, *.ppsm.
-		ImportHiddenSlides bool `json:"importHiddenSlides,omitempty"`
+		ImportHiddenSlides *bool `json:"importHiddenSlides,omitempty"`
 
 		// Important: ContentSegmentation option disables the possibility to upload existing translations
 		// for XML files when enabled.
@@ -322,7 +330,7 @@ type (
 		// Specify elements that should not be imported
 		ExcludedFrontMatterElements []string `json:"excludedFrontMatterElements,omitempty"`
 		// Defines whether to import code blocks. Default: false.
-		ExcludeCodeBlocks bool `json:"excludeCodeBlocks,omitempty"`
+		ExcludeCodeBlocks *bool `json:"excludeCodeBlocks,omitempty"`
 
 		CommonFileImportOptions
 	}
@@ -332,7 +340,7 @@ type (
 		// Specify elements that should not be imported
 		ExcludedFrontMatterElements []string `json:"excludedFrontMatterElements,omitempty"`
 		// Defines whether to import code blocks. Default: false.
-		ExcludeCodeBlocks bool `json:"excludeCodeBlocks,omitempty"`
+		ExcludeCodeBlocks *bool `json:"excludeCodeBlocks,omitempty"`
 
 		CommonFileImportOptions
 	}
@@ -341,13 +349,13 @@ type (
 	StringCatalogFileImportOptions struct {
 		// Determines whether to import the key as source string if it does not exist.
 		// Default: false.
-		ImportKeyAsSource bool `json:"importKeyAsSource,omitempty"`
+		ImportKeyAsSource *bool `json:"importKeyAsSource,omitempty"`
 	}
 
 	// AdocFileImportOptions implements the FileImportOptions interface.
 	AdocFileImportOptions struct {
 		// Skip Include Directives. Default: false.
-		ExcludeIncludeDirectives bool `json:"excludeIncludeDirectives,omitempty"`
+		ExcludeIncludeDirectives *bool `json:"excludeIncludeDirectives,omitempty"`
 	}
 
 	// OtherFileImportOptions implements the FileImportOptions interface.
@@ -364,9 +372,9 @@ type (
 	// CommonFileImportOptions implements the FileImportOptions interface.
 	CommonFileImportOptions struct {
 		// Defines whether to split long texts into smaller text segments. Default: true.
-		ContentSegmentation bool `json:"contentSegmentation,omitempty"`
+		ContentSegmentation *bool `json:"contentSegmentation,omitempty"`
 		// Storage identifier of the SRX segmentation rules file. Default: null.
-		SRXStorageID *int64 `json:"srxStorageId,omitempty"`
+		SRXStorageID *int `json:"srxStorageId,omitempty"`
 	}
 )
 
@@ -394,13 +402,13 @@ type (
 		// 1 - Escape single quote by another single quote.
 		// 2 - Escape single quote by a backslash.
 		// 3 - Escape single quote by another single quote only in strings containing variables ({0}).
-		EscapeQuotes int `json:"escapeQuotes,omitempty"`
+		EscapeQuotes *int `json:"escapeQuotes,omitempty"`
 		// Defines whether any special characters (=, :, ! and #) should be escaped by
 		// backslash in exported translations. You can add escape_special_characters per-file option.
 		// Acceptable values are: 0, 1. Default is 0.
 		// 0 - Do not escape special characters.
 		// 1 - Escape special characters by a backslash.
-		EscapeSpecialCharacters int `json:"escapeSpecialCharacters,omitempty"`
+		EscapeSpecialCharacters *int `json:"escapeSpecialCharacters,omitempty"`
 	}
 
 	// JavaScriptFileExportOptions implements the FileExportOptions interface.
@@ -423,9 +431,9 @@ func (o *JavaScriptFileExportOptions) ValidateFileExportOptions() error { return
 // to update or restore a file.
 type FileUpdateRestoreRequest struct {
 	// Revision Identifier.
-	RevisionID int64 `json:"revisionId,omitempty"`
+	RevisionID int `json:"revisionId,omitempty"`
 	// Storage Identifier.
-	StorageID int64 `json:"storageId,omitempty"`
+	StorageID int `json:"storageId,omitempty"`
 	// File name.
 	// Note: Can't contain \ / : * ? " < > | symbols.
 	Name string `json:"name,omitempty"`
@@ -438,17 +446,20 @@ type FileUpdateRestoreRequest struct {
 	// File export options.
 	ExportOptions FileExportOptions `json:"exportOptions,omitempty"`
 	// Attach labels to updated strings.
-	AttachLabelIDs []int64 `json:"attachLabelIds,omitempty"`
+	AttachLabelIDs []int `json:"attachLabelIds,omitempty"`
 	// Detach labels from updated strings.
-	DetachLabelIDs []int64 `json:"detachLabelIds,omitempty"`
+	DetachLabelIDs []int `json:"detachLabelIds,omitempty"`
 	// Enable to replace context, that have been modified in Crowdin.
 	// Default: false.
-	ReplaceModifiedContext bool `json:"replaceModifiedContext,omitempty"`
+	ReplaceModifiedContext *bool `json:"replaceModifiedContext,omitempty"`
 }
 
 // Validate checks if the request is valid.
 // It implements the crowdin.RequestValidator interface.
 func (r *FileUpdateRestoreRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
 	if r.RevisionID == 0 && r.StorageID == 0 {
 		return fmt.Errorf("one of revisionId or storageId is required")
 	}
@@ -461,10 +472,10 @@ func (r *FileUpdateRestoreRequest) Validate() error {
 type (
 	// FileRevision represents a file revision.
 	FileRevision struct {
-		ID                int64  `json:"id"`
-		ProjectID         int64  `json:"projectId"`
-		FileID            int64  `json:"fileId"`
-		RestoreToRevision *int64 `json:"restoreToRevision,omitempty"`
+		ID                int  `json:"id"`
+		ProjectID         int  `json:"projectId"`
+		FileID            int  `json:"fileId"`
+		RestoreToRevision *int `json:"restoreToRevision,omitempty"`
 		Info              struct {
 			Added   RevisionInfo `json:"added"`
 			Deleted RevisionInfo `json:"deleted"`
@@ -495,12 +506,12 @@ type FileRevisionListResponse struct {
 
 // ReviewedBuild represents a reviewed source file build.
 type ReviewedBuild struct {
-	ID         int64  `json:"id"`
-	ProjectID  int64  `json:"projectId"`
+	ID         int    `json:"id"`
+	ProjectID  int    `json:"projectId"`
 	Status     string `json:"status"`
 	Progress   int    `json:"progress"`
 	Attributes struct {
-		BranchID         *int64 `json:"branchId,omitempty"`
+		BranchID         *int   `json:"branchId,omitempty"`
 		TargetLanguageID string `json:"targetLanguageId"`
 	} `json:"attributes"`
 }
@@ -519,22 +530,32 @@ type ReviewedBuildListResponse struct {
 // SourceFilesService.ListReviewedBuilds method.
 type ReviewedBuildListOptions struct {
 	// BranchID is the ID of the branch to filter reviewed builds by.
-	BranchID int64 `json:"branchId,omitempty"`
+	BranchID int `json:"branchId,omitempty"`
 
 	ListOptions
 }
 
 // Values returns the url.Values representation of ReviewedBuildListOptions.
-func (o *ReviewedBuildListOptions) Values() url.Values {
-	v := o.ListOptions.Values()
+func (o *ReviewedBuildListOptions) Values() (url.Values, bool) {
+	v, _ := o.ListOptions.Values()
 	if o.BranchID > 0 {
 		v.Add("branchId", fmt.Sprintf("%d", o.BranchID))
 	}
-	return v
+
+	return v, len(v) > 0
 }
 
 // ReviewedBuildRequest defines the structure of a request to create a new reviewed build.
 type ReviewedBuildRequest struct {
 	// Branch Identifier.
-	BranchID int64 `json:"branchId,omitempty"`
+	BranchID int `json:"branchId,omitempty"`
+}
+
+// Validate checks if the reviewed build request is valid.
+// It implements the crowdin.RequestValidator interface.
+func (r *ReviewedBuildRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
+	return nil
 }

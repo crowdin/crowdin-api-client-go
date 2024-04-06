@@ -44,7 +44,7 @@ func (s *GroupsService) List(ctx context.Context, opts *model.GroupsListOptions)
 // Get returns a group by its identifier.
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.groups.get
-func (s *GroupsService) Get(ctx context.Context, id int64) (*model.Group, *Response, error) {
+func (s *GroupsService) Get(ctx context.Context, id int) (*model.Group, *Response, error) {
 	res := new(model.GroupsGetResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/groups/%d", id), nil, res)
 
@@ -70,7 +70,7 @@ func (s *GroupsService) Add(ctx context.Context, req *model.GroupsAddRequest) (*
 //	value: The value to be used within the operations. The value must be one of string or integer.
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.groups.patch
-func (s *GroupsService) Edit(ctx context.Context, id int64, req *model.UpdateRequest) (*model.Group, *Response, error) {
+func (s *GroupsService) Edit(ctx context.Context, id int, req []*model.UpdateRequest) (*model.Group, *Response, error) {
 	res := new(model.GroupsGetResponse)
 	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/groups/%d", id), req, res)
 
@@ -80,6 +80,6 @@ func (s *GroupsService) Edit(ctx context.Context, id int64, req *model.UpdateReq
 // Delete removes a group from the organization.
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.groups.delete
-func (s *GroupsService) Delete(ctx context.Context, id int64) (*Response, error) {
+func (s *GroupsService) Delete(ctx context.Context, id int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/groups/%d", id))
 }

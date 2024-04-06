@@ -7,8 +7,8 @@ import (
 
 // Branch represents a project branch.
 type Branch struct {
-	ID            int64   `json:"id"`
-	ProjectID     int64   `json:"projectId"`
+	ID            int     `json:"id"`
+	ProjectID     int     `json:"projectId"`
 	Name          string  `json:"name"`
 	Title         string  `json:"title"`
 	CreatedAt     string  `json:"createdAt"`
@@ -30,19 +30,19 @@ type BranchesListResponse struct {
 // BranchesListOptions specifies the optional parameters to the
 // SourceFilesService.ListBranches method.
 type BranchesListOptions struct {
-	//Name of the branch (filter branch by name).
+	// Name of the branch (filter branch by name).
 	Name string `json:"name,omitempty"`
 
 	ListOptions
 }
 
 // Values returns the url.Values representation of BranchesListOptions.
-func (o *BranchesListOptions) Values() url.Values {
-	v := o.ListOptions.Values()
+func (o *BranchesListOptions) Values() (url.Values, bool) {
+	v, _ := o.ListOptions.Values()
 	if o.Name != "" {
 		v.Add("name", o.Name)
 	}
-	return v
+	return v, len(v) > 0
 }
 
 // BranchesAddRequest defines the structure of a request to create a new branch.
@@ -64,6 +64,9 @@ type BranchesAddRequest struct {
 // Validate checks if the request is valid.
 // It implements the crowdin.RequestValidator interface.
 func (r *BranchesAddRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
 	if r.Name == "" {
 		return fmt.Errorf("name is required")
 	}
@@ -76,8 +79,8 @@ type BranchMerge struct {
 	Status     string `json:"status"`
 	Progress   int    `json:"progress"`
 	Attributes struct {
-		SourceBranchID   int64 `json:"sourceBranchId"`
-		DeleteAfterMerge bool  `json:"deleteAfterMerge"`
+		SourceBranchID   int  `json:"sourceBranchId"`
+		DeleteAfterMerge bool `json:"deleteAfterMerge"`
 	} `json:"attributes"`
 	CreatedAt  string `json:"createdAt"`
 	UpdatedAt  string `json:"updatedAt"`
@@ -93,8 +96,8 @@ type BranchesMergeResponse struct {
 // BranchMergeSummary represents a summary of a branch merge.
 type BranchMergeSummary struct {
 	Status         string         `json:"status"`
-	SourceBranchID int64          `json:"sourceBranchId"`
-	TargetBranchID int64          `json:"targetBranchId"`
+	SourceBranchID int            `json:"sourceBranchId"`
+	TargetBranchID int            `json:"targetBranchId"`
 	DryRun         bool           `json:"dryRun"`
 	Details        map[string]int `json:"details"`
 }
@@ -107,16 +110,19 @@ type BranchesMergeSummaryResponse struct {
 // BranchesMergeRequest defines the structure of a request to merge branches.
 type BranchesMergeRequest struct {
 	// Branch that will be merged.
-	SourceBranchID int64 `json:"sourceBranchId"`
+	SourceBranchID int `json:"sourceBranchId"`
 	// Whether to delete branch after merge. Default: false.
-	DeleteAfterMerge bool `json:"deleteAfterMerge,omitempty"`
+	DeleteAfterMerge *bool `json:"deleteAfterMerge,omitempty"`
 	// Simulate merging without making any real changes. Default: false.
-	DryRun bool `json:"dryRun,omitempty"`
+	DryRun *bool `json:"dryRun,omitempty"`
 }
 
 // Validate checks if the request is valid.
 // It implements the crowdin.RequestValidator interface.
 func (r *BranchesMergeRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
 	if r.SourceBranchID == 0 {
 		return fmt.Errorf("sourceBranchId is required")
 	}
@@ -135,6 +141,9 @@ type BranchesCloneRequest struct {
 // Validate checks if the request is valid.
 // It implements the crowdin.RequestValidator interface.
 func (r *BranchesCloneRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
 	if r.Name == "" {
 		return fmt.Errorf("name is required")
 	}
