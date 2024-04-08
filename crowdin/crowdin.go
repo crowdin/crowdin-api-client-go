@@ -184,13 +184,15 @@ func (c *Client) do(r *http.Request, v any) (*Response, error) {
 		return response, fmt.Errorf("client: error reading response body: %w", err)
 	}
 
-	if err = response.populatePagination(body); err != nil {
-		return response, fmt.Errorf("client: error parsing pagination: %w", err)
-	}
-
 	if code := resp.StatusCode; code >= http.StatusBadRequest && code <= 599 {
 		err = handleErrorResponse(resp, body)
 		return response, err
+	}
+
+	if r.Method == http.MethodGet {
+		if err = response.populatePagination(body); err != nil {
+			return response, fmt.Errorf("client: error parsing pagination: %w", err)
+		}
 	}
 
 	if v != nil {
