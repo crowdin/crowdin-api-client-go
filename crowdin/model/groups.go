@@ -1,6 +1,10 @@
 package model
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"net/url"
+)
 
 // Group represents a Crowdin group.
 type Group struct {
@@ -12,6 +16,7 @@ type Group struct {
 	UserID         int    `json:"userId"`
 	SubgroupsCount int    `json:"subgroupsCount"`
 	ProjectsCount  int    `json:"projectsCount"`
+	WebURL         string `json:"webUrl"`
 	CreatedAt      string `json:"createdAt"`
 	UpdatedAt      string `json:"updatedAt"`
 }
@@ -21,6 +26,21 @@ type GroupsListOptions struct {
 	ListOptions
 
 	ParentID int `json:"parentId,omitempty"`
+}
+
+// Values returns the url.Values representation of the GroupsListOptions.
+// It implements the crowdin.ListOptionsProvider interface.
+func (o *GroupsListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
+	v, _ := o.ListOptions.Values()
+	if o.ParentID > 0 {
+		v.Add("parentId", fmt.Sprintf("%d", o.ParentID))
+	}
+
+	return v, len(v) > 0
 }
 
 // GroupsGetResponse defines the structure of a response when retrieving a group.
