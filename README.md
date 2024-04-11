@@ -27,15 +27,124 @@ Our API is a full-featured RESTful API that helps you to integrate localization 
 
 ## Installation
 
-**Coming soon** :construction:
-
-[//]: # (TODO)
+```bash
+go get github.com/crowdin/crowdin-api-client-go
+```
 
 ## Quick Start
 
-**Coming soon** :construction:
+Create a new Crowdin client, then use the exposed services to access different parts of the Crowdin API.  
+You can generate Personal Access Token in your Crowdin Account Settings.
 
-[//]: # (TODO)
+```go
+import "github.com/crowdin/crowdin-api-client-go/crowdin"
+
+client, err := crowdin.NewClient(
+    os.Getenv("CROWDIN_ACCESS_TOKEN"),
+    crowdin.WithOrganization("organization-name"), // optional for Crowdin Enterprise
+)
+```
+
+For example, to create a new project:
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/crowdin/crowdin-api-client-go/crowdin"
+	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
+)
+
+func main() {
+    client, err := crowdin.NewClient(os.Getenv("CROWDIN_ACCESS_TOKEN"))
+    if err != nil {
+        log.Fatalf("Error creating client: %s", err)
+    }
+
+    ctx := context.Background()
+    request := &model.ProjectsAddRequest{
+        Name: "My Project",
+		SourceLanguageID: "en",
+		TargetLanguageIDs: []string{"uk", "de"},
+
+    }
+    project, _, err := client.Projects.Add(ctx, request)
+    if err != nil {
+        log.Fatalf("Error creating project: %s", err)
+    }
+
+    fmt.Printf("Project: %+v\n", project)
+}
+
+```
+
+Some API methods have optional parameters that can be passed.  
+For example, to list all projects for a specific user:
+
+```go
+
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/crowdin/crowdin-api-client-go/crowdin"
+	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
+)
+
+func main() {
+    client, err := crowdin.NewClient(os.Getenv("CROWDIN_ACCESS_TOKEN"))
+    if err != nil {
+        log.Fatalf("Error creating client: %s", err)
+    }
+
+    // list all projects for a specific user
+    opts := &model.ProjectsListOptions{UserID: 1}
+    projects, _, err := client.Projects.List(context.Background(), opts)
+    if err != nil {
+        log.Fatalf("Error getting projects: %s", err)
+    }
+
+    fmt.Printf("Projects: %+v\n", projects)
+}
+```
+
+### Error Handling
+
+In case of an error, the client returns an error object. This can either be a generic error with an error message and a code, or a validation error that additionally contains validation error codes.
+
+To detect this condition of error, you can use a type assertion:
+
+```go
+res, _, err := client.SourceStrings.Add(ctx, 1, nil)
+if err != nil {
+    if validationErr, ok := err.(*model.ValidationErrorResponse); ok {
+        fmt.Printf("Validation error: %v\n", validationErr)
+    } else 
+        fmt.Printf("Error: %v\n", err)
+    }
+}
+```
+
+### HTTP Request Timeout
+
+To set a timeout for HTTP requests, you can pass a custom HTTP client with a timeout to the client.  
+You can also use the context package, you can pass cancellation signals and deadlines to various services of the client to handle a request. 
+
+```go
+client, err := crowdin.NewClient(
+    os.Getenv("CROWDIN_ACCESS_TOKEN"),
+    crowdin.WithHTTPClient(&http.Client{Timeout: 10 * time.Second}),
+)
+```
 
 ## Seeking Assistance
 
