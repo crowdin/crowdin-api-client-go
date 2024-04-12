@@ -35,6 +35,10 @@ type ProjectProgressListOptions struct {
 // Values returns the url.Values representation of ProjectProgressListOptions.
 // It implements the crowdin.ListOptionsProvider interface.
 func (o *ProjectProgressListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
 	v, _ := o.ListOptions.Values()
 	if o.LanguageIDs != "" {
 		v.Add("languageIds", o.LanguageIDs)
@@ -94,6 +98,10 @@ type QACheckListOptions struct {
 // Values returns the url.Values representation of QACheckListOptions.
 // It implements the crowdin.ListOptionsProvider interface.
 func (o *QACheckListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
 	v, _ := o.ListOptions.Values()
 	if o.Category != "" {
 		v.Add("category", o.Category)

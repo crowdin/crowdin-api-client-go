@@ -54,6 +54,10 @@ type DirectoryListOptions struct {
 
 // Values returns the url.Values representation of DirectoryListOptions.
 func (o *DirectoryListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
 	v, _ := o.ListOptions.Values()
 	if o.BranchID > 0 {
 		v.Add("branchId", fmt.Sprintf("%d", o.BranchID))
@@ -167,6 +171,10 @@ type FileListOptions struct {
 
 // Values returns the url.Values representation of FileListOptions.
 func (o *FileListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
 	v, _ := o.ListOptions.Values()
 	if o.BranchID > 0 {
 		v.Add("branchId", fmt.Sprintf("%d", o.BranchID))
@@ -537,6 +545,10 @@ type ReviewedBuildListOptions struct {
 
 // Values returns the url.Values representation of ReviewedBuildListOptions.
 func (o *ReviewedBuildListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
 	v, _ := o.ListOptions.Values()
 	if o.BranchID > 0 {
 		v.Add("branchId", fmt.Sprintf("%d", o.BranchID))
