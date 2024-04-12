@@ -18,6 +18,8 @@ Our API is a full-featured RESTful API that helps you to integrate localization 
 [**`Crowdin API`**](https://developer.crowdin.com/api/v2/) &nbsp;|&nbsp;
 [**`Crowdin Enterprise API`**](https://developer.crowdin.com/enterprise/api/v2/)
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/crowdin/crowdin-api-client-go/crowdin.svg)](https://pkg.go.dev/github.com/crowdin/crowdin-api-client-go/crowdin)
+[![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/crowdin/crowdin-api-client-go)](https://github.com/crowdin/crowdin-api-client-go/blob/main/go.mod)
 [![tests](https://github.com/crowdin/crowdin-api-client-go/actions/workflows/basic.yml/badge.svg)](https://github.com/crowdin/crowdin-api-client-go/actions/workflows/basic.yml)
 [![codecov](https://codecov.io/gh/crowdin/crowdin-api-client-go/graph/badge.svg?token=BC055K8EOG)](https://codecov.io/gh/crowdin/crowdin-api-client-go)
 [![GitHub contributors](https://img.shields.io/github/contributors/crowdin/crowdin-api-client-go?cacheSeconds=3600)](https://github.com/crowdin/crowdin-api-client-go/graphs/contributors)
