@@ -62,6 +62,10 @@ type ApprovalsListOptions struct {
 // Values returns the url.Values representation of the ApprovalsListOptions.
 // It implements the crowdin.ListOptionsProvider interface.
 func (o *ApprovalsListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
 	v, _ := o.ListOptions.Values()
 	if o.FileID > 0 {
 		v.Add("fileId", fmt.Sprintf("%d", o.FileID))
@@ -204,6 +208,10 @@ type LanguageTranslationsListOptions struct {
 // Values returns the url.Values representation of the LanguageTranslationsListOptions.
 // It implements the crowdin.ListOptionsProvider interface.
 func (o *LanguageTranslationsListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
 	v, _ := o.ListOptions.Values()
 	if len(o.StringIDs) > 0 {
 		v.Add("stringIds", joinIntSlice(o.StringIDs))
@@ -266,6 +274,10 @@ type TranslationGetOptions struct {
 // Values returns the url.Values representation of the TranslationGetOptions.
 // It implements the crowdin.ListOptionsProvider interface.
 func (o *TranslationGetOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
 	v := url.Values{}
 	if o.DenormalizePlaceholders != nil &&
 		(*o.DenormalizePlaceholders == 0 || *o.DenormalizePlaceholders == 1) {
@@ -293,6 +305,10 @@ type StringTranslationsListOptions struct {
 // Values returns the url.Values representation of the StringTranslationsListOptions.
 // It implements the crowdin.ListOptionsProvider interface.
 func (o *StringTranslationsListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
 	v, _ := o.ListOptions.Values()
 	if o.StringID > 0 {
 		v.Add("stringId", fmt.Sprintf("%d", o.StringID))
@@ -391,6 +407,10 @@ type VotesListOptions struct {
 // Values returns the url.Values representation of the VotesListOptions.
 // It implements the crowdin.ListOptionsProvider interface.
 func (o *VotesListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
 	v, _ := o.ListOptions.Values()
 	if o.StringID > 0 {
 		v.Add("stringId", fmt.Sprintf("%d", o.StringID))

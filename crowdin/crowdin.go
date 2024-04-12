@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
 )
@@ -17,7 +16,7 @@ import (
 const (
 	baseURL = "https://api.crowdin.com/"
 
-	userAgent = "crowdin-api-client-go/0.0.1"
+	userAgent = "crowdin-api-client-go/0.1.0"
 )
 
 // Client is a Crowdin API client.
@@ -102,14 +101,6 @@ func WithOrganization(organization string) ClientOption {
 func WithHTTPClient(hc *http.Client) ClientOption {
 	return func(c *Client) error {
 		c.httpClient = hc
-		return nil
-	}
-}
-
-// WithTimeout modifies the default HTTP client timeout.
-func WithTimeout(timeout time.Duration) ClientOption {
-	return func(c *Client) error {
-		c.httpClient.Timeout = timeout
 		return nil
 	}
 }

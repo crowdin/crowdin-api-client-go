@@ -179,10 +179,14 @@ type TranslationsBuildsListOptions struct {
 }
 
 // Values returns the url.Values representation of the query options.
-func (p *TranslationsBuildsListOptions) Values() (url.Values, bool) {
-	v, _ := p.ListOptions.Values()
-	if p.BranchID > 0 {
-		v.Add("branchId", fmt.Sprintf("%d", p.BranchID))
+func (o *TranslationsBuildsListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
+	v, _ := o.ListOptions.Values()
+	if o.BranchID > 0 {
+		v.Add("branchId", fmt.Sprintf("%d", o.BranchID))
 	}
 
 	return v, len(v) > 0

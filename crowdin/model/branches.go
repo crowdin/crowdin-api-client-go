@@ -38,6 +38,10 @@ type BranchesListOptions struct {
 
 // Values returns the url.Values representation of BranchesListOptions.
 func (o *BranchesListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
 	v, _ := o.ListOptions.Values()
 	if o.Name != "" {
 		v.Add("name", o.Name)

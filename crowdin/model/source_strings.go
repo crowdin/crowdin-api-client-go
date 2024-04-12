@@ -74,6 +74,10 @@ type SourceStringsListOptions struct {
 // Values returns the url.Values representation of SourceStringListOptions.
 // It implements the crowdin.ListOptionsProvider interface.
 func (o *SourceStringsListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
 	v, _ := o.ListOptions.Values()
 	if o.DenormalizePlaceholders != nil &&
 		(*o.DenormalizePlaceholders == 0 || *o.DenormalizePlaceholders == 1) {
@@ -113,6 +117,10 @@ type SourceStringsGetOptions struct {
 
 // Values returns the url.Values representation of SourceStringsGetOptions.
 func (o *SourceStringsGetOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
 	v := url.Values{}
 	if o.DenormalizePlaceholders != nil &&
 		(*o.DenormalizePlaceholders == 0 || *o.DenormalizePlaceholders == 1) {

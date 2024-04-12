@@ -117,17 +117,21 @@ type ProjectsListOptions struct {
 
 // Values returns the url.Values representation of ProjectsListOptions.
 // It implements the crowdin.ListOptionsProvider interface.
-func (p *ProjectsListOptions) Values() (url.Values, bool) {
-	v, _ := p.ListOptions.Values()
-	if p.UserID > 0 {
-		v.Add("userId", fmt.Sprintf("%d", p.UserID))
+func (o *ProjectsListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
 	}
-	if p.HasManagerAccess != nil &&
-		(*p.HasManagerAccess == 0 || *p.HasManagerAccess == 1) {
-		v.Add("hasManagerAccess", fmt.Sprintf("%d", *p.HasManagerAccess))
+
+	v, _ := o.ListOptions.Values()
+	if o.UserID > 0 {
+		v.Add("userId", fmt.Sprintf("%d", o.UserID))
 	}
-	if p.Type != nil && (*p.Type == 0 || *p.Type == 1) {
-		v.Add("type", fmt.Sprintf("%d", *p.Type))
+	if o.HasManagerAccess != nil &&
+		(*o.HasManagerAccess == 0 || *o.HasManagerAccess == 1) {
+		v.Add("hasManagerAccess", fmt.Sprintf("%d", *o.HasManagerAccess))
+	}
+	if o.Type != nil && (*o.Type == 0 || *o.Type == 1) {
+		v.Add("type", fmt.Sprintf("%d", *o.Type))
 	}
 	return v, len(v) > 0
 }
