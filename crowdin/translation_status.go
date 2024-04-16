@@ -84,7 +84,7 @@ func (s *TranslationStatusService) ListQAChecks(ctx context.Context, projectID i
 		return nil, resp, err
 	}
 
-	issues := make([]*model.QACheck, len(res.Data))
+	issues := make([]*model.QACheck, 0, len(res.Data))
 	for _, i := range res.Data {
 		issues = append(issues, i.Data)
 	}
@@ -101,7 +101,7 @@ func (s *TranslationStatusService) progress(ctx context.Context, path string, op
 		return nil, resp, err
 	}
 
-	progress := make([]*model.TranslationProgress, len(res.Data))
+	progress := make([]*model.TranslationProgress, 0, len(res.Data))
 	for _, p := range res.Data {
 		progress = append(progress, p.Data)
 	}

@@ -48,6 +48,14 @@ func testBody(t *testing.T, r *http.Request, want string) {
 	}
 }
 
+func testHeader(t *testing.T, r *http.Request, header, want string) {
+	t.Helper()
+	if got := r.Header.Get(header); got != want {
+		t.Errorf("Request header %s: %v, want %v", header, got, want)
+	}
+
+}
+
 func testClientServices(t *testing.T, c *Client) {
 	services := []string{
 		"Storages",

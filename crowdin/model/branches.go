@@ -30,6 +30,11 @@ type BranchesListResponse struct {
 // BranchesListOptions specifies the optional parameters to the
 // SourceFilesService.ListBranches method.
 type BranchesListOptions struct {
+	// Sort branches by the specified fields.
+	// Enum: id, name, title, createdAt, updatedAt, exportPattern, priority. Default: id.
+	// Example: orderBy=createdAt desc,name,priority.
+	// see: https://developer.crowdin.com/enterprise/api/v2/#section/Introduction/Sorting
+	OrderBy string `json:"orderBy,omitempty"`
 	// Name of the branch (filter branch by name).
 	Name string `json:"name,omitempty"`
 
@@ -43,6 +48,9 @@ func (o *BranchesListOptions) Values() (url.Values, bool) {
 	}
 
 	v, _ := o.ListOptions.Values()
+	if o.OrderBy != "" {
+		v.Add("orderBy", o.OrderBy)
+	}
 	if o.Name != "" {
 		v.Add("name", o.Name)
 	}

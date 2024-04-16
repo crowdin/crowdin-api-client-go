@@ -1,18 +1,21 @@
 package model
 
-import "net/url"
+import (
+	"net/url"
+	"strings"
+)
 
 // TranslationProgress defines the structure of a translations status progress.
 type TranslationProgress struct {
-	Words               map[string]int64 `json:"words"`
-	Phrases             map[string]int64 `json:"phrases"`
-	TranslationProgress int64            `json:"translationProgress"`
-	ApprovalProgress    int64            `json:"approvalProgress"`
-	LanguageID          *string          `json:"languageId,omitempty"`
-	BranchID            *int64           `json:"branchId,omitempty"`
-	FileID              *int64           `json:"fileId,omitempty"`
-	Language            *Language        `json:"language,omitempty"`
-	Etag                *string          `json:"etag,omitempty"`
+	Words               map[string]int `json:"words"`
+	Phrases             map[string]int `json:"phrases"`
+	TranslationProgress int            `json:"translationProgress"`
+	ApprovalProgress    int            `json:"approvalProgress"`
+	LanguageID          *string        `json:"languageId,omitempty"`
+	BranchID            *int           `json:"branchId,omitempty"`
+	FileID              *int           `json:"fileId,omitempty"`
+	Language            *Language      `json:"language,omitempty"`
+	Etag                *string        `json:"etag,omitempty"`
 }
 
 // TranslationStatusProgressResponse defines the structure of a response when getting
@@ -27,7 +30,7 @@ type TranslationProgressResponse struct {
 // TranslationStatusService.GetProjectProgress method.
 type ProjectProgressListOptions struct {
 	// Filter progress by Language Identifier.
-	LanguageIDs string `json:"languageIds,omitempty"`
+	LanguageIDs []string `json:"languageIds,omitempty"`
 
 	ListOptions
 }
@@ -40,8 +43,8 @@ func (o *ProjectProgressListOptions) Values() (url.Values, bool) {
 	}
 
 	v, _ := o.ListOptions.Values()
-	if o.LanguageIDs != "" {
-		v.Add("languageIds", o.LanguageIDs)
+	if len(o.LanguageIDs) > 0 {
+		v.Add("languageIds", strings.Join(o.LanguageIDs, ","))
 	}
 
 	return v, len(v) > 0
@@ -49,13 +52,13 @@ func (o *ProjectProgressListOptions) Values() (url.Values, bool) {
 
 // QACheck represents a QA check issue.
 type QACheck struct {
-	StringID              int64  `json:"stringId"`
+	StringID              int    `json:"stringId"`
 	LanguageID            string `json:"languageId"`
 	Category              string `json:"category"`
 	CategoryDescription   string `json:"categoryDescription"`
 	Validation            string `json:"validation"`
 	ValidationDescription string `json:"validationDescription"`
-	PluralID              int64  `json:"pluralId"`
+	PluralID              int    `json:"pluralId"`
 	Text                  string `json:"text"`
 }
 
@@ -74,7 +77,7 @@ type QACheckListOptions struct {
 	// Example: category=variables,tags
 	// Enum: empty, variables, tags, punctuation, symbol_register, spaces, size, special_symbols,
 	//       wrong_translation, spellcheck, icu
-	Category string `json:"category,omitempty"`
+	Category []string `json:"category,omitempty"`
 	// Defines the QA check issue validation type. It can be one validation type or a list
 	// of comma-separated ones. Example: validation=capitalize_check,punctuation_check
 	// Enum: empty_string_check, empty_suggestion_check, max_length_check, tags_check,
@@ -88,9 +91,9 @@ type QACheckListOptions struct {
 	//       spaces_after_punctuation_check, non_breaking_spaces_check, capitalize_check,
 	//       multiple_uppercase_check, parentheses_check, entities_check, escaped_quotes_check,
 	//       wrong_translation_issue_check, spellcheck, icu_check
-	Validation string `json:"validation,omitempty"`
+	Validation []string `json:"validation,omitempty"`
 	// Filter progress by Language Identifier.
-	LanguageIDs string `json:"languageIds,omitempty"`
+	LanguageIDs []string `json:"languageIds,omitempty"`
 
 	ListOptions
 }
@@ -103,14 +106,14 @@ func (o *QACheckListOptions) Values() (url.Values, bool) {
 	}
 
 	v, _ := o.ListOptions.Values()
-	if o.Category != "" {
-		v.Add("category", o.Category)
+	if len(o.Category) > 0 {
+		v.Add("category", strings.Join(o.Category, ","))
 	}
-	if o.Validation != "" {
-		v.Add("validation", o.Validation)
+	if len(o.Validation) > 0 {
+		v.Add("validation", strings.Join(o.Validation, ","))
 	}
-	if o.LanguageIDs != "" {
-		v.Add("languageIds", o.LanguageIDs)
+	if len(o.LanguageIDs) > 0 {
+		v.Add("languageIds", strings.Join(o.LanguageIDs, ","))
 	}
 
 	return v, len(v) > 0
