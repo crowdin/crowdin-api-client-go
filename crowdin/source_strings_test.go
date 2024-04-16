@@ -91,7 +91,6 @@ func TestSourceStringsService_List(t *testing.T) {
 	if !reflect.DeepEqual(resp.Pagination, expectedPagination) {
 		t.Errorf("SourceStrings.List pagination returned %+v, want %+v", resp.Pagination, expectedPagination)
 	}
-
 }
 
 func TestSourceStringsService_ListQueryParams(t *testing.T) {
@@ -409,7 +408,7 @@ func TestSourceStringsService_AddWithValidationErrors(t *testing.T) {
 		{
 			"empty text map",
 			&model.SourceStringsAddRequest{
-				Text:   map[string]string{},
+				Text: map[string]string{},
 			},
 			"text cannot be empty",
 		},
@@ -434,7 +433,6 @@ func TestSourceStringsService_AddWithValidationErrors(t *testing.T) {
 				t.Errorf("SourceStrings.Add returned %+q, want %+q", err, tt.expectErr)
 			}
 		})
-
 	}
 }
 
@@ -600,7 +598,7 @@ func TestSourceStringsService_Delete(t *testing.T) {
 	projectID := 2
 	stringID := 2814
 
-	mux.HandleFunc(fmt.Sprintf("/api/v2/projects/%d/strings/%d", projectID, stringID), func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(fmt.Sprintf("/api/v2/projects/%d/strings/%d", projectID, stringID), func(_ http.ResponseWriter, r *http.Request) {
 		testURL(t, r, fmt.Sprintf("/api/v2/projects/%d/strings/%d", projectID, stringID))
 		testMethod(t, r, http.MethodDelete)
 	})
