@@ -9,24 +9,25 @@ import (
 
 // SourceString represents the text units for translation.
 type SourceString struct {
-	ID             int     `json:"id"`
-	ProjectID      int     `json:"projectId"`
-	BranchID       *int    `json:"branchId,omitempty"`
-	Identifier     string  `json:"identifier"`
-	Text           string  `json:"text"`
-	Type           string  `json:"type"`
-	Context        string  `json:"context"`
-	MaxLength      int     `json:"maxLength"`
-	IsHidden       bool    `json:"isHidden"`
-	IsDuplicate    bool    `json:"isDuplicate"`
-	MasterStringID *int    `json:"masterStringId,omitempty"`
-	LabelIDs       []int   `json:"labelIds"`
-	WebURL         string  `json:"webUrl"`
-	CreatedAt      *string `json:"createdAt,omitempty"`
-	UpdatedAt      *string `json:"updatedAt,omitempty"`
-	FileID         int     `json:"fileId"`
-	DirectoryID    *int    `json:"directoryId,omitempty"`
-	Revision       int     `json:"revision"`
+	ID             int            `json:"id"`
+	ProjectID      int            `json:"projectId"`
+	BranchID       *int           `json:"branchId,omitempty"`
+	Identifier     string         `json:"identifier"`
+	Text           string         `json:"text"`
+	Type           string         `json:"type"`
+	Context        string         `json:"context"`
+	MaxLength      int            `json:"maxLength"`
+	IsHidden       bool           `json:"isHidden"`
+	IsDuplicate    bool           `json:"isDuplicate"`
+	MasterStringID *int           `json:"masterStringId,omitempty"`
+	LabelIDs       []int          `json:"labelIds"`
+	WebURL         string         `json:"webUrl"`
+	CreatedAt      *string        `json:"createdAt,omitempty"`
+	UpdatedAt      *string        `json:"updatedAt,omitempty"`
+	Fields         map[string]any `json:"fields,omitempty"`
+	FileID         *int           `json:"fileId,omitempty"`
+	DirectoryID    *int           `json:"directoryId,omitempty"`
+	Revision       *int           `json:"revision,omitempty"`
 }
 
 // SourceStringsGetResponse describes the response when getting
@@ -193,7 +194,7 @@ type SourceStringsUpload struct {
 	Progress   int    `json:"progress"`
 	Attributes struct {
 		BranchID      int    `json:"branchId"`
-		SotrageID     int    `json:"storageId"`
+		StorageID     int    `json:"storageId"`
 		FileType      string `json:"fileType"`
 		ParserVersion int    `json:"parserVersion"`
 		LabelIDs      []int  `json:"labelIds"`

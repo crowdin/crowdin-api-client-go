@@ -22,7 +22,7 @@ type SourceStringsService struct {
 // Use optional parameters to filter the list.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.strings.getMany
-func (s *SourceStringsService) List(ctx context.Context, projectID int64, opts *model.SourceStringsListOptions) (
+func (s *SourceStringsService) List(ctx context.Context, projectID int, opts *model.SourceStringsListOptions) (
 	[]*model.SourceString, *Response, error,
 ) {
 	res := new(model.SourceStringsListResponse)
@@ -42,7 +42,7 @@ func (s *SourceStringsService) List(ctx context.Context, projectID int64, opts *
 // Get returns a specific source string by its identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.strings.get
-func (s *SourceStringsService) Get(ctx context.Context, projectID, stringID int64, opts *model.SourceStringsGetOptions) (
+func (s *SourceStringsService) Get(ctx context.Context, projectID, stringID int, opts *model.SourceStringsGetOptions) (
 	*model.SourceString, *Response, error,
 ) {
 	res := new(model.SourceStringsGetResponse)
@@ -54,7 +54,7 @@ func (s *SourceStringsService) Get(ctx context.Context, projectID, stringID int6
 // Add creates a new string.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.strings.post
-func (s *SourceStringsService) Add(ctx context.Context, projectID int64, req *model.SourceStringsAddRequest) (
+func (s *SourceStringsService) Add(ctx context.Context, projectID int, req *model.SourceStringsAddRequest) (
 	*model.SourceString, *Response, error,
 ) {
 	res := new(model.SourceStringsGetResponse)
@@ -74,7 +74,7 @@ func (s *SourceStringsService) Add(ctx context.Context, projectID int64, req *mo
 //     boolean or map
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.strings.batchPatch
-func (s *SourceStringsService) BatchOperations(ctx context.Context, projectID int64, req []*model.UpdateRequest) (
+func (s *SourceStringsService) BatchOperations(ctx context.Context, projectID int, req []*model.UpdateRequest) (
 	[]*model.SourceString, *Response, error,
 ) {
 	res := new(model.SourceStringsListResponse)
@@ -102,7 +102,7 @@ func (s *SourceStringsService) BatchOperations(ctx context.Context, projectID in
 //     boolean or object
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.strings.patch
-func (s *SourceStringsService) Edit(ctx context.Context, projectID, stringID int64, req []*model.UpdateRequest) (
+func (s *SourceStringsService) Edit(ctx context.Context, projectID, stringID int, req []*model.UpdateRequest) (
 	*model.SourceString, *Response, error,
 ) {
 	res := new(model.SourceStringsGetResponse)
@@ -114,14 +114,14 @@ func (s *SourceStringsService) Edit(ctx context.Context, projectID, stringID int
 // Delete removes a specific string by its identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.strings.delete
-func (s *SourceStringsService) Delete(ctx context.Context, projectID, stringID int64) (*Response, error) {
+func (s *SourceStringsService) Delete(ctx context.Context, projectID, stringID int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/%d", projectID, stringID))
 }
 
 // GetUploadStatus returns the status of the uploaded strings.
 //
 // https://developer.crowdin.com/api/v2/string-based/#operation/api.projects.strings.uploads.get
-func (s *SourceStringsService) GetUploadStatus(ctx context.Context, projectID int64, uploadID string) (
+func (s *SourceStringsService) GetUploadStatus(ctx context.Context, projectID int, uploadID string) (
 	*model.SourceStringsUpload, *Response, error,
 ) {
 	res := new(model.SourceStringsUploadResponse)
@@ -133,7 +133,7 @@ func (s *SourceStringsService) GetUploadStatus(ctx context.Context, projectID in
 // Upload uploads strings to the project.
 //
 // https://developer.crowdin.com/api/v2/string-based/#operation/api.projects.strings.uploads.post
-func (s *SourceStringsService) Upload(ctx context.Context, projectID int64, req *model.SourceStringsUploadRequest) (
+func (s *SourceStringsService) Upload(ctx context.Context, projectID int, req *model.SourceStringsUploadRequest) (
 	*model.SourceStringsUpload, *Response, error,
 ) {
 	res := new(model.SourceStringsUploadResponse)
