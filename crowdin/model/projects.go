@@ -330,6 +330,8 @@ type NotificationSettings struct {
 	ManagerLanguageCompleted *bool `json:"managerLanguageCompleted,omitempty"`
 }
 
+// TODO: Move to the Workflow service later.
+//
 // WorkflowTemplateStepConfig represents a workflow template
 // step configuration and is used in the ProjectsAddRequest.
 type WorkflowTemplateStepConfig struct {
