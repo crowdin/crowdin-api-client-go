@@ -3,6 +3,7 @@ package crowdin
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -48,12 +49,36 @@ func testBody(t *testing.T, r *http.Request, want string) {
 	}
 }
 
+// testJSONBody checks if the request body is equal to the expected JSON (beautified)
+// by comparing the unmarshalled maps.
+func testJSONBody(t *testing.T, r *http.Request, want string) {
+	t.Helper()
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(r.Body)
+	if err != nil {
+		t.Fatalf("Failed to read request body: %v", err)
+	}
+
+	var wantMap, gotMap map[string]any
+	if err := json.Unmarshal([]byte(want), &wantMap); err != nil {
+		t.Fatalf("Failed to unmarshal expected JSON: %v", err)
+	}
+
+	got := buf.String()
+	if err := json.Unmarshal([]byte(got), &gotMap); err != nil {
+		t.Fatalf("Failed to unmarshal result JSON: %v", err)
+	}
+
+	if !reflect.DeepEqual(wantMap, gotMap) {
+		t.Errorf("JSON does not match:\nExpected: %v\nGot: %v", wantMap, gotMap)
+	}
+}
+
 func testHeader(t *testing.T, r *http.Request, header, want string) {
 	t.Helper()
 	if got := r.Header.Get(header); got != want {
 		t.Errorf("Request header %s: %v, want %v", header, got, want)
 	}
-
 }
 
 func testClientServices(t *testing.T, c *Client) {
@@ -243,7 +268,7 @@ func TestDelete(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
-	mux.HandleFunc("/delete", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/delete", func(_ http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
 			t.Errorf("Request method is %v, want %v", r.Method, http.MethodGet)
 		}

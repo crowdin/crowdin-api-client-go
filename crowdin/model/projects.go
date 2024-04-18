@@ -54,7 +54,7 @@ type (
 		ShowTMSuggestionsDialects       bool                       `json:"showTmSuggestionsDialects,omitempty"`
 		IsSuspended                     bool                       `json:"isSuspended,omitempty"`
 		QACheckIsActive                 bool                       `json:"qaCheckIsActive,omitempty"`
-		QAApprovalsCount                int                       `json:"qaApprovalsCount,omitempty"`
+		QAApprovalsCount                int                        `json:"qaApprovalsCount,omitempty"`
 		QACheckCategories               map[string]bool            `json:"qaCheckCategories,omitempty"`
 		QAChecksIgnorableCategories     map[string]bool            `json:"qaChecksIgnorableCategories,omitempty"`
 		CustomQACheckIDs                []int                      `json:"customQACheckIds,omitempty"`
