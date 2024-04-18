@@ -9,59 +9,72 @@ import (
 type (
 	// Project represents a Crowdin project.
 	Project struct {
-		ID                   int         `json:"id"`
-		Type                 int         `json:"type"`
-		UserID               int         `json:"userId"`
-		SourceLanguageID     string      `json:"sourceLanguageId"`
-		TargetLanguageIDs    []string    `json:"targetLanguageIds"`
-		LanguageAccessPolicy string      `json:"languageAccessPolicy"`
-		Name                 string      `json:"name"`
-		Cname                *string     `json:"cname"`
-		Identifier           string      `json:"identifier"`
-		Description          string      `json:"description"`
-		Visibility           string      `json:"visibility"`
-		Logo                 string      `json:"logo"`
-		PublicDownloads      *bool       `json:"publicDownloads"`
-		CreatedAt            *string     `json:"createdAt"`
-		UpdatedAt            *string     `json:"updatedAt"`
-		LastActivity         *string     `json:"lastActivity"`
-		SourceLanguage       *Language   `json:"sourceLanguage"`
-		TargetLanguages      []*Language `json:"targetLanguages"`
+		ID                   int            `json:"id"`
+		GroupID              int            `json:"groupId,omitempty"`
+		Type                 int            `json:"type"`
+		UserID               int            `json:"userId"`
+		SourceLanguageID     string         `json:"sourceLanguageId"`
+		TargetLanguageIDs    []string       `json:"targetLanguageIds"`
+		LanguageAccessPolicy string         `json:"languageAccessPolicy"`
+		Name                 string         `json:"name"`
+		Cname                string         `json:"cname,omitempty"`
+		Identifier           string         `json:"identifier"`
+		Description          string         `json:"description"`
+		Visibility           string         `json:"visibility"`
+		Logo                 string         `json:"logo"`
+		IsExternal           bool           `json:"isExternal,omitempty"`
+		ExternalType         string         `json:"externalType,omitempty"`
+		WorkflowID           int            `json:"workflowId,omitempty"`
+		HasCrowdsourcing     bool           `json:"hasCrowdsourcing,omitempty"`
+		PublicDownloads      bool           `json:"publicDownloads"`
+		CreatedAt            string         `json:"createdAt"`
+		UpdatedAt            string         `json:"updatedAt"`
+		LastActivity         string         `json:"lastActivity"`
+		SourceLanguage       *Language      `json:"sourceLanguage"`
+		TargetLanguages      []*Language    `json:"targetLanguages"`
+		WebURL               string         `json:"webUrl"`
+		Fields               map[string]any `json:"fields,omitempty"`
 
-		TranslateDuplicates             int                          `json:"translateDuplicates,omitempty"`
-		TagsDetection                   int                          `json:"tagsDetection,omitempty"`
-		GlossaryAccess                  bool                         `json:"glossaryAccess,omitempty"`
-		IsMTAllowed                     bool                         `json:"isMtAllowed,omitempty"`
-		TaskBasedAccessControl          bool                         `json:"taskBasedAccessControl,omitempty"`
-		HiddenStringsProofreadersAccess bool                         `json:"hiddenStringsProofreadersAccess,omitempty"`
-		AutoSubstitution                bool                         `json:"autoSubstitution,omitempty"`
-		ExportTranslatedOnly            bool                         `json:"exportTranslatedOnly,omitempty"`
-		SkipUntranslatedStrings         bool                         `json:"skipUntranslatedStrings,omitempty"`
-		ExportApprovedOnly              bool                         `json:"exportApprovedOnly,omitempty"`
-		AutoTranslateDialects           bool                         `json:"autoTranslateDialects,omitempty"`
-		UseGlobalTM                     bool                         `json:"useGlobalTm,omitempty"`
-		TMContextType                   string                       `json:"tmContextType,omitempty"`
-		ShowTMSuggestionsDialects       bool                         `json:"showTmSuggestionsDialects,omitempty"`
-		IsSuspended                     bool                         `json:"isSuspended,omitempty"`
-		QACheckIsActive                 bool                         `json:"qaCheckIsActive,omitempty"`
-		QACheckCategories               map[string]bool              `json:"qaCheckCategories,omitempty"`
-		QAChecksIgnorableCategories     map[string]bool              `json:"qaChecksIgnorableCategories,omitempty"`
-		LanguageMapping                 map[string]map[string]string `json:"languageMapping,omitempty"`
-		NotificationSettings            map[string]bool              `json:"notificationSettings,omitempty"`
-		DefaultTMID                     int                          `json:"defaultTmId,omitempty"`
-		DefaultGlossaryID               int                          `json:"defaultGlossaryId,omitempty"`
-		AssignedTMs                     map[int]map[string]int       `json:"assignedTms,omitempty"`
-		AssignedGlossaries              []int                        `json:"assignedGlossaries,omitempty"`
-		TMPenalties                     any                          `json:"tmPenalties,omitempty"`
-		NormalizePlaceholder            bool                         `json:"normalizePlaceholder,omitempty"`
-		TMPreTranslate                  *ProjectTMPreTranslate       `json:"tmPreTranslate,omitempty"`
-		MTPreTranslate                  *ProjectMTPreTranslate       `json:"mtPreTranslate,omitempty"`
-		SaveMetaInfoInSource            bool                         `json:"saveMetaInfoInSource,omitempty"`
-		SkipUntranslatedFiles           bool                         `json:"skipUntranslatedFiles,omitempty"`
-		InContext                       bool                         `json:"inContext,omitempty"`
-		InContextProcessHiddenStrings   bool                         `json:"inContextProcessHiddenStrings,omitempty"`
-		InContextPseudoLanguageID       *string                      `json:"inContextPseudoLanguageId,omitempty"`
-		InContextPseudoLanguage         *Language                    `json:"inContextPseudoLanguage,omitempty"`
+		ClientOrganizationID            int                        `json:"clientOrganizationId,omitempty"`
+		TranslateDuplicates             int                        `json:"translateDuplicates,omitempty"`
+		TagsDetection                   int                        `json:"tagsDetection,omitempty"`
+		GlossaryAccess                  bool                       `json:"glossaryAccess,omitempty"`
+		IsMTAllowed                     bool                       `json:"isMtAllowed,omitempty"`
+		TaskBasedAccessControl          bool                       `json:"taskBasedAccessControl,omitempty"`
+		HiddenStringsProofreadersAccess bool                       `json:"hiddenStringsProofreadersAccess,omitempty"`
+		AutoSubstitution                bool                       `json:"autoSubstitution,omitempty"`
+		ExportTranslatedOnly            bool                       `json:"exportTranslatedOnly,omitempty"`
+		SkipUntranslatedStrings         bool                       `json:"skipUntranslatedStrings,omitempty"`
+		ExportApprovedOnly              bool                       `json:"exportApprovedOnly,omitempty"`
+		ExportWithMinApprovalsCount     int                        `json:"exportWithMinApprovalsCount,omitempty"`
+		ExportStringsThatPassedWorkflow bool                       `json:"exportStringsThatPassedWorkflow,omitempty"`
+		AutoTranslateDialects           bool                       `json:"autoTranslateDialects,omitempty"`
+		UseGlobalTM                     bool                       `json:"useGlobalTm,omitempty"`
+		TMContextType                   string                     `json:"tmContextType,omitempty"`
+		ShowTMSuggestionsDialects       bool                       `json:"showTmSuggestionsDialects,omitempty"`
+		IsSuspended                     bool                       `json:"isSuspended,omitempty"`
+		QACheckIsActive                 bool                       `json:"qaCheckIsActive,omitempty"`
+		QAApprovalsCount                int                       `json:"qaApprovalsCount,omitempty"`
+		QACheckCategories               map[string]bool            `json:"qaCheckCategories,omitempty"`
+		QAChecksIgnorableCategories     map[string]bool            `json:"qaChecksIgnorableCategories,omitempty"`
+		CustomQACheckIDs                []int                      `json:"customQACheckIds,omitempty"`
+		LanguageMapping                 map[string]LanguageMapping `json:"languageMapping,omitempty"`
+		DelayedWorkflowStart            bool                       `json:"delayedTranslations,omitempty"`
+		NotificationSettings            *NotificationSettings      `json:"notificationSettings,omitempty"`
+		DefaultTMID                     int                        `json:"defaultTmId,omitempty"`
+		DefaultGlossaryID               int                        `json:"defaultGlossaryId,omitempty"`
+		AssignedTMs                     map[int]map[string]int     `json:"assignedTms,omitempty"`
+		AssignedGlossaries              []int                      `json:"assignedGlossaries,omitempty"`
+		TMPenalties                     any                        `json:"tmPenalties,omitempty"`
+		NormalizePlaceholder            bool                       `json:"normalizePlaceholder,omitempty"`
+		TMPreTranslate                  *ProjectTMPreTranslate     `json:"tmPreTranslate,omitempty"`
+		MTPreTranslate                  *ProjectMTPreTranslate     `json:"mtPreTranslate,omitempty"`
+		SaveMetaInfoInSource            bool                       `json:"saveMetaInfoInSource,omitempty"`
+		SkipUntranslatedFiles           bool                       `json:"skipUntranslatedFiles,omitempty"`
+		InContext                       bool                       `json:"inContext,omitempty"`
+		InContextProcessHiddenStrings   bool                       `json:"inContextProcessHiddenStrings,omitempty"`
+		InContextPseudoLanguageID       string                     `json:"inContextPseudoLanguageId,omitempty"`
+		InContextPseudoLanguage         *Language                  `json:"inContextPseudoLanguage,omitempty"`
 	}
 
 	ProjectTMPenalties struct {
@@ -107,6 +120,10 @@ type (
 type ProjectsListOptions struct {
 	ListOptions
 
+	// Order projects by.
+	// Enum: id, name, identifier, description, createdAt, updatedAt, lastActivity. Default: id.
+	// Example: orderBy=createdAt desc,name,id.
+	OrderBy string `json:"orderBy,omitempty"`
 	// User Identifier.
 	UserID int `json:"userId,omitempty"`
 	// Projects with Manager Access. Enum: 0, 1. Default: 0.
@@ -123,6 +140,9 @@ func (o *ProjectsListOptions) Values() (url.Values, bool) {
 	}
 
 	v, _ := o.ListOptions.Values()
+	if o.OrderBy != "" {
+		v.Add("orderBy", o.OrderBy)
+	}
 	if o.UserID > 0 {
 		v.Add("userId", fmt.Sprintf("%d", o.UserID))
 	}
@@ -200,32 +220,29 @@ type ProjectsAddRequest struct {
 	// Defines whether to export only approved strings.
 	ExportApprovedOnly *bool `json:"exportApprovedOnly,omitempty"`
 	// If true - QA checks are active. Default: true.
-	QACheckIsActive             *bool           `json:"qaCheckIsActive,omitempty"`
-	QACheckCategories           map[string]bool `json:"qaCheckCategories,omitempty"`
+	QACheckIsActive *bool `json:"qaCheckIsActive,omitempty"`
+	// Acceptable categories are: empty, size, tags, spaces, variables, punctuation, symbolRegister,
+	// specialSymbols, wrongTranslation, spellcheck, icu, terms, duplicate, ftl, android
+	QACheckCategories map[string]bool `json:"qaCheckCategories,omitempty"`
+	// Acceptable categories are: empty, size, tags, spaces, variables, punctuation, symbolRegister,
+	// specialSymbols, wrongTranslation, spellcheck, icu, terms, duplicate, ftl, android
 	QAChecksIgnorableCategories map[string]bool `json:"qaChecksIgnorableCategories,omitempty"`
 	// Language Mapping.
-	LanguageMapping map[string]map[string]string `json:"languageMapping,omitempty"`
+	LanguageMapping map[string]LanguageMapping `json:"languageMapping,omitempty"`
 	// Allow project members to manage glossary terms.
 	// The project owner and managers always can add and edit terms. Default: false.
 	GlossaryAccess *bool `json:"glossaryAccess,omitempty"`
 	// Enable the transformation of the placeholders to the unified format to improve the work with TM suggestions.
 	NormalizePlaceholder *bool `json:"normalizePlaceholder,omitempty"`
 	// Notification Settings.
-	NotificationSettings struct {
-		// Notify translators about new strings. Default: false.
-		TranslatorNewStrings *bool `json:"translatorNewStrings,omitempty"`
-		// Notify project managers about new strings. Default: false.
-		ManagerNewStrings *bool `json:"managerNewStrings,omitempty"`
-		// Notify project managers about language translation/validation completion. Default: false.
-		ManagerLanguageCompleted *bool `json:"managerLanguageCompleted,omitempty"`
-	} `json:"notificationSettings,omitempty"`
+	NotificationSettings *NotificationSettings `json:"notificationSettings,omitempty"`
 	// TM perfect match searching mode. Enum: "segmentContext" "auto" "prevAndNextSegment". Default: "segmentContext".
 	// segmentContext - searching by context.
 	// auto - context search for key-value formats and segment search for others.
 	// prevAndNextSegment - search by previous and next segment.
-	TMContextType  string                `json:"tmContextType,omitempty"`
-	TMPreTranslate ProjectTMPreTranslate `json:"tmPreTranslate,omitempty"`
-	MTPreTranslate ProjectMTPreTranslate `json:"mtPreTranslate,omitempty"`
+	TMContextType  string                 `json:"tmContextType,omitempty"`
+	TMPreTranslate *ProjectTMPreTranslate `json:"tmPreTranslate,omitempty"`
+	MTPreTranslate *ProjectMTPreTranslate `json:"mtPreTranslate,omitempty"`
 	// Context and max.length added in Crowdin will be visible in the downloaded files.
 	SaveMetaInfoInSource *bool `json:"saveMetaInfoInSource,omitempty"`
 	// Defines the project type. Use 0 for a file-based project and 1 for a string-based project.
@@ -242,6 +259,98 @@ type ProjectsAddRequest struct {
 	// In-Context pseudo-language id.
 	// Note: Must be different from project source and target languages
 	InContextPseudoLanguageID string `json:"inContextPseudoLanguageId,omitempty"`
+
+	// Workflow Template Step Identifier.
+	ID int `json:"id,omitempty"`
+	// Workflow Template Identifier.
+	TemplateID int `json:"templateId,omitempty"`
+	// Workflow Template Steps Configuration.
+	// Note. Must be used together with `templateId`. Can't be used with
+	//       `vendorId`, `mtEngineId` in same request.
+	Steps []WorkflowTemplateStepConfig `json:"steps,omitempty"`
+	// Group Identifier.
+	GroupID int `json:"groupId,omitempty"`
+	// Specify Vendor Identifier, if no Vendor is assigned to Workflow step yet.
+	VendorID int `json:"vendorId,omitempty"`
+	// Specify Machine Translation engine Identifier, if no MT engine is
+	// assigned to Workflow step yet.
+	MTEngineID int `json:"mtEngineId,omitempty"`
+	// Enum 0, 1, 2, 3, 4, 5. Default: 0.
+	//  0 - Show – translators will translate each instance separately,
+	//  1 - Hide (regular detection) – all duplicates will share the same translation
+	//  2 - Show, but auto-translate them,
+	//  3 - Show within a version branch (regular detection) - duplicates will be hidden only
+	//      between versions branches
+	//  4 - Hide (strict detection) – all duplicates will share the same translation
+	//  5 - Show within a version branch (strict detection) - duplicates will be hidden only
+	//      between versions branches
+	TranslateDuplicates *int `json:"translateDuplicates,omitempty"`
+	// Delay workflow start after project creation. Default: false.
+	DelayedWorkflowStart *bool `json:"delayedTranslations,omitempty"`
+	// Defines whether to export only approved strings.
+	// Note: value greater than 0 can't be used with `exportStringsThatPassedWorkflow=true`
+	//       in same request.
+	ExportWithMinApprovalsCount *int `json:"exportWithMinApprovalsCount,omitempty"`
+	// Defines whether to export only strings that passed workflow.
+	// Note: `true` value can't be used with `exportWithMinApprovalsCount>0` in same request
+	// or in projects without an assigned workflow.
+	ExportStringsThatPassedWorkflow *bool `json:"exportStringsThatPassedWorkflow,omitempty"`
+	// Clear QA checks for translations with specific number of approvals. Default: 1.
+	QAApprovalsCount *int `json:"qaApprovalsCount,omitempty"`
+	// Custom QA checks identifiers.
+	CustomQACheckIDs []int `json:"customQACheckIds,omitempty"`
+	// MT Engine Identifier.
+	MTID int `json:"mtId,omitempty"`
+	// Fields.
+	Fields map[string]any `json:"fields,omitempty"`
+	// Target Languages Identifiers.
+	Languages []string `json:"languages,omitempty"`
+}
+
+// LanguageMapping represents a project language mapping.
+type LanguageMapping struct {
+	Name                 string `json:"name"`
+	TwoLettersCode       string `json:"two_letters_code"`
+	ThreeLettersCode     string `json:"three_letters_code"`
+	Locale               string `json:"locale"`
+	LocaleWithUnderscore string `json:"locale_with_underscore"`
+	AndroidCode          string `json:"android_code"`
+	OSXCode              string `json:"osx_code"`
+	OSXLocale            string `json:"osx_locale"`
+}
+
+// NotificationSettings represents a project notification settings.
+type NotificationSettings struct {
+	// Notify translators about new strings. Default: false.
+	TranslatorNewStrings *bool `json:"translatorNewStrings,omitempty"`
+	// Notify project managers about new strings. Default: false.
+	ManagerNewStrings *bool `json:"managerNewStrings,omitempty"`
+	// Notify project managers about language translation/validation completion.
+	// Default: false.
+	ManagerLanguageCompleted *bool `json:"managerLanguageCompleted,omitempty"`
+}
+
+// WorkflowTemplateStepConfig represents a workflow template
+// step configuration and is used in the ProjectsAddRequest.
+type WorkflowTemplateStepConfig struct {
+	// Workflow Template Step Identifier.
+	ID int `json:"id"`
+	// Target Languages Identifiers.
+	Languages []string `json:"languages"`
+	// User Identifiers.
+	// Note: Use only with `Translation` and `Proofreading` step types.
+	Assignees []int `json:"assignees"`
+
+	// Vendor Identifier.
+	VendorID int `json:"vendorId,omitempty"`
+
+	// Use only if TM Pre-translation is part of your Workflow Template.
+	Config struct {
+		// Minimum match for TM suggestions.
+		MinRelevant int `json:"minRelevant"`
+		// Improves TM suggestions.
+		AutoSubstitution bool `json:"autoSubstitution"`
+	} `json:"config,omitempty"`
 }
 
 // Validate checks if the add request is valid.
@@ -261,16 +370,13 @@ func (r *ProjectsAddRequest) Validate() error {
 
 // ProjectsFileFormatSettings represents a Crowdin project file format settings.
 type ProjectsFileFormatSettings struct {
-	ID         int      `json:"id"`
-	Name       string   `json:"name"`
-	Format     string   `json:"format"`
-	Extensions []string `json:"extensions"`
-	Settings   struct {
-		ContentSegmentation bool `json:"contentSegmentation"`
-		CustomSegmentation  bool `json:"customSegmentation"`
-	} `json:"settings"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+	ID         int            `json:"id"`
+	Name       string         `json:"name"`
+	Format     string         `json:"format"`
+	Extensions []string       `json:"extensions"`
+	Settings   map[string]any `json:"settings"`
+	CreatedAt  string         `json:"createdAt"`
+	UpdatedAt  string         `json:"updatedAt"`
 }
 
 // ProjectsFileFormatSettingsResponse defines the structure of a response when
@@ -438,7 +544,7 @@ type (
 		ExportQuotes string `json:"exportQuotes,omitempty"`
 	}
 
-	StringCanalogFileFormatSettings struct {
+	StringCatalogFileFormatSettings struct {
 		// Determines whether to import the key as source string if it does not exist.
 		// Default: false.
 		ImportKeyAsSource *bool `json:"importKeyAsSource,omitempty"`
@@ -471,26 +577,38 @@ type (
 	ReactIntlFileFormatSettings   struct{ CommonFileFormatSettings }
 )
 
+// Validate checks if the add project file format settings request is valid.
+// It implements the crowdin.RequestValidator interface.
+func (r *ProjectsAddFileFormatSettingsRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
+	if r.Format == "" {
+		return errors.New("format is required")
+	}
+	if r.Settings == nil {
+		return errors.New("settings is required")
+	}
+	return r.Settings.ValidateSettings()
+}
+
 func (p *CommonFileFormatSettings) ValidateSettings() error        { return nil }
 func (p *PropertyFileFormatSettings) ValidateSettings() error      { return nil }
 func (p *XMLFileFormatSettings) ValidateSettings() error           { return nil }
 func (p *MediaWikiFileFormatSettings) ValidateSettings() error     { return nil }
 func (p *TXTFileFormatSettings) ValidateSettings() error           { return nil }
 func (p *JavaScriptFileFormatSettings) ValidateSettings() error    { return nil }
-func (p *StringCanalogFileFormatSettings) ValidateSettings() error { return nil }
+func (p *StringCatalogFileFormatSettings) ValidateSettings() error { return nil }
 func (p *OtherFileFormatSettings) ValidateSettings() error         { return nil }
 
 // ProjectsStringsExporterSettings represents a Crowdin project strings
 // exporter settings.
 type ProjectsStringsExporterSettings struct {
-	ID       int    `json:"id"`
-	Format   string `json:"format"`
-	Settings struct {
-		ConvertPlaceholders bool              `json:"convertPlaceholders,omitempty"`
-		LanguagePairMapping map[string]string `json:"languagePairMapping,omitempty"`
-	} `json:"settings"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+	ID        int                     `json:"id"`
+	Format    string                  `json:"format"`
+	Settings  StringsExporterSettings `json:"settings"`
+	CreatedAt string                  `json:"createdAt"`
+	UpdatedAt string                  `json:"updatedAt"`
 }
 
 // ProjectsStringsExporterSettingsResponse defines the structure of a response when
@@ -511,14 +629,17 @@ type ProjectsStringsExporterSettingsRequest struct {
 	// Defines strings exporter format. Enum: "android", "macosx", "xliff".
 	Format string `json:"format"`
 	// Defines strings exporter settings.
-	Settings struct {
-		// Convert placeholders to MacOSX format. Default: false.
-		// Note: Only for Android and MacOSX formats.
-		ConvertPlaceholders *bool `json:"convertPlaceholders,omitempty"`
-		// Defines language pair mapping the target language for the specified source language.
-		// Note: Only for XLIFF format.
-		LanguagePairMapping map[string]string `json:"languagePairMapping,omitempty"`
-	} `json:"settings"`
+	Settings StringsExporterSettings `json:"settings"`
+}
+
+// StringsExporterSettings defines the structure of a strings exporter settings.
+type StringsExporterSettings struct {
+	// Convert placeholders to MacOSX format. Default: false.
+	// Note: Only for Android and MacOSX formats.
+	ConvertPlaceholders *bool `json:"convertPlaceholders,omitempty"`
+	// Defines language pair mapping the target language for the specified source language.
+	// Note: Only for XLIFF format.
+	LanguagePairMapping map[string]string `json:"languagePairMapping,omitempty"`
 }
 
 // Validate checks if the update request is valid.
@@ -529,6 +650,9 @@ func (r *ProjectsStringsExporterSettingsRequest) Validate() error {
 	}
 	if r.Format == "" {
 		return errors.New("format is required")
+	}
+	if r.Settings.ConvertPlaceholders == nil && len(r.Settings.LanguagePairMapping) == 0 {
+		return errors.New("settings is required")
 	}
 	return nil
 }
