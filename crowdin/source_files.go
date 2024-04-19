@@ -35,6 +35,9 @@ func (s *SourceFilesService) ListDirectories(ctx context.Context, projectID int,
 ) {
 	res := new(model.DirectoryListResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/directories", projectID), opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
 
 	dir := make([]*model.Directory, 0, len(res.Data))
 	for _, d := range res.Data {
@@ -107,6 +110,9 @@ func (s *SourceFilesService) ListFiles(ctx context.Context, projectID int, opts 
 ) {
 	res := new(model.FileListResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/files", projectID), opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
 
 	files := make([]*model.File, 0, len(res.Data))
 	for _, f := range res.Data {
@@ -200,6 +206,9 @@ func (s *SourceFilesService) ListFileRevisions(ctx context.Context, projectID, f
 ) {
 	res := new(model.FileRevisionListResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d/revisions", projectID, fileID), opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
 
 	revisions := make([]*model.FileRevision, 0, len(res.Data))
 	for _, rev := range res.Data {
@@ -227,6 +236,9 @@ func (s *SourceFilesService) ListReviewedBuilds(ctx context.Context, projectID i
 ) {
 	res := new(model.ReviewedBuildListResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/reviewed-builds", projectID), opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
 
 	builds := make([]*model.ReviewedBuild, 0, len(res.Data))
 	for _, b := range res.Data {
