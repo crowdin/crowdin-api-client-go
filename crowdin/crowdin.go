@@ -35,6 +35,7 @@ type Client struct {
 	SourceFiles        *SourceFilesService
 	SourceStrings      *SourceStringsService
 	StringTranslations *StringTranslationsService
+	StringComments     *StringCommentsService
 	Translations       *TranslationsService
 	TranslationStatus  *TranslationStatusService
 }
@@ -82,6 +83,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.TranslationStatus = &TranslationStatusService{client: c}
 	c.SourceStrings = &SourceStringsService{client: c}
 	c.StringTranslations = &StringTranslationsService{client: c}
+	c.StringComments = &StringCommentsService{client: c}
 
 	return c, nil
 }
