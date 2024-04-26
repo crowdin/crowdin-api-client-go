@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 )
@@ -86,10 +87,10 @@ func (r *PreTranslationRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if len(r.LanguageIDs) == 0 {
-		return fmt.Errorf("languageIds is required")
+		return errors.New("languageIds is required")
 	}
 	if len(r.FileIDs) == 0 {
-		return fmt.Errorf("fileIds is required")
+		return errors.New("fileIds is required")
 	}
 	return nil
 }
@@ -121,7 +122,7 @@ func (r *BuildProjectDirectoryTranslationRequest) Validate() error {
 
 	if (r.SkipUntranslatedStrings != nil && r.SkipUntranslatedFiles != nil) &&
 		(*r.SkipUntranslatedStrings && *r.SkipUntranslatedFiles) {
-		return fmt.Errorf("skipUntranslatedStrings and skipUntranslatedFiles must not be true at the same request")
+		return errors.New("skipUntranslatedStrings and skipUntranslatedFiles must not be true at the same request")
 	}
 	return nil
 }
@@ -159,12 +160,12 @@ func (r *BuildProjectFileTranslationRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if len(r.TargetLanguageID) == 0 {
-		return fmt.Errorf("targetLanguageId is required")
+		return errors.New("targetLanguageId is required")
 	}
 
 	if (r.SkipUntranslatedStrings != nil && r.SkipUntranslatedFiles != nil) &&
 		(*r.SkipUntranslatedStrings && *r.SkipUntranslatedFiles) {
-		return fmt.Errorf("skipUntranslatedStrings and skipUntranslatedFiles must not be true at the same request")
+		return errors.New("skipUntranslatedStrings and skipUntranslatedFiles must not be true at the same request")
 	}
 	return nil
 }
@@ -278,7 +279,7 @@ func (r *BuildProjectRequest) ValidateBuildRequest() error {
 
 	if (r.SkipUntranslatedStrings != nil && r.SkipUntranslatedFiles != nil) &&
 		(*r.SkipUntranslatedStrings && *r.SkipUntranslatedFiles) {
-		return fmt.Errorf("`skipUntranslatedStrings` and `skipUntranslatedFiles` must not be true at the same request")
+		return errors.New("`skipUntranslatedStrings` and `skipUntranslatedFiles` must not be true at the same request")
 	}
 	return nil
 }
@@ -300,7 +301,7 @@ func (r *PseudoBuildProjectRequest) ValidateBuildRequest() error {
 
 	if r.LengthTransformation != nil &&
 		(*r.LengthTransformation < -50 || *r.LengthTransformation > 100) {
-		return fmt.Errorf("lengthTransformation must be from -50 to 100")
+		return errors.New("lengthTransformation must be from -50 to 100")
 	}
 	return nil
 }
@@ -340,10 +341,10 @@ func (r *UploadTranslationsRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if r.StorageID == 0 {
-		return fmt.Errorf("storageId is required")
+		return errors.New("storageId is required")
 	}
 	if r.FileID > 0 && r.BranchID > 0 {
-		return fmt.Errorf("fileId and branchId can not be used at the same request")
+		return errors.New("fileId and branchId can not be used at the same request")
 	}
 	return nil
 }
@@ -399,7 +400,7 @@ func (r *ExportTranslationRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if r.TargetLanguageID == "" {
-		return fmt.Errorf("targetLanguageId is required")
+		return errors.New("targetLanguageId is required")
 	}
 	return nil
 }

@@ -1,7 +1,7 @@
 package model
 
 import (
-	"fmt"
+	"errors"
 	"net/url"
 )
 
@@ -80,7 +80,7 @@ func (r *BranchesAddRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if r.Name == "" {
-		return fmt.Errorf("name is required")
+		return errors.New("name is required")
 	}
 	return nil
 }
@@ -136,7 +136,7 @@ func (r *BranchesMergeRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if r.SourceBranchID == 0 {
-		return fmt.Errorf("sourceBranchId is required")
+		return errors.New("sourceBranchId is required")
 	}
 	return nil
 }
@@ -157,7 +157,7 @@ func (r *BranchesCloneRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if r.Name == "" {
-		return fmt.Errorf("name is required")
+		return errors.New("name is required")
 	}
 	return nil
 }

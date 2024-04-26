@@ -134,7 +134,7 @@ func (c *Client) newRequest(ctx context.Context, method, path string, body any, 
 			return nil, err
 		}
 	}
-	req, err := http.NewRequest(method, u.String(), buf)
+	req, err := http.NewRequestWithContext(ctx, method, u.String(), buf)
 	if err != nil {
 		return nil, err
 	}
@@ -150,8 +150,6 @@ func (c *Client) newRequest(ctx context.Context, method, path string, body any, 
 			return nil, err
 		}
 	}
-
-	req = req.WithContext(ctx)
 
 	return req, nil
 }

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -131,16 +132,16 @@ type TranslationAlignmentRequest struct {
 // It implements the crowdin.RequestValidator interface.
 func (r *TranslationAlignmentRequest) Validate() error {
 	if r == nil {
-		return fmt.Errorf("request cannot be nil")
+		return errors.New("request cannot be nil")
 	}
 	if r.SourceLanguageID == "" {
-		return fmt.Errorf("source language ID is required")
+		return errors.New("source language ID is required")
 	}
 	if r.TargetLanguageID == "" {
-		return fmt.Errorf("target language ID is required")
+		return errors.New("target language ID is required")
 	}
 	if r.Text == "" {
-		return fmt.Errorf("text is required")
+		return errors.New("text is required")
 	}
 	return nil
 }
@@ -345,16 +346,16 @@ type TranslationAddRequest struct {
 // It implements the crowdin.RequestValidator interface.
 func (r *TranslationAddRequest) Validate() error {
 	if r == nil {
-		return fmt.Errorf("request cannot be nil")
+		return errors.New("request cannot be nil")
 	}
 	if r.StringID == 0 {
-		return fmt.Errorf("string ID is required")
+		return errors.New("string ID is required")
 	}
 	if r.LanguageID == "" {
-		return fmt.Errorf("language ID is required")
+		return errors.New("language ID is required")
 	}
 	if r.Text == "" {
-		return fmt.Errorf("text is required")
+		return errors.New("text is required")
 	}
 	return nil
 }
@@ -457,21 +458,21 @@ type VoteAddRequest struct {
 // It implements the crowdin.RequestValidator interface.
 func (r *VoteAddRequest) Validate() error {
 	if r == nil {
-		return fmt.Errorf("request cannot be nil")
+		return errors.New("request cannot be nil")
 	}
 	if r.Mark != VoteTypeUp && r.Mark != VoteTypeDown {
 		return fmt.Errorf("invalid vote type: %s", r.Mark)
 	}
 	if r.TranslationID == 0 {
-		return fmt.Errorf("translation ID is required")
+		return errors.New("translation ID is required")
 	}
 	return nil
 }
 
 func joinIntSlice(s []int) string {
-	var res []string
-	for _, v := range s {
-		res = append(res, fmt.Sprintf("%d", v))
+	res := make([]string, len(s))
+	for i, v := range s {
+		res[i] = fmt.Sprintf("%d", v)
 	}
 	return strings.Join(res, ",")
 }

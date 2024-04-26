@@ -236,7 +236,7 @@ func TestLanguagesService_GetByLanguageIDNotFound(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
-	mux.HandleFunc("/api/v2/languages/xx", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v2/languages/xx", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
@@ -381,6 +381,7 @@ func TestLanguagesService_Delete(t *testing.T) {
 	mux.HandleFunc("/api/v2/languages/uk", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 		testURL(t, r, "/api/v2/languages/uk")
+		w.WriteHeader(http.StatusNoContent)
 	})
 
 	_, err := client.Languages.Delete(context.Background(), "uk")
