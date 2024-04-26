@@ -91,6 +91,7 @@ func testClientServices(t *testing.T, c *Client) {
 		"SourceFiles",
 		"SourceStrings",
 		"StringTranslations",
+		"StringComments",
 		"Translations",
 		"TranslationStatus",
 	}
