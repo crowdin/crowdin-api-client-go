@@ -27,16 +27,17 @@ type Client struct {
 	userAgent    string
 	httpClient   *http.Client
 
-	Storages           *StorageService
-	Languages          *LanguagesService
-	Groups             *GroupsService
-	Projects           *ProjectsService
-	Branches           *BranchesService
-	SourceFiles        *SourceFilesService
-	SourceStrings      *SourceStringsService
-	StringTranslations *StringTranslationsService
-	Translations       *TranslationsService
-	TranslationStatus  *TranslationStatusService
+	Storages                  *StorageService
+	Languages                 *LanguagesService
+	Groups                    *GroupsService
+	Projects                  *ProjectsService
+	Branches                  *BranchesService
+	SourceFiles               *SourceFilesService
+	SourceStrings             *SourceStringsService
+	StringTranslations        *StringTranslationsService
+	Translations              *TranslationsService
+	TranslationStatus         *TranslationStatusService
+	MachineTranslationEngines *MachineTranslationEnginesService
 }
 
 // NewClient creates a new Crowdin API client with provided options (ex. WithHTTPClient).
@@ -82,6 +83,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.TranslationStatus = &TranslationStatusService{client: c}
 	c.SourceStrings = &SourceStringsService{client: c}
 	c.StringTranslations = &StringTranslationsService{client: c}
+	c.MachineTranslationEngines = &MachineTranslationEnginesService{client: c}
 
 	return c, nil
 }
