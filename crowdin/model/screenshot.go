@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+// Screenshot represents a screenshot, which provides translators
+// with additional context for the source strings.
 type Screenshot struct {
 	ID     int    `json:"id"`
 	UserID int    `json:"userId"`
@@ -23,14 +25,19 @@ type Screenshot struct {
 	UpdatedAt string `json:"updatedAt"`
 }
 
+// ScreenshotResponse defines the structure of a response
+// to get a screenshot.
 type ScreenshotResponse struct {
 	Data *Screenshot `json:"data"`
 }
 
+// ScreenshotListResponse defines the structure of a response
+// to list screenshots.
 type ScreenshotListResponse struct {
 	Data []*ScreenshotResponse `json:"data"`
 }
 
+// Tag represents a tag on a screenshot.
 type Tag struct {
 	ID           int          `json:"id"`
 	ScreenshotID int          `json:"screenshotId"`
@@ -47,14 +54,18 @@ type TagPosition struct {
 	Height *int `json:"height,omitempty"`
 }
 
+// TagResponse defines the structure of a response to get a tag.
 type TagResponse struct {
 	Data *Tag `json:"data"`
 }
 
+// TagListResponse defines the structure of a response to list tags.
 type TagListResponse struct {
 	Data []*TagResponse `json:"data"`
 }
 
+// ScreenshotListOptions specifies the optional parameters
+// to the ScreenshotsService.ListScreenshots method.
 type ScreenshotListOptions struct {
 	// Sort screenshots by specified field.
 	// Enum: id, name, tagsCount, createdAt, updatedAt. Default: id.
@@ -72,6 +83,8 @@ type ScreenshotListOptions struct {
 	ListOptions
 }
 
+// Values returns the url.Values representation of the list options.
+// It implements the crowdin.ListOptionsProvider interface.
 func (o *ScreenshotListOptions) Values() (url.Values, bool) {
 	if o == nil {
 		return nil, false
@@ -95,6 +108,8 @@ func (o *ScreenshotListOptions) Values() (url.Values, bool) {
 	return v, len(v) > 0
 }
 
+// ScreenshotAddRequest defines the structure of a request
+// to add a screenshot.
 type ScreenshotAddRequest struct {
 	// Storage Identifier. Storage file must be image in one of the
 	// following formats: jpeg, jpg, png, gif
@@ -119,6 +134,8 @@ type ScreenshotAddRequest struct {
 	LabelIDs []int `json:"labelIds,omitempty"`
 }
 
+// Validate checks if the request is valid.
+// It implements the crowdin.RequestValidator interface.
 func (r *ScreenshotAddRequest) Validate() error {
 	if r == nil {
 		return ErrNilRequest
@@ -139,6 +156,8 @@ func (r *ScreenshotAddRequest) Validate() error {
 	return nil
 }
 
+// ScreenshotUpdateRequest defines the structure of a request
+// to update a screenshot.
 type ScreenshotUpdateRequest struct {
 	// Storage Identifier.
 	StorageID int `json:"storageId"`
@@ -146,6 +165,8 @@ type ScreenshotUpdateRequest struct {
 	Name string `json:"name"`
 }
 
+// Validate checks if the request is valid.
+// It implements the crowdin.RequestValidator interface.
 func (r *ScreenshotUpdateRequest) Validate() error {
 	if r == nil {
 		return ErrNilRequest
@@ -160,6 +181,7 @@ func (r *ScreenshotUpdateRequest) Validate() error {
 	return nil
 }
 
+// TagAddRequest defines the structure of a request to add a tag.
 type TagAddRequest struct {
 	// String Identifier.
 	StringID int `json:"stringId"`
@@ -167,6 +189,8 @@ type TagAddRequest struct {
 	Position *TagPosition `json:"position,omitempty"`
 }
 
+// Validate checks if the request is valid.
+// It implements the crowdin.RequestValidator interface.
 func (r *TagAddRequest) Validate() error {
 	if r == nil {
 		return ErrNilRequest
@@ -178,6 +202,8 @@ func (r *TagAddRequest) Validate() error {
 	return nil
 }
 
+// ReplaceTagsRequest defines the structure of a request to
+// replace tags.
 type ReplaceTagsRequest struct {
 	// String Identifier.
 	StringID int `json:"stringId"`
@@ -185,6 +211,8 @@ type ReplaceTagsRequest struct {
 	Position *TagPosition `json:"position,omitempty"`
 }
 
+// Validate checks if the request is valid.
+// It implements the crowdin.RequestValidator interface.
 func (r *ReplaceTagsRequest) Validate() error {
 	if r == nil {
 		return ErrNilRequest
@@ -196,6 +224,8 @@ func (r *ReplaceTagsRequest) Validate() error {
 	return nil
 }
 
+// AutoTagRequest defines the structure of a request to
+// automatically tag a screenshot.
 type AutoTagRequest struct {
 	// Automatically tags screenshot and replaces old tags with new ones.
 	AutoTag *bool `json:"autoTag"`
@@ -210,6 +240,8 @@ type AutoTagRequest struct {
 	DirectoryID int `json:"directoryId,omitempty"`
 }
 
+// Validate checks if the request is valid.
+// It implements the crowdin.RequestValidator interface.
 func (r *AutoTagRequest) Validate() error {
 	if r == nil {
 		return ErrNilRequest
