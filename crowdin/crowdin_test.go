@@ -93,6 +93,7 @@ func testClientServices(t *testing.T, c *Client) {
 		"StringTranslations",
 		"Translations",
 		"TranslationStatus",
+		"MachineTranslationEngines",
 	}
 
 	ptr := reflect.ValueOf(c)
