@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 )
@@ -77,8 +78,8 @@ func (o *DirectoryListOptions) Values() (url.Values, bool) {
 	if o.Filter != "" {
 		v.Add("filter", o.Filter)
 	}
-	if o.Recursion != nil {
-		v.Add("recursion", o.Recursion.(string))
+	if recursion, ok := o.Recursion.(string); ok {
+		v.Add("recursion", recursion)
 	}
 
 	return v, len(v) > 0
@@ -115,10 +116,10 @@ func (r *DirectoryAddRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if r.Name == "" {
-		return fmt.Errorf("name is required")
+		return errors.New("name is required")
 	}
 	if r.BranchID != 0 && r.DirectoryID != 0 {
-		return fmt.Errorf("branchId and directoryId cannot be used in the same request")
+		return errors.New("branchId and directoryId cannot be used in the same request")
 	}
 	return nil
 }
@@ -204,8 +205,8 @@ func (o *FileListOptions) Values() (url.Values, bool) {
 	if o.Filter != "" {
 		v.Add("filter", o.Filter)
 	}
-	if o.Recursion != nil {
-		v.Add("recursion", o.Recursion.(string))
+	if recursion, ok := o.Recursion.(string); ok {
+		v.Add("recursion", recursion)
 	}
 
 	return v, len(v) > 0
@@ -261,13 +262,13 @@ func (r *FileAddRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if r.StorageID == 0 {
-		return fmt.Errorf("storageId is required")
+		return errors.New("storageId is required")
 	}
 	if r.Name == "" {
-		return fmt.Errorf("name is required")
+		return errors.New("name is required")
 	}
 	if r.BranchID > 0 && r.DirectoryID > 0 {
-		return fmt.Errorf("branchId and directoryId cannot be used in the same request")
+		return errors.New("branchId and directoryId cannot be used in the same request")
 	}
 	return nil
 }
@@ -490,10 +491,10 @@ func (r *FileUpdateRestoreRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if r.RevisionID == 0 && r.StorageID == 0 {
-		return fmt.Errorf("one of revisionId or storageId is required")
+		return errors.New("one of revisionId or storageId is required")
 	}
 	if r.RevisionID != 0 && r.StorageID != 0 {
-		return fmt.Errorf("use only one of revisionId or storageId")
+		return errors.New("use only one of revisionId or storageId")
 	}
 	return nil
 }
