@@ -114,9 +114,6 @@ func (s *TranslationsService) BuildProjectTranslation(ctx context.Context, proje
 ) {
 	res := new(model.TranslationsProjectBuildResponse)
 	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/builds", projectID), req, &res)
-	if err != nil {
-		return nil, resp, err
-	}
 
 	return res.Data, resp, err
 }
