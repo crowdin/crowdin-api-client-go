@@ -2,6 +2,7 @@ package crowdin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -181,7 +182,9 @@ func TestBranchesService_GetByIDNotFound(t *testing.T) {
 	if resp.StatusCode != http.StatusNotFound {
 		t.Errorf("Branches.Get expected status 404, got %v", resp.StatusCode)
 	}
-	if e, ok := err.(*model.ErrorResponse); !ok {
+
+	var e *model.ErrorResponse
+	if !errors.As(err, &e) {
 		t.Errorf("Branches.Get expected *model.ErrorResponse, got %+v", e)
 	}
 }

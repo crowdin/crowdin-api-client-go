@@ -90,7 +90,8 @@ func (s *ProjectsService) Delete(ctx context.Context, id int) (*Response, error)
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.file-format-settings.custom-segmentations.get
 func (s *ProjectsService) DownloadFileFormatSettingsCustomSegmentation(ctx context.Context, projectID, settingsID int) (
-	*model.DownloadLink, *Response, error) {
+	*model.DownloadLink, *Response, error,
+) {
 	path := fmt.Sprintf("/api/v2/projects/%d/file-format-settings/%d/custom-segmentations", projectID, settingsID)
 	res := new(model.DownloadLinkResponse)
 	resp, err := s.client.Get(ctx, path, nil, res)
@@ -145,7 +146,8 @@ func (s *ProjectsService) GetFileFormatSettings(ctx context.Context, projectID, 
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.file-format-settings.post
 func (s *ProjectsService) AddFileFormatSettings(ctx context.Context, projectID int, req *model.ProjectsAddFileFormatSettingsRequest) (
-	*model.ProjectsFileFormatSettings, *Response, error) {
+	*model.ProjectsFileFormatSettings, *Response, error,
+) {
 	path := fmt.Sprintf("/api/v2/projects/%d/file-format-settings", projectID)
 	res := new(model.ProjectsFileFormatSettingsResponse)
 	resp, err := s.client.Post(ctx, path, req, res)

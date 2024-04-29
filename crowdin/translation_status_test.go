@@ -10,54 +10,6 @@ import (
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
 )
 
-var jsonRespMock = `{
-	"data": [
-		{
-			"data": {
-				"words": {
-					"total": 7249,
-					"translated": 3651,
-					"preTranslateAppliedTo": 1254,
-					"approved": 3637
-				},
-				"phrases": {
-					"total": 3041,
-					"translated": 2631,
-					"preTranslateAppliedTo": 1254,
-					"approved": 2622
-				},
-				"translationProgress": 86,
-				"approvalProgress": 86,
-				"languageId": "es",
-				"language": {
-					"id": "es",
-					"name": "Spanish",
-					"editorCode": "es",
-					"twoLettersCode": "es",
-					"threeLettersCode": "spa",
-					"locale": "es-ES",
-					"androidCode": "es-rES",
-					"osxCode": "es.lproj",
-					"osxLocale": "es",
-					"pluralCategoryNames": [
-						"one"
-					],
-					"pluralRules": "(n != 1)",
-					"pluralExamples": [
-						"0, 2-999; 1.2, 2.07..."
-					],
-					"textDirection": "ltr",
-					"dialectOf": "es"
-				}
-			}
-		}
-	],
-	"pagination": {
-		"offset": 1,
-		"limit": 25
-	}
-}`
-
 func TestTranslationStatusService_GetBranchProgress(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -66,7 +18,7 @@ func TestTranslationStatusService_GetBranchProgress(t *testing.T) {
 		testMethod(t, r, http.MethodGet)
 		testURL(t, r, "/api/v2/projects/1/branches/2/languages/progress?limit=25&offset=1")
 
-		fmt.Fprint(w, jsonRespMock)
+		fmt.Fprint(w, getJSONResponseMock())
 	})
 
 	opts := &model.ListOptions{
@@ -131,7 +83,7 @@ func TestTranslationStatusService_GetDirectoryProgress(t *testing.T) {
 		testMethod(t, r, http.MethodGet)
 		testURL(t, r, "/api/v2/projects/1/directories/2/languages/progress?limit=25&offset=1")
 
-		fmt.Fprint(w, jsonRespMock)
+		fmt.Fprint(w, getJSONResponseMock())
 	})
 
 	opts := &model.ListOptions{
@@ -196,7 +148,7 @@ func TestTranslationStatusService_GetFileProgress(t *testing.T) {
 		testMethod(t, r, http.MethodGet)
 		testURL(t, r, "/api/v2/projects/1/files/2/languages/progress?limit=25&offset=1")
 
-		fmt.Fprint(w, jsonRespMock)
+		fmt.Fprint(w, getJSONResponseMock())
 	})
 
 	opts := &model.ListOptions{
@@ -338,7 +290,7 @@ func TestTranslationStatusService_GetProjectProgress(t *testing.T) {
 		testMethod(t, r, http.MethodGet)
 		testURL(t, r, "/api/v2/projects/1/languages/progress?languageIds=es%2Cde%2Cfr&limit=25&offset=1")
 
-		fmt.Fprint(w, jsonRespMock)
+		fmt.Fprint(w, getJSONResponseMock())
 	})
 
 	opts := &model.ProjectProgressListOptions{
@@ -407,7 +359,7 @@ func TestTranslationStatusService_ListQAChecks(t *testing.T) {
 	mux.HandleFunc(fmt.Sprintf("/api/v2/projects/%d/qa-checks", projectID), func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodGet)
 		q := "category=spellcheck&languageIds=uk%2Cde&limit=25&offset=1&validation=empty_string_check%2Cempty_suggestion_check"
-		testURL(t, r, "/api/v2/projects/1/qa-checks?" + q)
+		testURL(t, r, "/api/v2/projects/1/qa-checks?"+q)
 
 		fmt.Fprint(w, `{
 			"data": [
@@ -433,8 +385,8 @@ func TestTranslationStatusService_ListQAChecks(t *testing.T) {
 
 	opts := &model.QACheckListOptions{
 		ListOptions: model.ListOptions{Limit: 25, Offset: 1},
-		Category: []string{"spellcheck"},
-		Validation: []string{"empty_string_check,empty_suggestion_check"},
+		Category:    []string{"spellcheck"},
+		Validation:  []string{"empty_string_check,empty_suggestion_check"},
 		LanguageIDs: []string{"uk", "de"},
 	}
 	issues, resp, err := client.TranslationStatus.ListQAChecks(context.Background(), projectID, opts)
@@ -462,4 +414,54 @@ func TestTranslationStatusService_ListQAChecks(t *testing.T) {
 	if !reflect.DeepEqual(resp.Pagination, expectedPagination) {
 		t.Errorf("TranslationStatus.ListQAChecks pagination returned %+v, want %+v", resp.Pagination, expectedPagination)
 	}
+}
+
+func getJSONResponseMock() string {
+	return `{
+		"data": [
+			{
+				"data": {
+					"words": {
+						"total": 7249,
+						"translated": 3651,
+						"preTranslateAppliedTo": 1254,
+						"approved": 3637
+					},
+					"phrases": {
+						"total": 3041,
+						"translated": 2631,
+						"preTranslateAppliedTo": 1254,
+						"approved": 2622
+					},
+					"translationProgress": 86,
+					"approvalProgress": 86,
+					"languageId": "es",
+					"language": {
+						"id": "es",
+						"name": "Spanish",
+						"editorCode": "es",
+						"twoLettersCode": "es",
+						"threeLettersCode": "spa",
+						"locale": "es-ES",
+						"androidCode": "es-rES",
+						"osxCode": "es.lproj",
+						"osxLocale": "es",
+						"pluralCategoryNames": [
+							"one"
+						],
+						"pluralRules": "(n != 1)",
+						"pluralExamples": [
+							"0, 2-999; 1.2, 2.07..."
+						],
+						"textDirection": "ltr",
+						"dialectOf": "es"
+					}
+				}
+			}
+		],
+		"pagination": {
+			"offset": 1,
+			"limit": 25
+		}
+	}`
 }

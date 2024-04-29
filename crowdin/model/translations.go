@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 )
@@ -20,7 +21,8 @@ type (
 
 	PreTranslationAttributes struct {
 		LanguageIDs                   []string `json:"languageIds"`
-		FileIDs                       []int    `json:"fileIds"`
+		BranchIDs                     []int    `json:"branchIds,omitempty"`
+		FileIDs                       []int    `json:"fileIds,omitempty"`
 		Method                        *string  `json:"method,omitempty"`
 		AutoApproveOption             *string  `json:"autoApproveOption,omitempty"`
 		DuplicateTranslations         *bool    `json:"duplicateTranslations,omitempty"`
@@ -43,18 +45,18 @@ type PreTranslationRequest struct {
 	// Files array that should be translated.
 	FileIDs []int `json:"fileIds"`
 	// Defines pre-translation method. Enum: "tm", "mt". Default: "tm".
-	// - tm – pre-translation via Translation Memory.
-	// - mt – pre-translation via Machine Translation. "mt" should be used with `engineId` parameter.
+	//  - tm – pre-translation via Translation Memory.
+	//  - mt – pre-translation via Machine Translation. "mt" should be used with `engineId` parameter.
 	Method string `json:"method,omitempty"`
 	// Machine Translation engine Identifier. Required if `method` is set to "mt".
 	EngineID int `json:"engineId,omitempty"`
-	// Defines which translations added by TM pre-translation should be auto-approved.  Default: "none".
+	// Defines which translations added by TM pre-translation should be auto-approved. Default: "none".
 	// Enum: "all", "exceptAutoSubstituted", "perfectMatchApprovedOnly", "perfectMatchOnly", "none"
-	// - all – all
-	// - perfectMatchOnly – with perfect TM match
-	// - exceptAutoSubstituted – all (skip auto-substituted suggestions)
-	// - perfectMatchApprovedOnly - with perfect TM match (approved previously)
-	// - none – no auto-approve
+	//  - all – all
+	//  - perfectMatchOnly – with perfect TM match
+	//  - exceptAutoSubstituted – all (skip auto-substituted suggestions)
+	//  - perfectMatchApprovedOnly - with perfect TM match (approved previously)
+	//  - none – no auto-approve
 	AutoApproveOption string `json:"autoApproveOption,omitempty"`
 	// Adds translations even if the same translation already exists. Default is false.
 	// Note: Works only with TM pre-translation method.
@@ -70,7 +72,9 @@ type PreTranslationRequest struct {
 	// Note: Works only with TM pre-translation method.
 	TranslateWithPerfectMatchOnly *bool `json:"translateWithPerfectMatchOnly,omitempty"`
 	// Defines fallback languages mapping. The passed value should contain a map of
-	// language ID as a key and an array of fallback language IDs as a value.
+	// languageID as a key and an array of fallback language IDs as a value.
+	//  - languageID – Crowdin ID for the specified language.
+	//  - []string – an array containing fallback language IDs.
 	// Note: Available only for TM Pre-Translation.
 	FallbackLanguages map[string][]string `json:"fallbackLanguages,omitempty"`
 	// Label Identifiers.
@@ -86,10 +90,10 @@ func (r *PreTranslationRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if len(r.LanguageIDs) == 0 {
-		return fmt.Errorf("languageIds is required")
+		return errors.New("languageIds is required")
 	}
 	if len(r.FileIDs) == 0 {
-		return fmt.Errorf("fileIds is required")
+		return errors.New("fileIds is required")
 	}
 	return nil
 }
@@ -104,12 +108,21 @@ type BuildProjectDirectoryTranslationRequest struct {
 	// Note: true value can't be used with `skipUntranslatedFiles=true` in same request .
 	SkipUntranslatedStrings *bool `json:"skipUntranslatedStrings,omitempty"`
 	// Defines whether to export only translated file. Default: false.
-	// Note: true value can't be used with `skipUntranslatedStrings=true`` in same request.
+	// Note: true value can't be used with `skipUntranslatedStrings=true` in same request.
 	SkipUntranslatedFiles *bool `json:"skipUntranslatedFiles,omitempty"`
 	// Defines whether to export only approved strings. Default: false.
 	ExportApprovedOnly *bool `json:"exportApprovedOnly,omitempty"`
 	// Preserve folder hierarchy. Default: false.
 	PreserveFolderHierarchy *bool `json:"preserveFolderHierarchy,omitempty"`
+
+	// Defines whether to export only approved strings.
+	// Note: value greater than 0 can't be used with `exportStringsThatPassedWorkflow=true`
+	// in same request.
+	ExportWithMinApprovalsCount *int `json:"exportWithMinApprovalsCount,omitempty"`
+	// Defines whether to export only strings that passed workflow.
+	// Note: true value can't be used with `exportWithMinApprovalsCount>0` in same request
+	// or in projects without an assigned workflow.
+	ExportStringsThatPassedWorkflow *bool `json:"exportStringsThatPassedWorkflow,omitempty"`
 }
 
 // Validate checks if the build project directory translation request is valid.
@@ -121,8 +134,13 @@ func (r *BuildProjectDirectoryTranslationRequest) Validate() error {
 
 	if (r.SkipUntranslatedStrings != nil && r.SkipUntranslatedFiles != nil) &&
 		(*r.SkipUntranslatedStrings && *r.SkipUntranslatedFiles) {
-		return fmt.Errorf("skipUntranslatedStrings and skipUntranslatedFiles must not be true at the same request")
+		return errors.New("skipUntranslatedStrings and skipUntranslatedFiles must not be true at the same request")
 	}
+	if (r.ExportWithMinApprovalsCount != nil && r.ExportStringsThatPassedWorkflow != nil) &&
+		(*r.ExportWithMinApprovalsCount > 0 && *r.ExportStringsThatPassedWorkflow) {
+		return fmt.Errorf("exportWithMinApprovalsCount and exportStringsThatPassedWorkflow must not be true at the same request")
+	}
+
 	return nil
 }
 
@@ -146,10 +164,19 @@ type BuildProjectFileTranslationRequest struct {
 	// Note: true value can't be used with `skipUntranslatedFiles=true`` in same request.
 	SkipUntranslatedStrings *bool `json:"skipUntranslatedStrings,omitempty"`
 	// Defines whether to export only translated file. Default: false.
-	// Note: true value can't be used with skipUntranslatedStrings=true in same request.
+	// Note: true value can't be used with `skipUntranslatedStrings=true` in same request.
 	SkipUntranslatedFiles *bool `json:"skipUntranslatedFiles,omitempty"`
 	// Defines whether to export only approved strings. Default: false.
 	ExportApprovedOnly *bool `json:"exportApprovedOnly,omitempty"`
+
+	// Defines whether to export only approved strings.
+	// Note: value greater than 0 can't be used with `exportStringsThatPassedWorkflow=true`
+	// in same request.
+	ExportWithMinApprovalsCount *int `json:"exportWithMinApprovalsCount,omitempty"`
+	// Defines whether to export only strings that passed workflow.
+	// Note: true value can't be used with `exportWithMinApprovalsCount>0` in same request
+	// or in projects without an assigned workflow.
+	ExportStringsThatPassedWorkflow *bool `json:"exportStringsThatPassedWorkflow,omitempty"`
 }
 
 // Validate checks if the build project file translation request is valid.
@@ -159,13 +186,18 @@ func (r *BuildProjectFileTranslationRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if len(r.TargetLanguageID) == 0 {
-		return fmt.Errorf("targetLanguageId is required")
+		return errors.New("targetLanguageId is required")
 	}
 
 	if (r.SkipUntranslatedStrings != nil && r.SkipUntranslatedFiles != nil) &&
 		(*r.SkipUntranslatedStrings && *r.SkipUntranslatedFiles) {
-		return fmt.Errorf("skipUntranslatedStrings and skipUntranslatedFiles must not be true at the same request")
+		return errors.New("skipUntranslatedStrings and skipUntranslatedFiles must not be true at the same request")
 	}
+	if (r.ExportWithMinApprovalsCount != nil && r.ExportStringsThatPassedWorkflow != nil) &&
+		(*r.ExportWithMinApprovalsCount > 0 && *r.ExportStringsThatPassedWorkflow) {
+		return fmt.Errorf("exportWithMinApprovalsCount and exportStringsThatPassedWorkflow must not be true at the same request")
+	}
+
 	return nil
 }
 
@@ -194,21 +226,32 @@ func (o *TranslationsBuildsListOptions) Values() (url.Values, bool) {
 
 // TranslationsProjectBuild represents a project build.
 type TranslationsProjectBuild struct {
-	ID         int    `json:"id"`
-	ProjectID  int    `json:"projectId"`
-	Status     string `json:"status"`
-	Progress   int    `json:"progress"`
-	CreatedAt  string `json:"createdAt"`
-	UpdatedAt  string `json:"updatedAt"`
-	FinishedAt string `json:"finishedAt,omitempty"`
-	Attributes struct {
-		BranchID                *int     `json:"branchId,omitempty"`
-		DirectoryID             *int     `json:"directoryId,omitempty"`
-		TargetLanguageIDs       []string `json:"targetLanguageIds,omitempty"`
-		SkipUntranslatedStrings bool     `json:"skipUntranslatedStrings,omitempty"`
-		SkipUntranslatedFiles   bool     `json:"skipUntranslatedFiles,omitempty"`
-		ExportApprovedOnly      bool     `json:"exportApprovedOnly,omitempty"`
-	} `json:"attributes,omitempty"`
+	ID         int              `json:"id"`
+	ProjectID  int              `json:"projectId"`
+	Status     string           `json:"status"`
+	Progress   int              `json:"progress"`
+	CreatedAt  string           `json:"createdAt"`
+	UpdatedAt  string           `json:"updatedAt"`
+	FinishedAt string           `json:"finishedAt,omitempty"`
+	Attributes *BuildAttributes `json:"attributes,omitempty"`
+}
+
+// BuildAttributes represents the attributes of a project build.
+type BuildAttributes struct {
+	BranchID                        *int     `json:"branchId,omitempty"`
+	DirectoryID                     *int     `json:"directoryId,omitempty"`
+	TargetLanguageIDs               []string `json:"targetLanguageIds,omitempty"`
+	SkipUntranslatedStrings         *bool    `json:"skipUntranslatedStrings,omitempty"`
+	SkipUntranslatedFiles           *bool    `json:"skipUntranslatedFiles,omitempty"`
+	ExportApprovedOnly              *bool    `json:"exportApprovedOnly,omitempty"`
+	ExportWithMinApprovalsCount     *int     `json:"exportWithMinApprovalsCount,omitempty"`
+	ExportStringsThatPassedWorkflow *bool    `json:"exportStringsThatPassedWorkflow,omitempty"`
+
+	Pseudo               *bool   `json:"pseudo,omitempty"`
+	Prefix               *string `json:"prefix,omitempty"`
+	Suffix               *string `json:"suffix,omitempty"`
+	LengthTransformation *int    `json:"lengthTransformation,omitempty"`
+	CharTransformation   *string `json:"charTransformation,omitempty"`
 }
 
 // TranslationsProjectBuildResponse defines the structure of a response when
@@ -221,7 +264,6 @@ type TranslationsProjectBuildResponse struct {
 // getting a list of project builds.
 type TranslationsProjectBuildsListResponse struct {
 	Data       []*TranslationsProjectBuildResponse `json:"data"`
-	Pagination *Pagination                         `json:"pagination"`
 }
 
 type (
@@ -246,6 +288,15 @@ type (
 		SkipUntranslatedFiles *bool `json:"skipUntranslatedFiles,omitempty"`
 		// Defines whether to export only approved strings.
 		ExportApprovedOnly *bool `json:"exportApprovedOnly,omitempty"`
+
+		// Defines whether to export only approved strings.
+		// Note: value greater than 0 can't be used with `exportStringsThatPassedWorkflow=true`
+		// in same request.
+		ExportWithMinApprovalsCount *int `json:"exportWithMinApprovalsCount,omitempty"`
+		// Defines whether to export only strings that passed workflow.
+		// Note: true value can't be used with `exportWithMinApprovalsCount>0` in same request
+		// or in projects without an assigned workflow.
+		ExportStringsThatPassedWorkflow *bool `json:"exportStringsThatPassedWorkflow,omitempty"`
 	}
 
 	// PsuedoBuildProjectRequest defines the structure of a request to build a project
@@ -270,16 +321,26 @@ type (
 	}
 )
 
-// ValidateBuildRequest implements the BuildProjectTranslationRequest interface.
-func (r *BuildProjectRequest) ValidateBuildRequest() error {
+// Validate checks if the build project request is valid.
+// It implements the crowdin.RequestValidator interface.
+func (r *BuildProjectRequest) Validate() error {
 	if r == nil {
 		return ErrNilRequest
 	}
+	return r.ValidateBuildRequest()
+}
 
+// ValidateBuildRequest implements the BuildProjectTranslationRequest interface.
+func (r *BuildProjectRequest) ValidateBuildRequest() error {
 	if (r.SkipUntranslatedStrings != nil && r.SkipUntranslatedFiles != nil) &&
 		(*r.SkipUntranslatedStrings && *r.SkipUntranslatedFiles) {
-		return fmt.Errorf("`skipUntranslatedStrings` and `skipUntranslatedFiles` must not be true at the same request")
+		return errors.New("`skipUntranslatedStrings` and `skipUntranslatedFiles` must not be true at the same request")
 	}
+	if (r.ExportWithMinApprovalsCount != nil && r.ExportStringsThatPassedWorkflow != nil) &&
+		(*r.ExportWithMinApprovalsCount > 0 && *r.ExportStringsThatPassedWorkflow) {
+		return fmt.Errorf("`exportWithMinApprovalsCount` and `exportStringsThatPassedWorkflow` must not be true at the same request")
+	}
+
 	return nil
 }
 
@@ -294,24 +355,11 @@ func (r *PseudoBuildProjectRequest) Validate() error {
 
 // PseudoBuildProjectRequest implements the BuildProjectTranslationRequest interface.
 func (r *PseudoBuildProjectRequest) ValidateBuildRequest() error {
-	if r == nil {
-		return ErrNilRequest
-	}
-
 	if r.LengthTransformation != nil &&
 		(*r.LengthTransformation < -50 || *r.LengthTransformation > 100) {
-		return fmt.Errorf("lengthTransformation must be from -50 to 100")
+		return errors.New("lengthTransformation must be from -50 to 100")
 	}
 	return nil
-}
-
-// Validate checks if the build project request is valid.
-// It implements the crowdin.RequestValidator interface.
-func (r *BuildProjectRequest) Validate() error {
-	if r == nil {
-		return ErrNilRequest
-	}
-	return r.ValidateBuildRequest()
 }
 
 // UploadTranslationsRequest defines the structure of a request to upload translations.
@@ -340,10 +388,10 @@ func (r *UploadTranslationsRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if r.StorageID == 0 {
-		return fmt.Errorf("storageId is required")
+		return errors.New("storageId is required")
 	}
 	if r.FileID > 0 && r.BranchID > 0 {
-		return fmt.Errorf("fileId and branchId can not be used at the same request")
+		return errors.New("fileId and branchId can not be used at the same request")
 	}
 	return nil
 }
@@ -388,8 +436,20 @@ type ExportTranslationRequest struct {
 	// Defines whether to export only translated strings. Default is false.
 	// Note: Can't be used with `skipUntranslatedFiles` in same request.
 	SkipUntranslatedStrings *bool `json:"skipUntranslatedStrings,omitempty"`
+	// Defines whether to export only translated file. Default is false.
+	// Note: Can't be used with `skipUntranslatedStrings` in same request.
+	SkipUntranslatedFiles *bool `json:"skipUntranslatedFiles,omitempty"`
 	// Defines whether to export only approved strings. Default is false.
 	ExportApprovedOnly *bool `json:"exportApprovedOnly,omitempty"`
+
+	// Defines whether to export only approved strings.
+	// Note: value greater than 0 can't be used with `exportStringsThatPassedWorkflow=true`
+	// in same request.
+	ExportWithMinApprovalsCount *int `json:"exportWithMinApprovalsCount,omitempty"`
+	// Defines whether to export only strings that passed workflow.
+	// Note: true value can't be used with `exportWithMinApprovalsCount>0` in same request
+	// or in projects without an assigned workflow.
+	ExportStringsThatPassedWorkflow *bool `json:"exportStringsThatPassedWorkflow,omitempty"`
 }
 
 // Validate checks if the request is valid.
@@ -399,7 +459,7 @@ func (r *ExportTranslationRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if r.TargetLanguageID == "" {
-		return fmt.Errorf("targetLanguageId is required")
+		return errors.New("targetLanguageId is required")
 	}
 	return nil
 }

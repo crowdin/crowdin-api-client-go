@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 )
@@ -9,8 +10,8 @@ import (
 type Directory struct {
 	ID            int    `json:"id"`
 	ProjectID     int    `json:"projectId"`
-	BranchID      int    `json:"branchId"`
-	DirectoryID   int    `json:"directoryId"`
+	BranchID      *int   `json:"branchId,omitempty"`
+	DirectoryID   *int   `json:"directoryId,omitempty"`
 	Name          string `json:"name"`
 	Title         string `json:"title"`
 	ExportPattern string `json:"exportPattern"`
@@ -33,6 +34,11 @@ type DirectoryListResponse struct {
 // DirectoryListOptions specifies the optional parameters to the
 // SourceFilesService.ListDirectories method.
 type DirectoryListOptions struct {
+	// OrderBy is used to sort directories.
+	// Enum: id, name, title, createdAt, updatedAt, exportPattern, priority.
+	// Default: id.
+	// Example: orderBy=createdAt desc,name,priority.
+	OrderBy string `json:"orderBy,omitempty"`
 	// BranchID is the ID of the branch to filter directories by.
 	// Note: Can't be used with `directoryID` in the same request.
 	// To list the directories from all the nested levels within the branch,
@@ -59,6 +65,10 @@ func (o *DirectoryListOptions) Values() (url.Values, bool) {
 	}
 
 	v, _ := o.ListOptions.Values()
+
+	if o.OrderBy != "" {
+		v.Add("orderBy", o.OrderBy)
+	}
 	if o.BranchID > 0 {
 		v.Add("branchId", fmt.Sprintf("%d", o.BranchID))
 	}
@@ -68,8 +78,8 @@ func (o *DirectoryListOptions) Values() (url.Values, bool) {
 	if o.Filter != "" {
 		v.Add("filter", o.Filter)
 	}
-	if o.Recursion != nil {
-		v.Add("recursion", o.Recursion.(string))
+	if recursion, ok := o.Recursion.(string); ok {
+		v.Add("recursion", recursion)
 	}
 
 	return v, len(v) > 0
@@ -106,26 +116,27 @@ func (r *DirectoryAddRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if r.Name == "" {
-		return fmt.Errorf("name is required")
+		return errors.New("name is required")
 	}
 	if r.BranchID != 0 && r.DirectoryID != 0 {
-		return fmt.Errorf("branchId and directoryId cannot be used in the same request")
+		return errors.New("branchId and directoryId cannot be used in the same request")
 	}
 	return nil
 }
 
 // File represents a project file.
 type File struct {
-	ID          int     `json:"id"`
-	ProjectID   int     `json:"projectId"`
-	BranchID    *int    `json:"branchId,omitempty"`
-	DirectoryID *int    `json:"directoryId,omitempty"`
-	Name        string  `json:"name"`
-	Title       *string `json:"title,omitempty"`
-	Context     *string `json:"context,omitempty"`
-	Type        string  `json:"type"`
-	Path        string  `json:"path"`
-	Status      string  `json:"status"`
+	ID          int            `json:"id"`
+	ProjectID   int            `json:"projectId"`
+	BranchID    *int           `json:"branchId,omitempty"`
+	DirectoryID *int           `json:"directoryId,omitempty"`
+	Name        string         `json:"name"`
+	Title       *string        `json:"title,omitempty"`
+	Context     *string        `json:"context,omitempty"`
+	Type        string         `json:"type"`
+	Path        string         `json:"path"`
+	Status      string         `json:"status"`
+	Fields      map[string]any `json:"fields,omitempty"`
 
 	RevisionID             int            `json:"revisionId"`
 	Priority               string         `json:"priority"`
@@ -133,8 +144,8 @@ type File struct {
 	ExportOptions          map[string]any `json:"exportOptions,omitempty"`
 	ExcludeTargetLanguages []string       `json:"excludedTargetLanguages,omitempty"`
 	ParserVersion          *int           `json:"parserVersion,omitempty"`
-	CreatedAt              *string        `json:"createdAt,omitempty"`
-	UpdatedAt              *string        `json:"updatedAt,omitempty"`
+	CreatedAt              string         `json:"createdAt,omitempty"`
+	UpdatedAt              string         `json:"updatedAt,omitempty"`
 }
 
 // FileGetResponse describes a response with a single file.
@@ -150,6 +161,11 @@ type FileListResponse struct {
 // FileListOptions specifies the optional parameters to the
 // SourceFilesService.ListFiles method.
 type FileListOptions struct {
+	// OrderBy is used to sort files.
+	// Enum: id, name, title, status, exportPattern, priority, createdAt, updatedAt.
+	// Default: id.
+	// Example: orderBy=createdAt desc,name,priority.
+	OrderBy string `json:"orderBy,omitempty"`
 	// BranchID is the ID of the branch to filter files by.
 	// Note: Can't be used with `directoryId` in the same request.
 	// To list the files from all the nested levels within the branch,
@@ -176,6 +192,10 @@ func (o *FileListOptions) Values() (url.Values, bool) {
 	}
 
 	v, _ := o.ListOptions.Values()
+
+	if o.OrderBy != "" {
+		v.Add("orderBy", o.OrderBy)
+	}
 	if o.BranchID > 0 {
 		v.Add("branchId", fmt.Sprintf("%d", o.BranchID))
 	}
@@ -185,8 +205,8 @@ func (o *FileListOptions) Values() (url.Values, bool) {
 	if o.Filter != "" {
 		v.Add("filter", o.Filter)
 	}
-	if o.Recursion != nil {
-		v.Add("recursion", o.Recursion.(string))
+	if recursion, ok := o.Recursion.(string); ok {
+		v.Add("recursion", recursion)
 	}
 
 	return v, len(v) > 0
@@ -231,6 +251,8 @@ type FileAddRequest struct {
 	ExcludedTargetLanguages []string `json:"excludedTargetLanguages,omitempty"`
 	// Attach labels to strings.
 	AttachLabelIDs []int `json:"attachLabelIds,omitempty"`
+	// Fields.
+	Fields map[string]any `json:"fields,omitempty"`
 }
 
 // Validate checks if the request is valid.
@@ -240,13 +262,13 @@ func (r *FileAddRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if r.StorageID == 0 {
-		return fmt.Errorf("storageId is required")
+		return errors.New("storageId is required")
 	}
 	if r.Name == "" {
-		return fmt.Errorf("name is required")
+		return errors.New("name is required")
 	}
 	if r.BranchID > 0 && r.DirectoryID > 0 {
-		return fmt.Errorf("branchId and directoryId cannot be used in the same request")
+		return errors.New("branchId and directoryId cannot be used in the same request")
 	}
 	return nil
 }
@@ -469,10 +491,10 @@ func (r *FileUpdateRestoreRequest) Validate() error {
 		return ErrNilRequest
 	}
 	if r.RevisionID == 0 && r.StorageID == 0 {
-		return fmt.Errorf("one of revisionId or storageId is required")
+		return errors.New("one of revisionId or storageId is required")
 	}
 	if r.RevisionID != 0 && r.StorageID != 0 {
-		return fmt.Errorf("use only one of revisionId or storageId")
+		return errors.New("use only one of revisionId or storageId")
 	}
 	return nil
 }

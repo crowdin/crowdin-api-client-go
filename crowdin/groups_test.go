@@ -334,6 +334,7 @@ func TestGroupService_Delete(t *testing.T) {
 	mux.HandleFunc("/api/v2/groups/2", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 		testURL(t, r, "/api/v2/groups/2")
+		w.WriteHeader(http.StatusNoContent)
 	})
 
 	_, err := client.Groups.Delete(context.Background(), 2)

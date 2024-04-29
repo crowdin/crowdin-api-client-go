@@ -35,6 +35,7 @@ type Client struct {
 	SourceFiles        *SourceFilesService
 	SourceStrings      *SourceStringsService
 	StringTranslations *StringTranslationsService
+	StringComments     *StringCommentsService
 	Translations       *TranslationsService
 	TranslationStatus  *TranslationStatusService
 	Screenshots        *ScreenshotsService
@@ -83,6 +84,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.TranslationStatus = &TranslationStatusService{client: c}
 	c.SourceStrings = &SourceStringsService{client: c}
 	c.StringTranslations = &StringTranslationsService{client: c}
+	c.StringComments = &StringCommentsService{client: c}
 	c.Screenshots = &ScreenshotsService{client: c}
 
 	return c, nil
@@ -136,7 +138,7 @@ func (c *Client) newRequest(ctx context.Context, method, path string, body any, 
 			return nil, err
 		}
 	}
-	req, err := http.NewRequest(method, u.String(), buf)
+	req, err := http.NewRequestWithContext(ctx, method, u.String(), buf)
 	if err != nil {
 		return nil, err
 	}
@@ -152,8 +154,6 @@ func (c *Client) newRequest(ctx context.Context, method, path string, body any, 
 			return nil, err
 		}
 	}
-
-	req = req.WithContext(ctx)
 
 	return req, nil
 }
