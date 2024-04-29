@@ -38,6 +38,7 @@ type Client struct {
 	StringComments     *StringCommentsService
 	Translations       *TranslationsService
 	TranslationStatus  *TranslationStatusService
+	Screenshots        *ScreenshotsService
 }
 
 // NewClient creates a new Crowdin API client with provided options (ex. WithHTTPClient).
@@ -84,6 +85,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.SourceStrings = &SourceStringsService{client: c}
 	c.StringTranslations = &StringTranslationsService{client: c}
 	c.StringComments = &StringCommentsService{client: c}
+	c.Screenshots = &ScreenshotsService{client: c}
 
 	return c, nil
 }
