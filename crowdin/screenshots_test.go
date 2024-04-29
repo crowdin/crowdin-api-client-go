@@ -733,7 +733,7 @@ func TestScreenshotsService_ReplaceTags_WithValidationError(t *testing.T) {
 	for projectID, tt := range tests {
 		t.Run(tt.expectedErr, func(t *testing.T) {
 			path := fmt.Sprintf("/api/v2/projects/%d/screenshots/3/tags", projectID)
-			mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			mux.HandleFunc(path, func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			})
 

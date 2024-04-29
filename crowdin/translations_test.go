@@ -640,7 +640,7 @@ func TestTranslationsService_BuildProjectTranslation_WithValidationError(t *test
 	for projectID, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			path := fmt.Sprintf("/api/v2/projects/%d/translations/builds", projectID)
-			mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			mux.HandleFunc(path, func(w http.ResponseWriter, _ *http.Request) {
 				fmt.Fprint(w, `{}`)
 			})
 
@@ -719,7 +719,6 @@ func TestTranslationsService_UploadTranslations_WithValidationError(t *testing.T
 	for _, tt := range cases {
 		assert.EqualError(t, tt.req.Validate(), tt.expectedError)
 	}
-
 }
 
 func TestTranslationsService_DownloadProjectTranslations(t *testing.T) {
