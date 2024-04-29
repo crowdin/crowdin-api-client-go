@@ -20,7 +20,7 @@ type Screenshot struct {
 	} `json:"size"`
 	TagsCount int    `json:"tagsCount"`
 	Tags      []*Tag `json:"tags"`
-	LabelIds  []int  `json:"labelIds"`
+	LabelIDs  []int  `json:"labelIds"`
 	CreatedAt string `json:"createdAt"`
 	UpdatedAt string `json:"updatedAt"`
 }

@@ -263,7 +263,7 @@ type TranslationsProjectBuildResponse struct {
 // TranslationsProjectBuildsListResponse defines the structure of a response when
 // getting a list of project builds.
 type TranslationsProjectBuildsListResponse struct {
-	Data       []*TranslationsProjectBuildResponse `json:"data"`
+	Data []*TranslationsProjectBuildResponse `json:"data"`
 }
 
 type (

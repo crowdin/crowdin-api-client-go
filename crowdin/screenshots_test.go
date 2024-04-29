@@ -85,7 +85,7 @@ func TestScreenshotsService_GetScreenshot(t *testing.T) {
 				CreatedAt: "2023-09-23T09:35:31+00:00",
 			},
 		},
-		LabelIds:  []int{1},
+		LabelIDs:  []int{1},
 		CreatedAt: "2023-09-23T09:29:19+00:00",
 		UpdatedAt: "2023-09-23T09:29:19+00:00",
 	}
