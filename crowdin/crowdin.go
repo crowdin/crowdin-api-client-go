@@ -39,6 +39,7 @@ type Client struct {
 	Translations       *TranslationsService
 	TranslationStatus  *TranslationStatusService
 	Screenshots        *ScreenshotsService
+	Bundles            *BundlesService
 }
 
 // NewClient creates a new Crowdin API client with provided options (ex. WithHTTPClient).
@@ -86,6 +87,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.StringTranslations = &StringTranslationsService{client: c}
 	c.StringComments = &StringCommentsService{client: c}
 	c.Screenshots = &ScreenshotsService{client: c}
+	c.Bundles = &BundlesService{client: c}
 
 	return c, nil
 }
@@ -131,7 +133,7 @@ func (c *Client) newRequest(ctx context.Context, method, path string, body any, 
 	u := c.baseURL.ResolveReference(rel)
 
 	var buf io.ReadWriter
-	if body != nil {
+	if body != nil && body != "" {
 		buf = new(bytes.Buffer)
 		err := json.NewEncoder(buf).Encode(body)
 		if err != nil {
@@ -145,7 +147,7 @@ func (c *Client) newRequest(ctx context.Context, method, path string, body any, 
 
 	req.Header.Set("User-Agent", c.userAgent)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
-	if body != nil {
+	if body != nil && body != "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
 
