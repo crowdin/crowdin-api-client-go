@@ -494,3 +494,70 @@ func TestBundlesService_ListFiles(t *testing.T) {
 	assert.Equal(t, 10, resp.Pagination.Offset)
 	assert.Equal(t, 3, resp.Pagination.Limit)
 }
+
+func TestBundlesService_ListBranches(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/bundles/3/branches"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?limit=3&offset=10")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 34,
+						"projectId": 2,
+						"name": "develop-master",
+						"title": "Master branch",
+						"createdAt": "2023-09-16T13:48:04+00:00",
+						"updatedAt": "2023-09-19T13:25:27+00:00"
+					}
+				},
+				{
+					"data": {
+						"id": 36,
+						"projectId": 2,
+						"name": "develop-master-2",
+						"title": "Test branch",
+						"createdAt": "2023-09-16T13:48:04+00:00",
+						"updatedAt": "2023-09-19T13:25:27+00:00"
+					}
+				}
+			],
+			"pagination": {
+				"offset": 10,
+				"limit": 3
+			}
+		}`)
+	})
+
+	opts := &model.ListOptions{Limit: 3, Offset: 10}
+	branches, resp, err := client.Bundles.ListBranches(context.Background(), 2, 3, opts)
+	require.NoError(t, err)
+
+	expected := []*model.Branch{
+		{
+			ID:        34,
+			ProjectID: 2,
+			Name:      "develop-master",
+			Title:     "Master branch",
+			CreatedAt: "2023-09-16T13:48:04+00:00",
+			UpdatedAt: "2023-09-19T13:25:27+00:00",
+		},
+		{
+			ID:        36,
+			ProjectID: 2,
+			Name:      "develop-master-2",
+			Title:     "Test branch",
+			CreatedAt: "2023-09-16T13:48:04+00:00",
+			UpdatedAt: "2023-09-19T13:25:27+00:00",
+		},
+	}
+	assert.Equal(t, expected, branches)
+
+	assert.Equal(t, 10, resp.Pagination.Offset)
+	assert.Equal(t, 3, resp.Pagination.Limit)
+}

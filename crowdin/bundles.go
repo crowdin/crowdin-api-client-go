@@ -138,3 +138,23 @@ func (s *BundlesService) ListFiles(ctx context.Context, projectID, bundleID int,
 
 	return list, resp, err
 }
+
+// ListBranches returns a list of branches included in the bundle.
+//
+// https://developer.crowdin.com/api/v2/string-based/#operation/api.projects.bundles.branches.getMany
+func (s *BundlesService) ListBranches(ctx context.Context, projectID, bundleID int, opts *model.ListOptions) (
+	[]*model.Branch, *Response, error,
+) {
+	res := new(model.BranchesListResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/bundles/%d/branches", projectID, bundleID), opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.Branch, 0, len(res.Data))
+	for _, branch := range res.Data {
+		list = append(list, branch.Data)
+	}
+
+	return list, resp, err
+}
