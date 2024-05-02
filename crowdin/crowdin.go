@@ -40,6 +40,7 @@ type Client struct {
 	TranslationStatus  *TranslationStatusService
 	Screenshots        *ScreenshotsService
 	Bundles            *BundlesService
+	Labels             *LabelsService
 }
 
 // NewClient creates a new Crowdin API client with provided options (ex. WithHTTPClient).
@@ -88,6 +89,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.StringComments = &StringCommentsService{client: c}
 	c.Screenshots = &ScreenshotsService{client: c}
 	c.Bundles = &BundlesService{client: c}
+	c.Labels = &LabelsService{client: c}
 
 	return c, nil
 }
@@ -289,11 +291,17 @@ func (c *Client) Get(ctx context.Context, path string, params ListOptionsProvide
 }
 
 // Delete makes a DELETE request to the specified path.
-func (c *Client) Delete(ctx context.Context, path string) (*Response, error) {
+// If the provided parameter v is not nil, the result will be unmarshaled into it.
+func (c *Client) Delete(ctx context.Context, path string, v ...any) (*Response, error) {
 	req, err := c.newRequest(ctx, "DELETE", path, nil)
 	if err != nil {
 		return nil, err
 	}
+
+	if len(v) > 0 {
+		return c.do(req, v[0])
+	}
+
 	return c.do(req, nil)
 }
 
