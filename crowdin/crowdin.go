@@ -16,7 +16,7 @@ import (
 const (
 	baseURL = "https://api.crowdin.com/"
 
-	userAgent = "crowdin-api-client-go/0.1.0"
+	userAgent = "crowdin-api-client-go/0.2.0"
 )
 
 // Client is a Crowdin API client.
