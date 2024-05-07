@@ -52,7 +52,7 @@ type ConceptsListOptions struct {
 	// Sort concepts by specified field.
 	// Enum: id, subject, definition, note, createdAt, updatedAt. Default: id.
 	// Example: orderBy=createdAt desc,subject,definition
-	OrderBy string `url:"orderBy,omitempty"`
+	OrderBy string `json:"orderBy,omitempty"`
 
 	ListOptions
 }
@@ -142,10 +142,10 @@ type GlossariesListOptions struct {
 	// Sort glossaries by specified field.
 	// Enum: id, name, groupId, userId, createdAt. Default: id.
 	// Example: orderBy=createdAt desc,name
-	OrderBy string `url:"orderBy,omitempty"`
+	OrderBy string `json:"orderBy,omitempty"`
 	// Group Identifier.
 	// Note: Set 0 to see glossaries of root group.
-	GroupID *int `url:"groupId,omitempty"`
+	GroupID *int `json:"groupId,omitempty"`
 
 	ListOptions
 }
@@ -411,14 +411,14 @@ type TermsListOptions struct {
 	// Enum: id, text, description, partOfSpeech, status, type, gender,
 	// note, lemma, createdAt, updatedAt. Default: id.
 	// Example: orderBy=createdAt desc,text
-	OrderBy string `url:"orderBy,omitempty"`
+	OrderBy string `json:"orderBy,omitempty"`
 	// Project Member Identifier.
-	UserID int `url:"userId,omitempty"`
+	UserID int `json:"userId,omitempty"`
 	// Term Language Identifier.
-	LanguageID string `url:"languageId,omitempty"`
+	LanguageID string `json:"languageId,omitempty"`
 	// Filter terms by `conceptId`.
 	// Note: Use for terms that have translations.
-	ConceptID int `url:"conceptId,omitempty"`
+	ConceptID int `json:"conceptId,omitempty"`
 
 	ListOptions
 }
@@ -498,9 +498,9 @@ func (r *TermAddRequest) Validate() error {
 // GlossariesService.ClearGlossary method.
 type ClearGlossaryOptions struct {
 	// Language Identifier.
-	LanguageID string `url:"languageId,omitempty"`
+	LanguageID string `json:"languageId,omitempty"`
 	// Defines whether to delete specific term along with its translations.
-	ConceptID int `url:"conceptId,omitempty"`
+	ConceptID int `json:"conceptId,omitempty"`
 }
 
 // Values returns the url.Values representation of the ClearGlossaryOptions.
