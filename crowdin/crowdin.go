@@ -41,6 +41,7 @@ type Client struct {
 	Screenshots        *ScreenshotsService
 	Bundles            *BundlesService
 	Labels             *LabelsService
+	Glossaries         *GlossariesService
 }
 
 // NewClient creates a new Crowdin API client with provided options (ex. WithHTTPClient).
@@ -90,6 +91,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.Screenshots = &ScreenshotsService{client: c}
 	c.Bundles = &BundlesService{client: c}
 	c.Labels = &LabelsService{client: c}
+	c.Glossaries = &GlossariesService{client: c}
 
 	return c, nil
 }
@@ -186,7 +188,7 @@ func (c *Client) do(r *http.Request, v any) (*Response, error) {
 		return response, err
 	}
 
-	if r.Method == http.MethodGet {
+	if r.Method == http.MethodGet || r.Method == http.MethodPost {
 		if err = response.populatePagination(body); err != nil {
 			return response, fmt.Errorf("client: error parsing pagination: %w", err)
 		}
