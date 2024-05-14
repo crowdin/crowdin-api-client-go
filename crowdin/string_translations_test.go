@@ -86,7 +86,7 @@ func TestStringTranslationsService_ListApprovals(t *testing.T) {
 		expected := []*model.Approval{
 			{
 				ID: 190695,
-				User: &model.User{
+				User: &model.ShortUser{
 					ID:        19,
 					Username:  "john_doe",
 					FullName:  "John Smith",
@@ -136,7 +136,7 @@ func TestStringTranslationsService_GetApproval(t *testing.T) {
 
 	expected := &model.Approval{
 		ID: 190695,
-		User: &model.User{
+		User: &model.ShortUser{
 			ID:        19,
 			Username:  "john_doe",
 			FullName:  "John Smith",
@@ -184,7 +184,7 @@ func TestStringTranslationsService_AddApproval(t *testing.T) {
 
 	expected := &model.Approval{
 		ID: 190695,
-		User: &model.User{
+		User: &model.ShortUser{
 			ID:        19,
 			Username:  "john_doe",
 			FullName:  "John Smith",
@@ -300,7 +300,7 @@ func TestStringTranslationsService_ListLanguageTranslations(t *testing.T) {
 				ContentType:   "text/plain",
 				TranslationID: ToPtr(732),
 				Text:          ToPtr("Confirm New Password"),
-				User: &model.User{
+				User: &model.ShortUser{
 					ID:        19,
 					Username:  "john_doe",
 					FullName:  "John Smith",
@@ -407,7 +407,7 @@ func TestStringTranslationsService_ListStringTranslations(t *testing.T) {
 				ID:                 190695,
 				Text:               "Цю стрічку перекладено",
 				PluralCategoryName: "few",
-				User: &model.User{
+				User: &model.ShortUser{
 					ID:        19,
 					Username:  "john_doe",
 					FullName:  "John Smith",
@@ -579,7 +579,7 @@ func TestStringTranslationsService_GetTranslation(t *testing.T) {
 			ID:                 190695,
 			Text:               "Цю стрічку перекладено",
 			PluralCategoryName: "few",
-			User: &model.User{
+			User: &model.ShortUser{
 				ID:        19,
 				Username:  "john_doe",
 				FullName:  "John Smith",
@@ -637,7 +637,7 @@ func TestStringTranslationsService_AddTranslation(t *testing.T) {
 		ID:                 190695,
 		Text:               "Цю стрічку перекладено",
 		PluralCategoryName: "few",
-		User: &model.User{
+		User: &model.ShortUser{
 			ID:        19,
 			Username:  "john_doe",
 			FullName:  "John Smith",
@@ -732,7 +732,7 @@ func TestStringTranslationsService_RestoreTranslation(t *testing.T) {
 		ID:                 190695,
 		Text:               "Цю стрічку перекладено",
 		PluralCategoryName: "few",
-		User: &model.User{
+		User: &model.ShortUser{
 			ID:        19,
 			Username:  "john_doe",
 			FullName:  "John Smith",
@@ -794,7 +794,7 @@ func TestStringTranslationsService_GetVote(t *testing.T) {
 
 	expected := &model.Vote{
 		ID:            6643,
-		User:          &model.User{ID: 19, Username: "john_doe", FullName: "John Smith", AvatarURL: ""},
+		User:          &model.ShortUser{ID: 19, Username: "john_doe", FullName: "John Smith", AvatarURL: ""},
 		TranslationID: 19069345,
 		VotedAt:       "2023-09-19T12:42:12+00:00",
 		Mark:          "up",
@@ -925,7 +925,7 @@ func TestStringTranslationsService_AddVote(t *testing.T) {
 
 	expected := &model.Vote{
 		ID:            6643,
-		User:          &model.User{ID: 19, Username: "john_doe", FullName: "John Smith", AvatarURL: ""},
+		User:          &model.ShortUser{ID: 19, Username: "john_doe", FullName: "John Smith", AvatarURL: ""},
 		TranslationID: 19069345,
 		VotedAt:       "2023-09-19T12:42:12+00:00",
 		Mark:          "up",

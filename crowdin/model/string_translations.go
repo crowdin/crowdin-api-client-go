@@ -9,19 +9,12 @@ import (
 
 // Approval represents a Crowdin translation approval.
 type Approval struct {
-	ID            int    `json:"id"`
-	User          *User  `json:"user"`
-	TranslationID int    `json:"translationId"`
-	StringID      int    `json:"stringId"`
-	LanguageID    string `json:"languageId"`
-	CreatedAt     string `json:"createdAt"`
-}
-
-type User struct {
-	ID        int    `json:"id"`
-	Username  string `json:"username"`
-	FullName  string `json:"fullName"`
-	AvatarURL string `json:"avatarUrl"`
+	ID            int        `json:"id"`
+	User          *ShortUser `json:"user"`
+	TranslationID int        `json:"translationId"`
+	StringID      int        `json:"stringId"`
+	LanguageID    string     `json:"languageId"`
+	CreatedAt     string     `json:"createdAt"`
 }
 
 // ApprovalsGetResponse defines the structure of the response when
@@ -157,12 +150,12 @@ func (r *TranslationAlignmentRequest) Validate() error {
 // LanguageTranslation represents a language translation.
 // Contains the plain, plural, or ICU translation.
 type LanguageTranslation struct {
-	StringID      int     `json:"stringId"`
-	ContentType   string  `json:"contentType"`
-	TranslationID *int    `json:"translationId,omitempty"`
-	Text          *string `json:"text,omitempty"`
-	User          *User   `json:"user,omitempty"`
-	CreatedAt     *string `json:"createdAt,omitempty"`
+	StringID      int        `json:"stringId"`
+	ContentType   string     `json:"contentType"`
+	TranslationID *int       `json:"translationId,omitempty"`
+	Text          *string    `json:"text,omitempty"`
+	User          *ShortUser `json:"user,omitempty"`
+	CreatedAt     *string    `json:"createdAt,omitempty"`
 
 	Plurals []*LanguageTranslationPlural `json:"plurals,omitempty"`
 }
@@ -170,11 +163,11 @@ type LanguageTranslation struct {
 // LanguageTranslationPlural represents a plural language translation
 // and is part of the LanguageTranslation.
 type LanguageTranslationPlural struct {
-	TranslationID int    `json:"translationId"`
-	Text          string `json:"text"`
-	PluralForm    string `json:"pluralForm"`
-	User          *User  `json:"user"`
-	CreatedAt     string `json:"createdAt"`
+	TranslationID int        `json:"translationId"`
+	Text          string     `json:"text"`
+	PluralForm    string     `json:"pluralForm"`
+	User          *ShortUser `json:"user"`
+	CreatedAt     string     `json:"createdAt"`
 }
 
 // LanguageTranslationsGetResponse defines the structure of the response when
@@ -258,14 +251,14 @@ func (o *LanguageTranslationsListOptions) Values() (url.Values, bool) {
 
 // Translation represents a Crowdin translation.
 type Translation struct {
-	ID                 int     `json:"id"`
-	Text               string  `json:"text"`
-	PluralCategoryName string  `json:"pluralCategoryName"`
-	User               *User   `json:"user"`
-	Rating             int     `json:"rating"`
-	Provider           *string `json:"provider,omitempty"`
-	IsPreTranslated    bool    `json:"isPreTranslated"`
-	CreatedAt          string  `json:"createdAt"`
+	ID                 int        `json:"id"`
+	Text               string     `json:"text"`
+	PluralCategoryName string     `json:"pluralCategoryName"`
+	User               *ShortUser `json:"user"`
+	Rating             int        `json:"rating"`
+	Provider           *string    `json:"provider,omitempty"`
+	IsPreTranslated    bool       `json:"isPreTranslated"`
+	CreatedAt          string     `json:"createdAt"`
 }
 
 // TranslationGetResponse defines the structure of the response when
@@ -386,11 +379,11 @@ func (r *TranslationAddRequest) Validate() error {
 
 // Vote represents a Crowdin translation vote.
 type Vote struct {
-	ID            int    `json:"id"`
-	User          *User  `json:"user"`
-	TranslationID int    `json:"translationId"`
-	VotedAt       string `json:"votedAt"`
-	Mark          string `json:"mark"`
+	ID            int        `json:"id"`
+	User          *ShortUser `json:"user"`
+	TranslationID int        `json:"translationId"`
+	VotedAt       string     `json:"votedAt"`
+	Mark          string     `json:"mark"`
 }
 
 // VoteGetResponse defines the structure of the response when

@@ -32,7 +32,7 @@ func TestStringCommentsService_Get(t *testing.T) {
 		Text:     "@BeMyEyes  Please provide more details on where the text will be used",
 		UserID:   6,
 		StringID: 742,
-		User: &model.User{
+		User: &model.ShortUser{
 			ID:        12,
 			Username:  "john_smith",
 			FullName:  "John Smith",
@@ -51,7 +51,7 @@ func TestStringCommentsService_Get(t *testing.T) {
 		IssueType:   "source_mistake",
 		IssueStatus: "unresolved",
 		ResolverID:  12,
-		Resolver: &model.User{
+		Resolver: &model.ShortUser{
 			ID:        12,
 			Username:  "john_smith",
 			FullName:  "John Smith",
@@ -232,7 +232,7 @@ func TestStringCommentsService_Add(t *testing.T) {
 		Text:     "@BeMyEyes  Please provide more details on where the text will be used",
 		UserID:   6,
 		StringID: 742,
-		User: &model.User{
+		User: &model.ShortUser{
 			ID:        12,
 			Username:  "john_smith",
 			FullName:  "John Smith",
@@ -251,7 +251,7 @@ func TestStringCommentsService_Add(t *testing.T) {
 		IssueType:   "source_mistake",
 		IssueStatus: "unresolved",
 		ResolverID:  12,
-		Resolver: &model.User{
+		Resolver: &model.ShortUser{
 			ID:        12,
 			Username:  "john_smith",
 			FullName:  "John Smith",

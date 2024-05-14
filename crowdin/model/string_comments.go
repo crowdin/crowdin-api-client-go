@@ -9,21 +9,21 @@ import (
 
 // StringComment represents a Crowdin string comment.
 type StringComment struct {
-	ID          int     `json:"id"`
-	Text        string  `json:"text"`
-	UserID      int     `json:"userId"`
-	StringID    int     `json:"stringId"`
-	User        *User   `json:"user"`
-	String      *String `json:"string"`
-	ProjectID   int     `json:"projectId"`
-	LanguageID  string  `json:"languageId"`
-	Type        string  `json:"type"`
-	IssueType   string  `json:"issueType"`
-	IssueStatus string  `json:"issueStatus"`
-	ResolverID  int     `json:"resolverId"`
-	Resolver    *User   `json:"resolver"`
-	ResolvedAt  string  `json:"resolvedAt"`
-	CreatedAt   string  `json:"createdAt"`
+	ID          int        `json:"id"`
+	Text        string     `json:"text"`
+	UserID      int        `json:"userId"`
+	StringID    int        `json:"stringId"`
+	User        *ShortUser `json:"user"`
+	String      *String    `json:"string"`
+	ProjectID   int        `json:"projectId"`
+	LanguageID  string     `json:"languageId"`
+	Type        string     `json:"type"`
+	IssueType   string     `json:"issueType"`
+	IssueStatus string     `json:"issueStatus"`
+	ResolverID  int        `json:"resolverId"`
+	Resolver    *ShortUser `json:"resolver"`
+	ResolvedAt  string     `json:"resolvedAt"`
+	CreatedAt   string     `json:"createdAt"`
 
 	IsShared             *bool         `json:"isShared,omitempty"`
 	SenderOrganization   *Organization `json:"senderOrganization,omitempty"`
