@@ -16,7 +16,7 @@ import (
 const (
 	baseURL = "https://api.crowdin.com/"
 
-	userAgent = "crowdin-api-client-go/0.1.0"
+	userAgent = "crowdin-api-client-go/0.2.0"
 )
 
 // Client is a Crowdin API client.
@@ -35,8 +35,15 @@ type Client struct {
 	SourceFiles               *SourceFilesService
 	SourceStrings             *SourceStringsService
 	StringTranslations        *StringTranslationsService
+	StringComments     *StringCommentsService
 	Translations              *TranslationsService
 	TranslationStatus         *TranslationStatusService
+	Screenshots        *ScreenshotsService
+	Bundles            *BundlesService
+	Labels             *LabelsService
+	Glossaries         *GlossariesService
+	TranslationMemory  *TranslationMemoryService
+	Users              *UsersService
 	MachineTranslationEngines *MachineTranslationEnginesService
 }
 
@@ -83,6 +90,13 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.TranslationStatus = &TranslationStatusService{client: c}
 	c.SourceStrings = &SourceStringsService{client: c}
 	c.StringTranslations = &StringTranslationsService{client: c}
+	c.StringComments = &StringCommentsService{client: c}
+	c.Screenshots = &ScreenshotsService{client: c}
+	c.Bundles = &BundlesService{client: c}
+	c.Labels = &LabelsService{client: c}
+	c.Glossaries = &GlossariesService{client: c}
+	c.TranslationMemory = &TranslationMemoryService{client: c}
+	c.Users = &UsersService{client: c}
 	c.MachineTranslationEngines = &MachineTranslationEnginesService{client: c}
 
 	return c, nil
@@ -129,21 +143,21 @@ func (c *Client) newRequest(ctx context.Context, method, path string, body any, 
 	u := c.baseURL.ResolveReference(rel)
 
 	var buf io.ReadWriter
-	if body != nil {
+	if body != nil && body != "" {
 		buf = new(bytes.Buffer)
 		err := json.NewEncoder(buf).Encode(body)
 		if err != nil {
 			return nil, err
 		}
 	}
-	req, err := http.NewRequest(method, u.String(), buf)
+	req, err := http.NewRequestWithContext(ctx, method, u.String(), buf)
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Set("User-Agent", c.userAgent)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
-	if body != nil {
+	if body != nil && body != "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
 
@@ -152,8 +166,6 @@ func (c *Client) newRequest(ctx context.Context, method, path string, body any, 
 			return nil, err
 		}
 	}
-
-	req = req.WithContext(ctx)
 
 	return req, nil
 }
@@ -182,7 +194,7 @@ func (c *Client) do(r *http.Request, v any) (*Response, error) {
 		return response, err
 	}
 
-	if r.Method == http.MethodGet {
+	if r.Method == http.MethodGet || r.Method == http.MethodPost {
 		if err = response.populatePagination(body); err != nil {
 			return response, fmt.Errorf("client: error parsing pagination: %w", err)
 		}
@@ -287,11 +299,17 @@ func (c *Client) Get(ctx context.Context, path string, params ListOptionsProvide
 }
 
 // Delete makes a DELETE request to the specified path.
-func (c *Client) Delete(ctx context.Context, path string) (*Response, error) {
+// If the provided parameter v is not nil, the result will be unmarshaled into it.
+func (c *Client) Delete(ctx context.Context, path string, v ...any) (*Response, error) {
 	req, err := c.newRequest(ctx, "DELETE", path, nil)
 	if err != nil {
 		return nil, err
 	}
+
+	if len(v) > 0 {
+		return c.do(req, v[0])
+	}
+
 	return c.do(req, nil)
 }
 

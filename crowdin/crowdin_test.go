@@ -91,9 +91,11 @@ func testClientServices(t *testing.T, c *Client) {
 		"SourceFiles",
 		"SourceStrings",
 		"StringTranslations",
+		"StringComments",
 		"Translations",
 		"TranslationStatus",
 		"MachineTranslationEngines",
+		"Screenshots",
 	}
 
 	ptr := reflect.ValueOf(c)
@@ -148,7 +150,6 @@ func TestNewEnterpriseClient(t *testing.T) {
 
 func TestWithCustomHTTPClient(t *testing.T) {
 	c, err := NewClient("token", WithHTTPClient(http.DefaultClient))
-
 	if err != nil {
 		t.Errorf("NewClient error: %v", err)
 	}

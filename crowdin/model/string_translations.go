@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -8,19 +9,12 @@ import (
 
 // Approval represents a Crowdin translation approval.
 type Approval struct {
-	ID            int    `json:"id"`
-	User          User   `json:"user"`
-	TranslationID int    `json:"translationId"`
-	StringID      int    `json:"stringId"`
-	LanguageID    string `json:"languageId"`
-	CreatedAt     string `json:"createdAt"`
-}
-
-type User struct {
-	ID        int    `json:"id"`
-	Username  string `json:"username"`
-	FullName  string `json:"fullName"`
-	AvatarURL string `json:"avatarUrl"`
+	ID            int        `json:"id"`
+	User          *ShortUser `json:"user"`
+	TranslationID int        `json:"translationId"`
+	StringID      int        `json:"stringId"`
+	LanguageID    string     `json:"languageId"`
+	CreatedAt     string     `json:"createdAt"`
 }
 
 // ApprovalsGetResponse defines the structure of the response when
@@ -38,6 +32,10 @@ type ApprovalsListResponse struct {
 // ApprovalsListOptions specifies the optional parameters to the
 // StringTranslationsService.ListApprovals method.
 type ApprovalsListOptions struct {
+	// Sort a list of approvals.
+	// Enum: id, createdAt. Default: id.
+	// Example: orderBy=createdAt desc,id.
+	OrderBy string `json:"orderBy,omitempty"`
 	// File Identifier.
 	// Note: Must be used together with `languageId`.
 	FileID int `json:"fileId,omitempty"`
@@ -67,6 +65,10 @@ func (o *ApprovalsListOptions) Values() (url.Values, bool) {
 	}
 
 	v, _ := o.ListOptions.Values()
+
+	if o.OrderBy != "" {
+		v.Add("orderBy", o.OrderBy)
+	}
 	if o.FileID > 0 {
 		v.Add("fileId", fmt.Sprintf("%d", o.FileID))
 	}
@@ -131,16 +133,16 @@ type TranslationAlignmentRequest struct {
 // It implements the crowdin.RequestValidator interface.
 func (r *TranslationAlignmentRequest) Validate() error {
 	if r == nil {
-		return fmt.Errorf("request cannot be nil")
+		return errors.New("request cannot be nil")
 	}
 	if r.SourceLanguageID == "" {
-		return fmt.Errorf("source language ID is required")
+		return errors.New("source language ID is required")
 	}
 	if r.TargetLanguageID == "" {
-		return fmt.Errorf("target language ID is required")
+		return errors.New("target language ID is required")
 	}
 	if r.Text == "" {
-		return fmt.Errorf("text is required")
+		return errors.New("text is required")
 	}
 	return nil
 }
@@ -148,12 +150,12 @@ func (r *TranslationAlignmentRequest) Validate() error {
 // LanguageTranslation represents a language translation.
 // Contains the plain, plural, or ICU translation.
 type LanguageTranslation struct {
-	StringID      int     `json:"stringId"`
-	ContentType   string  `json:"contentType"`
-	TranslationID *int    `json:"translationId,omitempty"`
-	Text          *string `json:"text,omitempty"`
-	User          *User   `json:"user,omitempty"`
-	CreatedAt     *string `json:"createdAt,omitempty"`
+	StringID      int        `json:"stringId"`
+	ContentType   string     `json:"contentType"`
+	TranslationID *int       `json:"translationId,omitempty"`
+	Text          *string    `json:"text,omitempty"`
+	User          *ShortUser `json:"user,omitempty"`
+	CreatedAt     *string    `json:"createdAt,omitempty"`
 
 	Plurals []*LanguageTranslationPlural `json:"plurals,omitempty"`
 }
@@ -161,11 +163,11 @@ type LanguageTranslation struct {
 // LanguageTranslationPlural represents a plural language translation
 // and is part of the LanguageTranslation.
 type LanguageTranslationPlural struct {
-	TranslationID int    `json:"translationId"`
-	Text          string `json:"text"`
-	PluralForm    string `json:"pluralForm"`
-	User          User   `json:"user"`
-	CreatedAt     string `json:"createdAt"`
+	TranslationID int        `json:"translationId"`
+	Text          string     `json:"text"`
+	PluralForm    string     `json:"pluralForm"`
+	User          *ShortUser `json:"user"`
+	CreatedAt     string     `json:"createdAt"`
 }
 
 // LanguageTranslationsGetResponse defines the structure of the response when
@@ -179,6 +181,10 @@ type LanguageTranslationsListResponse struct {
 // LanguageTranslationsListOptions specifies the optional parameters to the
 // StringTranslationsService.ListLanguageTranslations method.
 type LanguageTranslationsListOptions struct {
+	// Sort a list of translations.
+	// Enum: text, stringId, translationId, createdAt. Default: stringId.
+	// Example: orderBy=createdAt desc,text
+	OrderBy string `json:"orderBy,omitempty"`
 	// String Identifiers. Filter translations by `stringIds`.
 	// Example: stringIds=1,2,3,4,5
 	StringIDs []int `json:"stringIds,omitempty"`
@@ -213,6 +219,10 @@ func (o *LanguageTranslationsListOptions) Values() (url.Values, bool) {
 	}
 
 	v, _ := o.ListOptions.Values()
+
+	if o.OrderBy != "" {
+		v.Add("orderBy", o.OrderBy)
+	}
 	if len(o.StringIDs) > 0 {
 		v.Add("stringIds", joinIntSlice(o.StringIDs))
 	}
@@ -241,14 +251,14 @@ func (o *LanguageTranslationsListOptions) Values() (url.Values, bool) {
 
 // Translation represents a Crowdin translation.
 type Translation struct {
-	ID                 int     `json:"id"`
-	Text               string  `json:"text"`
-	PluralCategoryName string  `json:"pluralCategoryName"`
-	User               User    `json:"user"`
-	Rating             int     `json:"rating"`
-	Provider           *string `json:"provider,omitempty"`
-	IsPreTranslated    bool    `json:"isPreTranslated"`
-	CreatedAt          string  `json:"createdAt"`
+	ID                 int        `json:"id"`
+	Text               string     `json:"text"`
+	PluralCategoryName string     `json:"pluralCategoryName"`
+	User               *ShortUser `json:"user"`
+	Rating             int        `json:"rating"`
+	Provider           *string    `json:"provider,omitempty"`
+	IsPreTranslated    bool       `json:"isPreTranslated"`
+	CreatedAt          string     `json:"createdAt"`
 }
 
 // TranslationGetResponse defines the structure of the response when
@@ -289,6 +299,10 @@ func (o *TranslationGetOptions) Values() (url.Values, bool) {
 // StringTranslationsListOptions specifies the optional parameters to the
 // StringTranslationsService.ListTranslations method.
 type StringTranslationsListOptions struct {
+	// Sort a list of translations.
+	// Enum: id, text, rating, createdAt. Default: id.
+	// Example: orderBy=createdAt desc,name,priority
+	OrderBy string `json:"orderBy,omitempty"`
 	// String Identifier.
 	// Note: Must be used together with `languageId`.
 	StringID int `json:"stringId,omitempty"`
@@ -310,6 +324,10 @@ func (o *StringTranslationsListOptions) Values() (url.Values, bool) {
 	}
 
 	v, _ := o.ListOptions.Values()
+
+	if o.OrderBy != "" {
+		v.Add("orderBy", o.OrderBy)
+	}
 	if o.StringID > 0 {
 		v.Add("stringId", fmt.Sprintf("%d", o.StringID))
 	}
@@ -345,27 +363,27 @@ type TranslationAddRequest struct {
 // It implements the crowdin.RequestValidator interface.
 func (r *TranslationAddRequest) Validate() error {
 	if r == nil {
-		return fmt.Errorf("request cannot be nil")
+		return errors.New("request cannot be nil")
 	}
 	if r.StringID == 0 {
-		return fmt.Errorf("string ID is required")
+		return errors.New("string ID is required")
 	}
 	if r.LanguageID == "" {
-		return fmt.Errorf("language ID is required")
+		return errors.New("language ID is required")
 	}
 	if r.Text == "" {
-		return fmt.Errorf("text is required")
+		return errors.New("text is required")
 	}
 	return nil
 }
 
 // Vote represents a Crowdin translation vote.
 type Vote struct {
-	ID            int    `json:"id"`
-	User          User   `json:"user"`
-	TranslationID int    `json:"translationId"`
-	VotedAt       string `json:"votedAt"`
-	Mark          string `json:"mark"`
+	ID            int        `json:"id"`
+	User          *ShortUser `json:"user"`
+	TranslationID int        `json:"translationId"`
+	VotedAt       string     `json:"votedAt"`
+	Mark          string     `json:"mark"`
 }
 
 // VoteGetResponse defines the structure of the response when
@@ -399,7 +417,7 @@ type VotesListOptions struct {
 	// Example: labelIds=1,2,3,4,5
 	LabelIDs []int `json:"labelIds,omitempty"`
 	// Exclude Label Identifiers.
-	EcludeLabelIDs []int `json:"excludeLabelIds,omitempty"`
+	ExcludeLabelIDs []int `json:"excludeLabelIds,omitempty"`
 
 	ListOptions
 }
@@ -427,8 +445,8 @@ func (o *VotesListOptions) Values() (url.Values, bool) {
 	if len(o.LabelIDs) > 0 {
 		v.Add("labelIds", joinIntSlice(o.LabelIDs))
 	}
-	if len(o.EcludeLabelIDs) > 0 {
-		v.Add("excludeLabelIds", joinIntSlice(o.EcludeLabelIDs))
+	if len(o.ExcludeLabelIDs) > 0 {
+		v.Add("excludeLabelIds", joinIntSlice(o.ExcludeLabelIDs))
 	}
 
 	return v, len(v) > 0
@@ -457,21 +475,21 @@ type VoteAddRequest struct {
 // It implements the crowdin.RequestValidator interface.
 func (r *VoteAddRequest) Validate() error {
 	if r == nil {
-		return fmt.Errorf("request cannot be nil")
+		return errors.New("request cannot be nil")
 	}
 	if r.Mark != VoteTypeUp && r.Mark != VoteTypeDown {
-		return fmt.Errorf("invalid vote type: %s", r.Mark)
+		return fmt.Errorf("invalid vote type: %q", r.Mark)
 	}
 	if r.TranslationID == 0 {
-		return fmt.Errorf("translation ID is required")
+		return errors.New("translation ID is required")
 	}
 	return nil
 }
 
 func joinIntSlice(s []int) string {
-	var res []string
-	for _, v := range s {
-		res = append(res, fmt.Sprintf("%d", v))
+	res := make([]string, len(s))
+	for i, v := range s {
+		res[i] = fmt.Sprintf("%d", v)
 	}
 	return strings.Join(res, ",")
 }
