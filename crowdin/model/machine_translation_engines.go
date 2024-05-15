@@ -12,8 +12,8 @@ type MachineTranslation struct {
 	Name        string `json:"name"`
 	Type        string `json:"type"`
 	Credentials struct {
-		CrowdinNMT                  int `json:"crowdin_nmt"`
-		CrowdinNMTMultiTranslations int `json:"crowdin_nmt_multi_translations"`
+		CrowdinNMT                  string `json:"crowdin_nmt"`
+		CrowdinNMTMultiTranslations string `json:"crowdin_nmt_multi_translations"`
 	} `json:"credentials"`
 	SupportedLanguageIDs   []string            `json:"supportedLanguageIds"`
 	SupportedLanguagePairs map[string][]string `json:"supportedLanguagePairs"`

@@ -35,15 +35,15 @@ type Client struct {
 	SourceFiles               *SourceFilesService
 	SourceStrings             *SourceStringsService
 	StringTranslations        *StringTranslationsService
-	StringComments     *StringCommentsService
+	StringComments            *StringCommentsService
 	Translations              *TranslationsService
 	TranslationStatus         *TranslationStatusService
-	Screenshots        *ScreenshotsService
-	Bundles            *BundlesService
-	Labels             *LabelsService
-	Glossaries         *GlossariesService
-	TranslationMemory  *TranslationMemoryService
-	Users              *UsersService
+	Screenshots               *ScreenshotsService
+	Bundles                   *BundlesService
+	Labels                    *LabelsService
+	Glossaries                *GlossariesService
+	TranslationMemory         *TranslationMemoryService
+	Users                     *UsersService
 	MachineTranslationEngines *MachineTranslationEnginesService
 }
 

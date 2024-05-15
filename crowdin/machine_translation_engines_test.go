@@ -27,8 +27,8 @@ func TestMachineTranslationEnginesService_GetMT(t *testing.T) {
 				"name": "Crowdin Translate",
 				"type": "crowdin",
 				"credentials": {
-					"crowdin_nmt": 1,
-					"crowdin_nmt_multi_translations": 1
+					"crowdin_nmt": "1",
+					"crowdin_nmt_multi_translations": "1"
 				},
 				"supportedLanguageIds": ["en", "es", "pl"],
 				"supportedLanguagePairs": {
@@ -53,11 +53,11 @@ func TestMachineTranslationEnginesService_GetMT(t *testing.T) {
 		Name: "Crowdin Translate",
 		Type: "crowdin",
 		Credentials: struct {
-			CrowdinNMT                  int `json:"crowdin_nmt"`
-			CrowdinNMTMultiTranslations int `json:"crowdin_nmt_multi_translations"`
+			CrowdinNMT                  string `json:"crowdin_nmt"`
+			CrowdinNMTMultiTranslations string `json:"crowdin_nmt_multi_translations"`
 		}{
-			CrowdinNMT:                  1,
-			CrowdinNMTMultiTranslations: 1,
+			CrowdinNMT:                  "1",
+			CrowdinNMTMultiTranslations: "1",
 		},
 		SupportedLanguageIDs: []string{"en", "es", "pl"},
 		SupportedLanguagePairs: map[string][]string{
@@ -264,11 +264,11 @@ func TestMachineTranslationEnginesService_AddMT(t *testing.T) {
 		Name: "Crowdin Translate",
 		Type: "crowdin",
 		Credentials: struct {
-			CrowdinNMT                  int `json:"crowdin_nmt"`
-			CrowdinNMTMultiTranslations int `json:"crowdin_nmt_multi_translations"`
+			CrowdinNMT                  string `json:"crowdin_nmt"`
+			CrowdinNMTMultiTranslations string `json:"crowdin_nmt_multi_translations"`
 		}{
-			CrowdinNMT:                  1,
-			CrowdinNMTMultiTranslations: 1,
+			CrowdinNMT:                  "1",
+			CrowdinNMTMultiTranslations: "1",
 		},
 		SupportedLanguageIDs: []string{"en", "es", "pl"},
 		SupportedLanguagePairs: map[string][]string{
