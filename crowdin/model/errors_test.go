@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"testing"
 
@@ -153,7 +154,9 @@ func TestParseErrorResponse(t *testing.T) {
 		t.Run(tt.err, func(t *testing.T) {
 			err := handleErrorResponse(tt.resp, tt.body)
 
-			verr, ok := err.(*ErrorResponse)
+			var verr *ErrorResponse
+			ok := errors.As(err, &verr)
+
 			assert.True(t, ok)
 			assert.NotNil(t, verr)
 			assert.Equal(t, tt.code, verr.Response.StatusCode)
@@ -247,7 +250,9 @@ func TestParseValidationErrorResponse(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := handleErrorResponse(response, tt.body)
 
-			verr, ok := err.(*ValidationErrorResponse)
+			var verr *ValidationErrorResponse
+			ok := errors.As(err, &verr)
+
 			assert.True(t, ok)
 			assert.NotNil(t, verr)
 			assert.Equal(t, http.StatusBadRequest, verr.Status)
