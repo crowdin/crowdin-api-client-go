@@ -27,23 +27,24 @@ type Client struct {
 	userAgent    string
 	httpClient   *http.Client
 
-	Storages           *StorageService
-	Languages          *LanguagesService
-	Groups             *GroupsService
-	Projects           *ProjectsService
-	Branches           *BranchesService
-	SourceFiles        *SourceFilesService
-	SourceStrings      *SourceStringsService
-	StringTranslations *StringTranslationsService
-	StringComments     *StringCommentsService
-	Translations       *TranslationsService
-	TranslationStatus  *TranslationStatusService
-	Screenshots        *ScreenshotsService
-	Bundles            *BundlesService
-	Labels             *LabelsService
-	Glossaries         *GlossariesService
-	TranslationMemory  *TranslationMemoryService
-	Users              *UsersService
+	Storages                  *StorageService
+	Languages                 *LanguagesService
+	Groups                    *GroupsService
+	Projects                  *ProjectsService
+	Branches                  *BranchesService
+	SourceFiles               *SourceFilesService
+	SourceStrings             *SourceStringsService
+	StringTranslations        *StringTranslationsService
+	StringComments            *StringCommentsService
+	Translations              *TranslationsService
+	TranslationStatus         *TranslationStatusService
+	Screenshots               *ScreenshotsService
+	Bundles                   *BundlesService
+	Labels                    *LabelsService
+	Glossaries                *GlossariesService
+	TranslationMemory         *TranslationMemoryService
+	Users                     *UsersService
+	MachineTranslationEngines *MachineTranslationEnginesService
 }
 
 // NewClient creates a new Crowdin API client with provided options (ex. WithHTTPClient).
@@ -96,6 +97,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.Glossaries = &GlossariesService{client: c}
 	c.TranslationMemory = &TranslationMemoryService{client: c}
 	c.Users = &UsersService{client: c}
+	c.MachineTranslationEngines = &MachineTranslationEnginesService{client: c}
 
 	return c, nil
 }
