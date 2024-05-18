@@ -165,8 +165,23 @@ const (
 	TaskVendorLanguageLineSolutions    TaskVendor = "languageline_solutions"
 )
 
-// TaskAddRequest is an interface for adding tasks of various types.
-// It defines the ValidateRequest method for validating the fields.
+// TaskAddRequest is an interface encapsulating a request for task addition.
+// The request body must conform to one of the following struct types:
+//
+//	TaskCreateForm
+//	LanguageServiceTaskCreateForm
+//	VendorOhtTaskCreateForm
+//	VendorGengoTaskCreateForm
+//	VendorManualTaskCreateForm
+//	PendingTaskCreateForm
+//	LanguageServicePendingTaskCreateForm
+//	VendorManualPendingTaskCreateForm
+//
+// For the Enterprise API, the request body should be one of the following structs:
+//
+//	EnterpriseTaskCreateForm
+//	EnterpriseVendorTaskCreateForm
+//	EnterprisePendingTaskCreateForm
 type TaskAddRequest interface {
 	ValidateRequest() error
 }
