@@ -27,7 +27,7 @@ type (
 		Title            string              `json:"title"`
 		Assignees        []*TaskAssignee     `json:"assignees"`
 		AssignedTeams    []*TaskAssignedTeam `json:"assignedTeams"`
-		Progress         *TaskProgress       `json:"progress"`
+		Progress         TaskProgress        `json:"progress"`
 		SourceLanguageID string              `json:"sourceLanguageId"`
 		TargetLanguageID string              `json:"targetLanguageId"`
 		Description      string              `json:"description"`
@@ -49,7 +49,7 @@ type (
 		ExcludeLabelIDs  []int               `json:"excludeLabelIds"`
 		PrecedingTaskID  int                 `json:"precedingTaskId"`
 		FilesCount       int                 `json:"filesCount"`
-		FileIDs          []int               `json:"fileIds"`
+		FileIDs          []int               `json:"fileIds,omitempty"`
 		Vendor           string              `json:"vendor,omitempty"`
 		BranchIDs        []int               `json:"branchIds,omitempty"`
 		IsArchived       *bool               `json:"isArchived,omitempty"`
@@ -171,19 +171,31 @@ type TaskAddRequest interface {
 	ValidateRequest() error
 }
 
+type CrowdinTaskAssignee struct {
+	// Project member identifier.
+	ID int `json:"id"`
+	// Defines how many words (starting from 1) are assigned
+	// to each task assignee. Note: Can be used only when
+	// `splitContent` parameter is specified.
+	WordsCount int `json:"wordsCount,omitempty"`
+}
+
 type (
-	CrowdinTaskCreateForm struct {
+	TaskCreateForm struct {
 		// Task title
 		Title string `json:"title"`
 		// Task language identifier.
 		LanguageID string `json:"languageId"`
 		// Task type. Enum: 0 - translate, 1 - proofread.
 		Type *TaskType `json:"type"`
+		// Branch identifiers.
+		// One of branchIds, stringIds or fileIds is required.
+		BranchIDs []int `json:"branchIds,omitempty"`
 		// Task string identifiers.
-		// One of stringIds or fileIds is required.
+		// One of branchIds, stringIds or fileIds is required.
 		StringIDs []int `json:"stringIds,omitempty"`
 		// Task file identifiers.
-		// One of stringIds or fileIds is required.
+		// One of branchIds, stringIds or fileIds is required.
 		FileIDs []int `json:"fileIds,omitempty"`
 		// Label identifiers.
 		LabelIDs []int `json:"labelIds,omitempty"`
@@ -213,7 +225,7 @@ type (
 		DateTo string `json:"dateTo,omitempty"`
 	}
 
-	CrowdinLanguageServiceTaskCreateForm struct {
+	LanguageServiceTaskCreateForm struct {
 		// Task title.
 		Title string `json:"title"`
 		// Language identifier.
@@ -222,11 +234,14 @@ type (
 		Type TaskType `json:"type"`
 		// Task vendor. Enum: "crowdin_language_service".
 		Vendor TaskVendor `json:"vendor"`
+		// Branch identifiers.
+		// One of branchIds, stringIds or fileIds is required.
+		BranchIDs []int `json:"branchIds,omitempty"`
 		// String identifiers.
-		// One of stringIds or fileIds is required.
+		// One of branchIds, stringIds or fileIds is required.
 		StringIDs []int `json:"stringIds,omitempty"`
 		// File identifiers.
-		// One of stringIds or fileIds is required.
+		// One of branchIds, stringIds or fileIds is required.
 		FileIDs []int `json:"fileIds,omitempty"`
 		// Label identifiers.
 		LabelIDs []int `json:"labelIds,omitempty"`
@@ -246,7 +261,7 @@ type (
 		DateTo string `json:"dateTo,omitempty"`
 	}
 
-	CrowdinVendorOhtTaskCreateForm struct {
+	VendorOhtTaskCreateForm struct {
 		// Task title.
 		Title string `json:"title"`
 		// Language identifier.
@@ -255,9 +270,14 @@ type (
 		Type TaskType `json:"type"`
 		// Task vendor. Enum: "oht" - OneHourTranslation.
 		Vendor TaskVendor `json:"vendor"`
+		// Branch identifiers.
+		// One of branchIds, stringIds or fileIds is required.
+		BranchIDs []int `json:"branchIds,omitempty"`
 		// String identifiers.
+		// One of branchIds, stringIds or fileIds is required.
 		StringIDs []int `json:"stringIds,omitempty"`
 		// File identifiers.
+		// One of branchIds, stringIds or fileIds is required.
 		FileIDs []int `json:"fileIds,omitempty"`
 		// Label identifiers.
 		LabelIDs []int `json:"labelIds,omitempty"`
@@ -286,7 +306,7 @@ type (
 		DateTo string `json:"dateTo,omitempty"`
 	}
 
-	CrowdinVendorGengoTaskCreateForm struct {
+	VendorGengoTaskCreateForm struct {
 		// Task title.
 		Title string `json:"title"`
 		// Language identifier.
@@ -295,9 +315,14 @@ type (
 		Type TaskType `json:"type"`
 		// Task vendor. Enum: "gengo" - Gengo.
 		Vendor TaskVendor `json:"vendor"`
+		// Branch identifiers.
+		// One of branchIds, stringIds or fileIds is required.
+		BranchIDs []int `json:"branchIds,omitempty"`
 		// String identifiers.
+		// One of branchIds, stringIds or fileIds is required.
 		StringIDs []int `json:"stringIds,omitempty"`
 		// File identifiers.
+		// One of branchIds, stringIds or fileIds is required.
 		FileIDs []int `json:"fileIds,omitempty"`
 		// Label identifiers.
 		LabelIDs []int `json:"labelIds,omitempty"`
@@ -329,7 +354,7 @@ type (
 		DateTo string `json:"dateTo,omitempty"`
 	}
 
-	CrowdinVendorManualTaskCreateForm struct {
+	VendorManualTaskCreateForm struct {
 		// Task title.
 		Title string `json:"title"`
 		// Language identifier.
@@ -340,9 +365,14 @@ type (
 		// inlingo, acclaro, translate_by_humans, lingo24, assertio_language_services,
 		// gte_localize, kettu_solutions, languageline_solutions.
 		Vendor TaskVendor `json:"vendor"`
+		// Branch identifiers.
+		// One of branchIds, stringIds or fileIds is required.
+		BranchIDs []int `json:"branchIds,omitempty"`
 		// String identifiers.
+		// One of branchIds, stringIds or fileIds is required.
 		StringIDs []int `json:"stringIds,omitempty"`
 		// File identifiers.
+		// One of branchIds, stringIds or fileIds is required.
 		FileIDs []int `json:"fileIds,omitempty"`
 		// Label identifiers.
 		LabelIDs []int `json:"labelIds,omitempty"`
@@ -370,7 +400,7 @@ type (
 		DateTo string `json:"dateTo,omitempty"`
 	}
 
-	CrowdinPendingTaskCreateForm struct {
+	PendingTaskCreateForm struct {
 		// Translate task identifier.
 		PrecedingTaskID int `json:"precedingTaskId"`
 		// Task type. Enum: 1 - proofread.
@@ -385,7 +415,7 @@ type (
 		Deadline string `json:"deadline,omitempty"`
 	}
 
-	CrowdinLanguageServicePendingTaskCreateForm struct {
+	LanguageServicePendingTaskCreateForm struct {
 		// Translate task identifier.
 		PrecedingTaskID int `json:"precedingTaskId"`
 		// Task type. Enum: 3 - proofread by vendor.
@@ -400,7 +430,7 @@ type (
 		Deadline string `json:"deadline,omitempty"`
 	}
 
-	CrowdinVendorManualPendingTaskCreateForm struct {
+	VendorManualPendingTaskCreateForm struct {
 		// Translate task identifier.
 		PrecedingTaskID int `json:"precedingTaskId"`
 		// Task type. Enum: 3 - proofread by vendor.
@@ -418,19 +448,113 @@ type (
 		// Task deadline date. Format: UTC, ISO 8601.
 		Deadline string `json:"deadline,omitempty"`
 	}
+)
 
-	CrowdinTaskAssignee struct {
-		// Project member identifier.
-		ID int `json:"id"`
-		// Defines how many words (starting from 1) are assigned
-		// to each task assignee. Note: Can be used only when
-		// `splitContent` parameter is specified.
-		WordsCount int `json:"wordsCount,omitempty"`
+type (
+	EnterpriseTaskCreateForm struct {
+		// Task type. Enum: 0 - translate, 1 - proofread.
+		// Note: Can't be used with `workflowStepId` in same request.
+		Type *TaskType `json:"type"`
+		// Task workflow step id.
+		// Note: Can't be used with `type` in same request.
+		WorkflowStepID int `json:"workflowStepId,omitempty"`
+		// Task title
+		Title string `json:"title"`
+		// Task language identifier.
+		LanguageID string `json:"languageId"`
+		// Task string identifiers.
+		// One of stringIds or fileIds is required.
+		StringIDs []int `json:"stringIds,omitempty"`
+		// Task file identifiers.
+		// One of stringIds or fileIds is required.
+		FileIDs []int `json:"fileIds,omitempty"`
+		// Label identifiers.
+		LabelIDs []int `json:"labelIds,omitempty"`
+		// Exclude label identifiers.
+		ExcludeLabelIDs []int `json:"excludeLabelIds,omitempty"`
+		// Task status. Enum: todo, in_progress.
+		Status TaskStatus `json:"status,omitempty"`
+		// Task description.
+		Description string `json:"description,omitempty"`
+		// Split content for task.
+		SplitContent *bool `json:"splitContent,omitempty"`
+		// Skip strings already included in other tasks. Default: false.
+		SkipAssignedStrings *bool `json:"skipAssignedStrings,omitempty"`
+		// Task assignees.
+		Assignees []CrowdinTaskAssignee `json:"assignees,omitempty"`
+		// Task assigned teams.
+		AssignedTeams []TaskAssignedTeam `json:"assignedTeams,omitempty"`
+		// Defines whether to export only pretranslated strings. Default: false.
+		// Note: `true` value can't be used with `skipUntranslatedStrings=false`,
+		// `type=0` or `type=2` in same request.
+		IncludePreTranslatedStringsOnly *bool `json:"includePreTranslatedStringsOnly,omitempty"`
+		// Task deadline date. Format: UTC, ISO 8601.
+		Deadline string `json:"deadline,omitempty"`
+		// Task started date. Format: UTC, ISO 8601.
+		StartedAt string `json:"startedAt,omitempty"`
+		// Start date for interval when strings were modified. Format: UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// End date for interval when strings were modified. Format: UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+		// Fields for task.
+		Fields map[string]any `json:"fields,omitempty"`
+	}
+
+	EnterpriseVendorTaskCreateForm struct {
+		// Task workflow step id with type `Translate by Vendor` or `Proofread by Vendor`.
+		WorkflowStepID int `json:"workflowStepId"`
+		// Task title.
+		Title string `json:"title"`
+		// Language identifier.
+		LanguageID string `json:"languageId"`
+		// String identifiers.
+		// One of stringIds or fileIds is required.
+		StringIDs []int `json:"stringIds,omitempty"`
+		// File identifiers.
+		// One of stringIds or fileIds is required.
+		FileIDs []int `json:"fileIds,omitempty"`
+		// Label identifiers.
+		LabelIDs []int `json:"labelIds,omitempty"`
+		// Exclude label identifiers.
+		ExcludeLabelIDs []int `json:"excludeLabelIds,omitempty"`
+		// Task description.
+		Description string `json:"description,omitempty"`
+		// Skip strings already included in other tasks. Default: false.
+		SkipAssignedStrings *bool `json:"skipAssignedStrings,omitempty"`
+		// Defines whether to export only pretranslated strings. Default: false.
+		// Note: `true` value can't be used with `skipUntranslatedStrings=false`,
+		// `type=0` or `type=2` in same request.
+		IncludePreTranslatedStringsOnly *bool `json:"includePreTranslatedStringsOnly,omitempty"`
+		// Task deadline date. Format: UTC, ISO 8601.
+		Deadline string `json:"deadline,omitempty"`
+		// Task started date. Format: UTC, ISO 8601.
+		StartedAt string `json:"startedAt,omitempty"`
+		// End date for interval when strings were modified. Format: UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+		// Fields for task.
+		Fields map[string]any `json:"fields,omitempty"`
+	}
+
+	EnterprisePendingTaskCreateForm struct {
+		// Translate task identifier.
+		PrecedingTaskID int `json:"precedingTaskId"`
+		// Task type. Enum: 1 - proofread.
+		Type TaskType `json:"type"`
+		// Task title.
+		Title string `json:"title"`
+		// Task description.
+		Description string `json:"description,omitempty"`
+		// Task assignees.
+		Assignees []CrowdinTaskAssignee `json:"assignees,omitempty"`
+		// Task assigned teams.
+		AssignedTeams []TaskAssignedTeam `json:"assignedTeams,omitempty"`
+		// Task deadline date. Format: UTC, ISO 8601.
+		Deadline string `json:"deadline,omitempty"`
 	}
 )
 
 // Validate checks if the request is valid.
-func (r *CrowdinTaskCreateForm) Validate() error {
+func (r *TaskCreateForm) Validate() error {
 	if r == nil {
 		return ErrNilRequest
 	}
@@ -439,7 +563,7 @@ func (r *CrowdinTaskCreateForm) Validate() error {
 }
 
 // ValidateRequest validates the request.
-func (r *CrowdinTaskCreateForm) ValidateRequest() error {
+func (r *TaskCreateForm) ValidateRequest() error {
 	if r.Title == "" {
 		return errors.New("title is required")
 	}
@@ -449,15 +573,15 @@ func (r *CrowdinTaskCreateForm) ValidateRequest() error {
 	if r.Type == nil || (*r.Type != TaskTypeTranslate && *r.Type != TaskTypeProofread) {
 		return fmt.Errorf("type is required and must be one of %d, %d", TaskTypeTranslate, TaskTypeProofread)
 	}
-	if len(r.StringIDs) == 0 && len(r.FileIDs) == 0 {
-		return errors.New("one of stringIds or fileIds is required")
+	if len(r.StringIDs) == 0 && len(r.FileIDs) == 0 && len(r.BranchIDs) == 0 {
+		return errors.New("one of stringIds, fileIds or branchIds is required")
 	}
 
 	return nil
 }
 
 // Validate checks if the request is valid.
-func (r *CrowdinLanguageServiceTaskCreateForm) Validate() error {
+func (r *LanguageServiceTaskCreateForm) Validate() error {
 	if r == nil {
 		return ErrNilRequest
 	}
@@ -466,7 +590,7 @@ func (r *CrowdinLanguageServiceTaskCreateForm) Validate() error {
 }
 
 // ValidateRequest validates the request.
-func (r *CrowdinLanguageServiceTaskCreateForm) ValidateRequest() error {
+func (r *LanguageServiceTaskCreateForm) ValidateRequest() error {
 	if r.Title == "" {
 		return errors.New("title is required")
 	}
@@ -480,15 +604,15 @@ func (r *CrowdinLanguageServiceTaskCreateForm) ValidateRequest() error {
 	if r.Vendor != TaskVendorCrowdinLanguageService {
 		return fmt.Errorf("vendor is required and must be %q", TaskVendorCrowdinLanguageService)
 	}
-	if len(r.StringIDs) == 0 && len(r.FileIDs) == 0 {
-		return errors.New("one of stringIds or fileIds is required")
+	if len(r.StringIDs) == 0 && len(r.FileIDs) == 0 && len(r.BranchIDs) == 0 {
+		return errors.New("one of stringIds, fileIds or branchIds is required")
 	}
 
 	return nil
 }
 
 // Validate checks if the request is valid.
-func (r *CrowdinVendorOhtTaskCreateForm) Validate() error {
+func (r *VendorOhtTaskCreateForm) Validate() error {
 	if r == nil {
 		return ErrNilRequest
 	}
@@ -497,7 +621,7 @@ func (r *CrowdinVendorOhtTaskCreateForm) Validate() error {
 }
 
 // ValidateRequest validates the request.
-func (r *CrowdinVendorOhtTaskCreateForm) ValidateRequest() error {
+func (r *VendorOhtTaskCreateForm) ValidateRequest() error {
 	if r.Title == "" {
 		return errors.New("title is required")
 	}
@@ -511,15 +635,15 @@ func (r *CrowdinVendorOhtTaskCreateForm) ValidateRequest() error {
 	if r.Vendor != TaskVendorOht {
 		return fmt.Errorf("vendor is required and must be %q", TaskVendorOht)
 	}
-	if len(r.StringIDs) == 0 && len(r.FileIDs) == 0 {
-		return errors.New("one of stringIds or fileIds is required")
+	if len(r.StringIDs) == 0 && len(r.FileIDs) == 0 && len(r.BranchIDs) == 0 {
+		return errors.New("one of stringIds, fileIds or branchIds is required")
 	}
 
 	return nil
 }
 
 // Validate checks if the request is valid.
-func (r *CrowdinVendorGengoTaskCreateForm) Validate() error {
+func (r *VendorGengoTaskCreateForm) Validate() error {
 	if r == nil {
 		return ErrNilRequest
 	}
@@ -528,7 +652,7 @@ func (r *CrowdinVendorGengoTaskCreateForm) Validate() error {
 }
 
 // ValidateRequest validates the request.
-func (r *CrowdinVendorGengoTaskCreateForm) ValidateRequest() error {
+func (r *VendorGengoTaskCreateForm) ValidateRequest() error {
 	if r.Title == "" {
 		return errors.New("title is required")
 	}
@@ -541,15 +665,15 @@ func (r *CrowdinVendorGengoTaskCreateForm) ValidateRequest() error {
 	if r.Vendor != TaskVendorGengo {
 		return fmt.Errorf("vendor is required and must be %q", TaskVendorGengo)
 	}
-	if len(r.StringIDs) == 0 && len(r.FileIDs) == 0 {
-		return errors.New("one of stringIds or fileIds is required")
+	if len(r.StringIDs) == 0 && len(r.FileIDs) == 0 && len(r.BranchIDs) == 0 {
+		return errors.New("one of stringIds, fileIds or branchIds is required")
 	}
 
 	return nil
 }
 
 // Validate checks if the request is valid.
-func (r *CrowdinVendorManualTaskCreateForm) Validate() error {
+func (r *VendorManualTaskCreateForm) Validate() error {
 	if r == nil {
 		return ErrNilRequest
 	}
@@ -558,7 +682,7 @@ func (r *CrowdinVendorManualTaskCreateForm) Validate() error {
 }
 
 // ValidateRequest validates the request.
-func (r *CrowdinVendorManualTaskCreateForm) ValidateRequest() error {
+func (r *VendorManualTaskCreateForm) ValidateRequest() error {
 	if r.Title == "" {
 		return errors.New("title is required")
 	}
@@ -572,15 +696,15 @@ func (r *CrowdinVendorManualTaskCreateForm) ValidateRequest() error {
 	if r.Vendor == "" {
 		return errors.New("vendor is required")
 	}
-	if len(r.StringIDs) == 0 && len(r.FileIDs) == 0 {
-		return errors.New("one of stringIds or fileIds is required")
+	if len(r.StringIDs) == 0 && len(r.FileIDs) == 0 && len(r.BranchIDs) == 0 {
+		return errors.New("one of stringIds, fileIds or branchIds is required")
 	}
 
 	return nil
 }
 
 // Validate checks if the request is valid.
-func (r *CrowdinPendingTaskCreateForm) Validate() error {
+func (r *PendingTaskCreateForm) Validate() error {
 	if r == nil {
 		return ErrNilRequest
 	}
@@ -589,7 +713,7 @@ func (r *CrowdinPendingTaskCreateForm) Validate() error {
 }
 
 // ValidateRequest validates the request.
-func (r *CrowdinPendingTaskCreateForm) ValidateRequest() error {
+func (r *PendingTaskCreateForm) ValidateRequest() error {
 	if r.PrecedingTaskID == 0 {
 		return errors.New("precedingTaskId is required")
 	}
@@ -604,7 +728,7 @@ func (r *CrowdinPendingTaskCreateForm) ValidateRequest() error {
 }
 
 // Validate checks if the request is valid.
-func (r *CrowdinLanguageServicePendingTaskCreateForm) Validate() error {
+func (r *LanguageServicePendingTaskCreateForm) Validate() error {
 	if r == nil {
 		return ErrNilRequest
 	}
@@ -613,7 +737,7 @@ func (r *CrowdinLanguageServicePendingTaskCreateForm) Validate() error {
 }
 
 // ValidateRequest validates the request.
-func (r *CrowdinLanguageServicePendingTaskCreateForm) ValidateRequest() error {
+func (r *LanguageServicePendingTaskCreateForm) ValidateRequest() error {
 	if r.PrecedingTaskID == 0 {
 		return errors.New("precedingTaskId is required")
 	}
@@ -628,7 +752,7 @@ func (r *CrowdinLanguageServicePendingTaskCreateForm) ValidateRequest() error {
 }
 
 // Validate checks if the request is valid.
-func (r *CrowdinVendorManualPendingTaskCreateForm) Validate() error {
+func (r *VendorManualPendingTaskCreateForm) Validate() error {
 	if r == nil {
 		return ErrNilRequest
 	}
@@ -637,7 +761,7 @@ func (r *CrowdinVendorManualPendingTaskCreateForm) Validate() error {
 }
 
 // ValidateRequest validates the request.
-func (r *CrowdinVendorManualPendingTaskCreateForm) ValidateRequest() error {
+func (r *VendorManualPendingTaskCreateForm) ValidateRequest() error {
 	if r.PrecedingTaskID == 0 {
 		return errors.New("precedingTaskId is required")
 	}
@@ -646,6 +770,90 @@ func (r *CrowdinVendorManualPendingTaskCreateForm) ValidateRequest() error {
 	}
 	if r.Vendor == "" {
 		return errors.New("vendor is required")
+	}
+	if r.Title == "" {
+		return errors.New("title is required")
+	}
+
+	return nil
+}
+
+// Validate checks if the request is valid.
+func (r *EnterpriseTaskCreateForm) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
+
+	return r.ValidateRequest()
+}
+
+// ValidateRequest validates the request.
+func (r *EnterpriseTaskCreateForm) ValidateRequest() error {
+	if r.WorkflowStepID == 0 && r.Type == nil {
+		return errors.New("workflowStepId or type is required")
+	}
+	if r.WorkflowStepID > 0 && r.Type != nil {
+		return errors.New("workflowStepId and type can't be used in the same request")
+	}
+	if r.Type != nil && (*r.Type != TaskTypeTranslate && *r.Type != TaskTypeProofread) {
+		return fmt.Errorf("type must be one of %d, %d", TaskTypeTranslate, TaskTypeProofread)
+	}
+	if r.Title == "" {
+		return errors.New("title is required")
+	}
+	if r.LanguageID == "" {
+		return errors.New("languageId is required")
+	}
+	if len(r.StringIDs) == 0 && len(r.FileIDs) == 0 {
+		return errors.New("one of stringIds or fileIds is required")
+	}
+
+	return nil
+}
+
+// Validate checks if the request is valid.
+func (r *EnterpriseVendorTaskCreateForm) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
+
+	return r.ValidateRequest()
+}
+
+// ValidateRequest validates the request.
+func (r *EnterpriseVendorTaskCreateForm) ValidateRequest() error {
+	if r.WorkflowStepID == 0 {
+		return errors.New("workflowStepId is required")
+	}
+	if r.Title == "" {
+		return errors.New("title is required")
+	}
+	if r.LanguageID == "" {
+		return errors.New("languageId is required")
+	}
+	if len(r.StringIDs) == 0 && len(r.FileIDs) == 0 {
+		return errors.New("one of stringIds or fileIds is required")
+	}
+
+	return nil
+}
+
+// Validate checks if the request is valid.
+func (r *EnterprisePendingTaskCreateForm) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
+
+	return r.ValidateRequest()
+}
+
+// ValidateRequest validates the request.
+func (r *EnterprisePendingTaskCreateForm) ValidateRequest() error {
+	if r.PrecedingTaskID == 0 {
+		return errors.New("precedingTaskId is required")
+	}
+	if r.Type != TaskTypeProofread {
+		return fmt.Errorf("type is required and must be %d", TaskTypeProofread)
 	}
 	if r.Title == "" {
 		return errors.New("title is required")
@@ -698,27 +906,25 @@ func (o *UserTasksListOptions) Values() (url.Values, bool) {
 type (
 	// TaskSettingsTemplate represents a task settings template.
 	TaskSettingsTemplate struct {
-		ID        int                         `json:"id"`
-		Name      string                      `json:"name"`
-		Config    *TaskSettingsTemplateConfig `json:"config"`
-		CreatedAt string                      `json:"createdAt"`
-		UpdatedAt string                      `json:"updatedAt"`
+		ID        int                        `json:"id"`
+		Name      string                     `json:"name"`
+		Config    TaskSettingsTemplateConfig `json:"config"`
+		CreatedAt string                     `json:"createdAt"`
+		UpdatedAt string                     `json:"updatedAt"`
 	}
 
 	// TaskSettingsTemplateConfig represents the configuration of a task
 	// settings template.
 	TaskSettingsTemplateConfig struct {
-		Languages []*TaskSettingsTemplateLanguage `json:"languages"`
+		Languages []TaskSettingsTemplateLanguage `json:"languages"`
 	}
 
 	// TaskSettingsTemplateLanguage represents the language settings of a
 	// task settings template.
 	TaskSettingsTemplateLanguage struct {
-		Languages []struct {
-			LanguageID string `json:"languageId"`
-			UserIDs    []int  `json:"userIds"`
-			TeamIDs    []int  `json:"teamIds,omitempty"`
-		} `json:"languages"`
+		LanguageID string `json:"languageId"`
+		UserIDs    []int  `json:"userIds"`
+		TeamIDs    []int  `json:"teamIds,omitempty"`
 	}
 )
 
@@ -753,8 +959,8 @@ func (r *TaskSettingsTemplateAddRequest) Validate() error {
 	if r.Name == "" {
 		return errors.New("name is required")
 	}
-	if r.Config.Languages == nil {
-		return errors.New("config is required")
+	if len(r.Config.Languages) == 0 {
+		return errors.New("config languages is required")
 	}
 
 	return nil

@@ -50,7 +50,7 @@ func (s *TasksService) Get(ctx context.Context, projectID, taskID int) (*model.T
 // Add creates a new task in a project.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.tasks.post
-func (s *TasksService) Add(ctx context.Context, projectID int, req *model.TaskAddRequest) (*model.Task, *Response, error) {
+func (s *TasksService) Add(ctx context.Context, projectID int, req model.TaskAddRequest) (*model.Task, *Response, error) {
 	res := new(model.TaskResponse)
 	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/tasks", projectID), req, res)
 
@@ -198,7 +198,7 @@ func (s *TasksService) AddSettingsTemplate(ctx context.Context, projectID int, r
 // - value (string|int): Value to be set. Enum: string, integer.
 //
 // https://developer.crowdin.com/api/v2/string-based/#operation/api.projects.tasks.settings-templates.patch
-func (s *TasksService) EditSettingsTemplate(ctx context.Context, projectID, taskSettingTemplateID int, req *model.UpdateRequest) (
+func (s *TasksService) EditSettingsTemplate(ctx context.Context, projectID, taskSettingTemplateID int, req []*model.UpdateRequest) (
 	*model.TaskSettingsTemplate, *Response, error,
 ) {
 	path := fmt.Sprintf("/api/v2/projects/%d/tasks/settings-templates/%d", projectID, taskSettingTemplateID)
