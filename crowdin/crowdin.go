@@ -45,6 +45,7 @@ type Client struct {
 	TranslationMemory         *TranslationMemoryService
 	Users                     *UsersService
 	MachineTranslationEngines *MachineTranslationEnginesService
+	Reports                   *ReportsService
 }
 
 // NewClient creates a new Crowdin API client with provided options (ex. WithHTTPClient).
@@ -98,6 +99,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.TranslationMemory = &TranslationMemoryService{client: c}
 	c.Users = &UsersService{client: c}
 	c.MachineTranslationEngines = &MachineTranslationEnginesService{client: c}
+	c.Reports = &ReportsService{client: c}
 
 	return c, nil
 }
