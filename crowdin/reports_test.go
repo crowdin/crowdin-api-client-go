@@ -49,6 +49,16 @@ func TestReportsService_GetArchive(t *testing.T) {
 		CreatedAt: "2023-09-23T11:26:54+00:00",
 	}
 	assert.Equal(t, expected, archive)
+
+	t.Run("enterprise client endpoint", func(t *testing.T) {
+		path := "/api/v2/reports/archives/12"
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			testURL(t, r, path)
+			fmt.Fprint(w, `{}`)
+		})
+		_, _, err = client.Reports.GetArchive(context.Background(), 0, 12)
+		require.NoError(t, err)
+	})
 }
 
 func TestReportsService_ListArchive(t *testing.T) {
@@ -82,6 +92,7 @@ func TestReportsService_ListArchive(t *testing.T) {
 	defer teardown()
 
 	for userID, tt := range tests {
+		userID++
 		t.Run(tt.name, func(t *testing.T) {
 			path := fmt.Sprintf("/api/v2/users/%d/reports/archives", userID)
 			mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
@@ -131,6 +142,16 @@ func TestReportsService_ListArchive(t *testing.T) {
 			assert.Equal(t, 10, resp.Pagination.Limit)
 		})
 	}
+
+	t.Run("enterprise client endpoint", func(t *testing.T) {
+		path := "/api/v2/reports/archives"
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			testURL(t, r, path)
+			fmt.Fprint(w, `{}`)
+		})
+		_, _, err := client.Reports.ListArchives(context.Background(), 0, nil)
+		require.NoError(t, err)
+	})
 }
 
 func TestReportsService_DeleteArchive(t *testing.T) {
@@ -147,6 +168,16 @@ func TestReportsService_DeleteArchive(t *testing.T) {
 	resp, err := client.Reports.DeleteArchive(context.Background(), 35, 12)
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
+
+	t.Run("enterprise client endpoint", func(t *testing.T) {
+		path := "/api/v2/reports/archives/12"
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			testURL(t, r, path)
+			fmt.Fprint(w, `{}`)
+		})
+		_, err := client.Reports.DeleteArchive(context.Background(), 0, 12)
+		require.NoError(t, err)
+	})
 }
 
 func TestReportsService_ExportArchive(t *testing.T) {
@@ -176,6 +207,7 @@ func TestReportsService_ExportArchive(t *testing.T) {
 	defer teardown()
 
 	for userID, tt := range tests {
+		userID++
 		t.Run(tt.name, func(t *testing.T) {
 			path := fmt.Sprintf("/api/v2/users/%d/reports/archives/12/exports", userID)
 			mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
@@ -207,6 +239,16 @@ func TestReportsService_ExportArchive(t *testing.T) {
 			assert.Equal(t, expected, status)
 		})
 	}
+
+	t.Run("enterprise client endpoint", func(t *testing.T) {
+		path := "/api/v2/reports/archives/12/exports"
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			testURL(t, r, path)
+			fmt.Fprint(w, `{}`)
+		})
+		_, _, err := client.Reports.ExportArchive(context.Background(), 0, 12, nil)
+		require.NoError(t, err)
+	})
 }
 func TestReportsService_CheckArchiveExportStatus(t *testing.T) {
 	client, mux, teardown := setupClient()
@@ -246,6 +288,16 @@ func TestReportsService_CheckArchiveExportStatus(t *testing.T) {
 		FinishedAt: "2023-09-23T11:26:54+00:00",
 	}
 	assert.Equal(t, expected, status)
+
+	t.Run("enterprise client endpoint", func(t *testing.T) {
+		path := "/api/v2/reports/archives/12/exports/50fb3506-4127-4ba8-8296-f97dc7e3e0c3"
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			testURL(t, r, path)
+			fmt.Fprint(w, `{}`)
+		})
+		_, _, err := client.Reports.CheckArchiveExportStatus(context.Background(), 0, 12, "50fb3506-4127-4ba8-8296-f97dc7e3e0c3")
+		require.NoError(t, err)
+	})
 }
 
 func TestReportsService_DownloadArchive(t *testing.T) {
@@ -281,6 +333,16 @@ func TestReportsService_DownloadArchive(t *testing.T) {
 		ExpireIn: "2023-09-20T10:31:21+00:00",
 	}
 	assert.Equal(t, expected, downloadLink)
+
+	t.Run("enterprise client endpoint", func(t *testing.T) {
+		path := "/api/v2/reports/archives/12/exports/50fb3506-4127-4ba8-8296-f97dc7e3e0c3/download"
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			testURL(t, r, path)
+			fmt.Fprint(w, `{}`)
+		})
+		_, _, err := client.Reports.DownloadArchive(context.Background(), 0, 12, "50fb3506-4127-4ba8-8296-f97dc7e3e0c3")
+		require.NoError(t, err)
+	})
 }
 
 func TestReportsService_Generate(t *testing.T) {
@@ -564,15 +626,25 @@ func TestReportsService_GetSettingsTemplate(t *testing.T) {
 		CreatedAt: "2023-09-23T11:26:54+00:00",
 		UpdatedAt: "2023-09-23T11:26:54+00:00",
 		IsPublic:  true,
-		IsGlobal:  false,
+		IsGlobal:  ToPtr(false),
 	}
 	assert.Equal(t, expected, template)
+
+	t.Run("enterprise client endpoint", func(t *testing.T) {
+		const path = "/api/v2/reports/settings-templates/1"
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			testURL(t, r, path)
+			fmt.Fprint(w, `{}`)
+		})
+		_, _, err = client.Reports.GetSettingsTemplate(context.Background(), 0, 1)
+		require.NoError(t, err)
+	})
 }
 
 func TestReportsService_ListSettingsTemplates(t *testing.T) {
 	tests := []struct {
 		name          string
-		opts          *model.ListOptions
+		opts          *model.ReportSettingsTemplatesListOptions
 		expectedQuery string
 	}{
 		{
@@ -582,13 +654,17 @@ func TestReportsService_ListSettingsTemplates(t *testing.T) {
 		},
 		{
 			name:          "empty options",
-			opts:          &model.ListOptions{},
+			opts:          &model.ReportSettingsTemplatesListOptions{},
 			expectedQuery: "",
 		},
 		{
-			name:          "with options",
-			opts:          &model.ListOptions{Offset: 10, Limit: 10},
-			expectedQuery: "?limit=10&offset=10",
+			name: "with options",
+			opts: &model.ReportSettingsTemplatesListOptions{
+				ProjectID:   1,
+				GroupID:     2,
+				ListOptions: model.ListOptions{Offset: 10, Limit: 10},
+			},
+			expectedQuery: "?groupId=2&limit=10&offset=10&projectId=1",
 		},
 	}
 
@@ -596,6 +672,7 @@ func TestReportsService_ListSettingsTemplates(t *testing.T) {
 	defer teardown()
 
 	for projectID, tt := range tests {
+		projectID++
 		t.Run(tt.name, func(t *testing.T) {
 			path := fmt.Sprintf("/api/v2/projects/%d/reports/settings-templates", projectID)
 			mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
@@ -632,6 +709,16 @@ func TestReportsService_ListSettingsTemplates(t *testing.T) {
 			assert.Equal(t, []*model.ReportSettingsTemplate{{ID: 1, Name: "Default template"}, {ID: 2, Name: "Custom template"}}, templates)
 		})
 	}
+
+	t.Run("enterprise client endpoint", func(t *testing.T) {
+		const path = "/api/v2/reports/settings-templates"
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			testURL(t, r, path)
+			fmt.Fprint(w, `{}`)
+		})
+		_, _, err := client.Reports.ListSettingsTemplates(context.Background(), 0, nil)
+		require.NoError(t, err)
+	})
 }
 
 func TestReportsService_AddSettingsTemplate(t *testing.T) {
@@ -724,6 +811,16 @@ func TestReportsService_AddSettingsTemplate(t *testing.T) {
 
 	expected := &model.ReportSettingsTemplate{ID: 1, Name: "Default template"}
 	assert.Equal(t, expected, template)
+
+	t.Run("enterprise client endpoint", func(t *testing.T) {
+		const path = "/api/v2/reports/settings-templates"
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			testURL(t, r, path)
+			fmt.Fprint(w, `{}`)
+		})
+		_, _, err = client.Reports.AddSettingsTemplate(context.Background(), 0, req)
+		require.NoError(t, err)
+	})
 }
 
 func TestReportsService_AddSettingsTemplate_WithValidationError(t *testing.T) {
@@ -817,6 +914,16 @@ func TestReportsService_EditSettingsTemplate(t *testing.T) {
 
 	expected := &model.ReportSettingsTemplate{ID: 2, Name: "New name", Currency: "USD"}
 	assert.Equal(t, expected, template)
+
+	t.Run("enterprise client endpoint", func(t *testing.T) {
+		const path = "/api/v2/reports/settings-templates/2"
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			testURL(t, r, path)
+			fmt.Fprint(w, `{}`)
+		})
+		_, _, err = client.Reports.EditSettingsTemplate(context.Background(), 0, 2, req)
+		require.NoError(t, err)
+	})
 }
 
 func TestReportsService_DeleteSettingsTemplate(t *testing.T) {
@@ -834,6 +941,16 @@ func TestReportsService_DeleteSettingsTemplate(t *testing.T) {
 	resp, err := client.Reports.DeleteSettingsTemplate(context.Background(), 1, 2)
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+
+	t.Run("enterprise client endpoint", func(t *testing.T) {
+		const path = "/api/v2/reports/settings-templates/2"
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			testURL(t, r, path)
+			fmt.Fprint(w, `{}`)
+		})
+		_, err = client.Reports.DeleteSettingsTemplate(context.Background(), 0, 2)
+		require.NoError(t, err)
+	})
 }
 
 func TestReportsService_CheckGroupReportStatus(t *testing.T) {

@@ -6,14 +6,23 @@ import (
 	"net/url"
 )
 
-// ReportFileFormat represents the format of a report
+// ReportFormat represents the format of a report
 // file to export.
-type ReportFileFormat string
+type ReportFormat string
 
 const (
-	ReportFormatXLSX ReportFileFormat = "xlsx"
-	ReportFormatCSV  ReportFileFormat = "csv"
-	ReportFormatJSON ReportFileFormat = "json"
+	ReportFormatXLSX ReportFormat = "xlsx"
+	ReportFormatCSV  ReportFormat = "csv"
+	ReportFormatJSON ReportFormat = "json"
+)
+
+// ReportScopeType represents the scope type of a report.
+type ReportScopeType string
+
+const (
+	ReportScopeTypeProject      ReportScopeType = "project"
+	ReportScopeTypeOrganization ReportScopeType = "organization"
+	ReportScopeTypeGroup        ReportScopeType = "group"
 )
 
 // ReportUnit represents a unit of a report.
@@ -77,9 +86,10 @@ type ReportArchiveListResponse struct {
 // the ReportsService.ListArchives method.
 type ReportArchivesListOptions struct {
 	// Filter only project report archives.
-	// Value: "project"
-	ScopeType string `json:"scopeType,omitempty"`
+	// Enum: project, organization, group.
+	ScopeType ReportScopeType `json:"scopeType,omitempty"`
 	// Filter archives by specific scope id.
+	// [Enterprise client] Use only if scopeType set to group or project.
 	ScopeID int `json:"scopeId,omitempty"`
 
 	ListOptions
@@ -95,7 +105,7 @@ func (o *ReportArchivesListOptions) Values() (url.Values, bool) {
 	v, _ := o.ListOptions.Values()
 
 	if o.ScopeType != "" {
-		v.Add("scopeType", o.ScopeType)
+		v.Add("scopeType", string(o.ScopeType))
 	}
 	if o.ScopeID != 0 {
 		v.Add("scopeId", fmt.Sprintf("%d", o.ScopeID))
@@ -136,9 +146,9 @@ type ReportStatusResponse struct {
 // ExportReportArchiveRequest defines the structure of a request to
 // export a report archive.
 type ExportReportArchiveRequest struct {
-	// Defines export file format.
+	// Export file format.
 	// Enum: xlsx, csv, json. Default: xlsx.
-	Format ReportFileFormat `json:"format,omitempty"`
+	Format ReportFormat `json:"format,omitempty"`
 }
 
 type (
@@ -161,8 +171,11 @@ type (
 	// ReportNetRateSchemes defines the net rate schemes for a report.
 	// Percentage paid of full translation rate.
 	ReportNetRateSchemes struct {
-		TMMatch         []ReportNetRateSchemeMatch `json:"tmMatch,omitempty"`
-		MTMatch         []ReportNetRateSchemeMatch `json:"mtMatch,omitempty"`
+		// Match type enum: "perfect", "100", "99-82", "81-60".
+		TMMatch []ReportNetRateSchemeMatch `json:"tmMatch,omitempty"`
+		// Match type enum: "100", "99-82", "81-60".
+		MTMatch []ReportNetRateSchemeMatch `json:"mtMatch,omitempty"`
+		// Match type enum: "100", "99-82".
 		SuggestionMatch []ReportNetRateSchemeMatch `json:"suggestionMatch,omitempty"`
 	}
 
@@ -209,7 +222,7 @@ type (
 		Currency string `json:"currency,omitempty"`
 		// Export file format.
 		// Enum: xlsx, csv, json. Default: xlsx.
-		Format ReportFileFormat `json:"format,omitempty"`
+		Format ReportFormat `json:"format,omitempty"`
 		// Base rates.
 		BaseRates *ReportBaseRates `json:"baseRates,omitempty"`
 		// Individual rates (Custom rates for certain languages or users).
@@ -257,7 +270,7 @@ type (
 		Currency string `json:"currency,omitempty"`
 		// Export file format.
 		// Enum: xlsx, csv, json. Default: xlsx.
-		Format ReportFileFormat `json:"format,omitempty"`
+		Format ReportFormat `json:"format,omitempty"`
 		// Base rates.
 		BaseRates *ReportBaseRates `json:"baseRates,omitempty"`
 		// Individual rates (Custom rates for certain languages or users).
@@ -305,7 +318,7 @@ type (
 		LanguageID string `json:"languageId,omitempty"`
 		// Export file format.
 		// Enum: xlsx, csv, json. Default: xlsx.
-		Format ReportFileFormat `json:"format,omitempty"`
+		Format ReportFormat `json:"format,omitempty"`
 		// Report date from in UTC, ISO 8601.
 		DateFrom string `json:"dateFrom,omitempty"`
 		// Report date to in UTC, ISO 8601.
@@ -431,7 +444,7 @@ type (
 		Currency string `json:"currency,omitempty"`
 		// Export file format.
 		// Enum: xlsx, csv, json. Default: xlsx.
-		Format ReportFileFormat `json:"format,omitempty"`
+		Format ReportFormat `json:"format,omitempty"`
 		// Base rates.
 		BaseRates *ReportBaseRates `json:"baseRates,omitempty"`
 		// Individual rates (Custom rates for certain languages or users).
@@ -464,7 +477,7 @@ type (
 		LanguageID string `json:"languageId,omitempty"`
 		// Export file format.
 		// Enum: xlsx, csv, json. Default: xlsx.
-		Format ReportFileFormat `json:"format,omitempty"`
+		Format ReportFormat `json:"format,omitempty"`
 		// Report date from in UTC, ISO 8601.
 		DateFrom string `json:"dateFrom,omitempty"`
 		// Report date to in UTC, ISO 8601.
@@ -515,10 +528,13 @@ type ReportSettingsTemplate struct {
 	Currency  string                       `json:"currency"`
 	Unit      string                       `json:"unit"`
 	Config    ReportSettingsTemplateConfig `json:"config"`
-	IsPublic  bool                         `json:"isPublic"`
-	IsGlobal  bool                         `json:"isGlobal"`
 	CreatedAt string                       `json:"createdAt"`
 	UpdatedAt string                       `json:"updatedAt"`
+	IsPublic  bool                         `json:"isPublic"`
+	IsGlobal  *bool                        `json:"isGlobal,omitempty"`
+
+	ProjectID int `json:"projectId,omitempty"`
+	GroupID   int `json:"groupId,omitempty"`
 }
 
 // ReportSettingsTemplateResponse defines the structure of a response
@@ -531,6 +547,36 @@ type ReportSettingsTemplateResponse struct {
 // when getting a list of report settings templates.
 type ReportSettingsTemplateListResponse struct {
 	Data []*ReportSettingsTemplateResponse `json:"data"`
+}
+
+// ReportSettingsTemplatesListOptions specifies the optional parameters to
+// the ReportsService.ListTemplates method.
+type ReportSettingsTemplatesListOptions struct {
+	// [Enterprise client] Project Identifier.
+	ProjectID int `json:"projectId,omitempty"`
+	// [Enterprise client] Group Identifier.
+	GroupID int `json:"groupId,omitempty"`
+
+	ListOptions
+}
+
+// Values returns the url.Values representation of the options.
+// It implements the crowdin.ListOptionsProvider interface.
+func (o *ReportSettingsTemplatesListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
+	v, _ := o.ListOptions.Values()
+
+	if o.ProjectID != 0 {
+		v.Add("projectId", fmt.Sprintf("%d", o.ProjectID))
+	}
+	if o.GroupID != 0 {
+		v.Add("groupId", fmt.Sprintf("%d", o.GroupID))
+	}
+
+	return v, len(v) > 0
 }
 
 // ReportSettingsTemplateAddRequest defines the structure of a request to
@@ -551,6 +597,11 @@ type ReportSettingsTemplateAddRequest struct {
 	IsPublic *bool `json:"isPublic,omitempty"`
 	// Report global visibility.
 	IsGlobal *bool `json:"isGlobal,omitempty"`
+
+	// [Enterprise client] Project Identifier.
+	ProjectID int `json:"projectId,omitempty"`
+	// [Enterprise client] Group Identifier.
+	GroupID int `json:"groupId,omitempty"`
 }
 
 // ReportSettingsTemplateUpdateRequest defines the structure of a request to
