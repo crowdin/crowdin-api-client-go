@@ -1,0 +1,1729 @@
+package crowdin
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"testing"
+
+	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestTasksService_Get(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks/2"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2,
+				"projectId": 2,
+				"creatorId": 6,
+				"type": 1,
+				"status": "todo",
+				"title": "French",
+				"assignees": [
+					{
+						"id": 12,
+						"username": "john_smith",
+						"fullName": "John Smith",
+						"avatarUrl": "",
+						"wordsCount": 5,
+						"wordsLeft": 3
+					}
+				],
+				"assignedTeams": [
+					{
+						"id": 1,
+						"wordsCount": 5
+					}
+				],
+				"progress": {
+					"total": 24,
+					"done": 15,
+					"percent": 62
+				},
+				"translateProgress": {
+					"total": 24,
+					"done": 15,
+					"percent": 62
+				},
+				"sourceLanguageId": "en",
+				"targetLanguageId": "fr",
+				"description": "Proofread all French strings",
+				"translationUrl": "/proofread/9092638ac9f2a2d1b5571d08edc53763/all/en-fr/10?task=dac37aff364d83899128e68afe0de4994",
+				"webUrl": "https://crowdin.com/project/example-project/tasks/1",
+				"wordsCount": 24,
+				"commentsCount": 0,
+				"deadline": "2023-09-27T07:00:14+00:00",
+				"startedAt": "2023-09-27T07:00:14+00:00",
+				"resolvedAt": "2023-09-27T07:00:14+00:00",
+				"timeRange": "2023-08-23T09:04:29+00:00|2019-07-23T09:04:29+00:00",
+				"workflowStepId": 10,
+				"buyUrl": "https://www.paypal.com/cgi-bin/webscr?cmd=...",
+				"createdAt": "2023-09-23T09:04:29+00:00",
+				"updatedAt": "2023-09-23T09:04:29+00:00",
+				"sourceLanguage": {
+					"id": "es",
+					"name": "Spanish",
+					"editorCode": "es",
+					"twoLettersCode": "es",
+					"threeLettersCode": "spa",
+					"locale": "es-ES",
+					"androidCode": "es-rES",
+					"osxCode": "es.lproj",
+					"osxLocale": "es",
+					"pluralCategoryNames": ["one"],
+					"pluralRules": "(n != 1)",
+					"pluralExamples": ["0, 2-999; 1.2, 2.07..."],
+					"textDirection": "ltr",
+					"dialectOf": "es"
+				},
+				"targetLanguages": [
+					{
+						"id": "es",
+						"name": "Spanish",
+						"editorCode": "es",
+						"twoLettersCode": "es",
+						"threeLettersCode": "spa",
+						"locale": "es-ES",
+						"androidCode": "es-rES",
+						"osxCode": "es.lproj",
+						"osxLocale": "es",
+						"pluralCategoryNames": ["one"],
+						"pluralRules": "(n != 1)",
+						"pluralExamples": ["0, 2-999; 1.2, 2.07..."],
+						"textDirection": "ltr",
+						"dialectOf": "es"
+					}
+				],
+				"labelIds": [13, 27],
+				"excludeLabelIds": [5,8],
+				"precedingTaskId": 1,
+				"vendor": "gengo",
+				"filesCount": 3,
+				"fileIds": [24,25,38],
+				"branchIds": [24,25,38],
+				"fields": {
+					"fieldSlug": "fieldValue"
+				}
+			}
+		}`)
+	})
+
+	task, resp, err := client.Tasks.Get(context.Background(), 1, 2)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := &model.Task{
+		ID:        2,
+		ProjectID: 2,
+		CreatorID: 6,
+		Type:      1,
+		Status:    "todo",
+		Title:     "French",
+		Assignees: []*model.TaskAssignee{
+			{
+				ID:         12,
+				Username:   "john_smith",
+				FullName:   "John Smith",
+				AvatarURL:  "",
+				WordsCount: 5,
+				WordsLeft:  3,
+			},
+		},
+		AssignedTeams: []*model.TaskAssignedTeam{
+			{
+				ID:         1,
+				WordsCount: 5,
+			},
+		},
+		Progress: model.TaskProgress{
+			Total:   24,
+			Done:    15,
+			Percent: 62,
+		},
+		SourceLanguageID: "en",
+		TargetLanguageID: "fr",
+		Description:      "Proofread all French strings",
+		TranslationURL:   "/proofread/9092638ac9f2a2d1b5571d08edc53763/all/en-fr/10?task=dac37aff364d83899128e68afe0de4994",
+		WebURL:           "https://crowdin.com/project/example-project/tasks/1",
+		WordsCount:       24,
+		CommentsCount:    0,
+		Deadline:         "2023-09-27T07:00:14+00:00",
+		StartedAt:        "2023-09-27T07:00:14+00:00",
+		ResolvedAt:       "2023-09-27T07:00:14+00:00",
+		TimeRange:        "2023-08-23T09:04:29+00:00|2019-07-23T09:04:29+00:00",
+		WorkflowStepID:   10,
+		BuyURL:           "https://www.paypal.com/cgi-bin/webscr?cmd=...",
+		CreatedAt:        "2023-09-23T09:04:29+00:00",
+		UpdatedAt:        "2023-09-23T09:04:29+00:00",
+		SourceLanguage: &model.Language{
+			ID:                  "es",
+			Name:                "Spanish",
+			EditorCode:          "es",
+			TwoLettersCode:      "es",
+			ThreeLettersCode:    "spa",
+			Locale:              "es-ES",
+			AndroidCode:         "es-rES",
+			OSXCode:             "es.lproj",
+			OSXLocale:           "es",
+			PluralCategoryNames: []string{"one"},
+			PluralRules:         "(n != 1)",
+			PluralExamples:      []string{"0, 2-999; 1.2, 2.07..."},
+			TextDirection:       "ltr",
+			DialectOf:           "es",
+		},
+		TargetLanguages: []*model.Language{
+			{
+				ID:                  "es",
+				Name:                "Spanish",
+				EditorCode:          "es",
+				TwoLettersCode:      "es",
+				ThreeLettersCode:    "spa",
+				Locale:              "es-ES",
+				AndroidCode:         "es-rES",
+				OSXCode:             "es.lproj",
+				OSXLocale:           "es",
+				PluralCategoryNames: []string{"one"},
+				PluralRules:         "(n != 1)",
+				PluralExamples:      []string{"0, 2-999; 1.2, 2.07..."},
+				TextDirection:       "ltr",
+				DialectOf:           "es",
+			},
+		},
+		LabelIDs:        []int{13, 27},
+		ExcludeLabelIDs: []int{5, 8},
+		PrecedingTaskID: 1,
+		Vendor:          "gengo",
+		FilesCount:      3,
+		FileIDs:         []int{24, 25, 38},
+		BranchIDs:       []int{24, 25, 38},
+		Fields: map[string]any{
+			"fieldSlug": "fieldValue",
+		},
+	}
+	assert.Equal(t, expected, task)
+
+	assert.Equal(t, 0, resp.Pagination.Offset)
+	assert.Equal(t, 0, resp.Pagination.Limit)
+}
+
+func TestTasksService_List(t *testing.T) {
+	tests := []struct {
+		name    string
+		options *model.TasksListOptions
+		want    string
+	}{
+		{
+			name:    "nil options",
+			options: nil,
+			want:    "",
+		},
+		{
+			name:    "empty options",
+			options: &model.TasksListOptions{},
+			want:    "",
+		},
+		{
+			name: "with options",
+			options: &model.TasksListOptions{
+				OrderBy:    "createdAt desc,title",
+				Status:     []model.TaskStatus{model.TaskStatusTodo, model.TaskStatusInProgress},
+				AssigneeID: 123,
+				ListOptions: model.ListOptions{
+					Offset: 10,
+					Limit:  25,
+				},
+			},
+			want: "?assigneeId=123&limit=25&offset=10&orderBy=createdAt+desc%2Ctitle&status=todo%2Cin_progress",
+		},
+	}
+
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	for projectID, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path := fmt.Sprintf("/api/v2/projects/%d/tasks", projectID)
+			mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+				testMethod(t, r, http.MethodGet)
+				testURL(t, r, path+tt.want)
+
+				fmt.Fprint(w, `{
+					"data": [
+						{
+							"data": {
+								"id": 2
+							}
+						},
+						{
+							"data": {
+								"id": 4
+							}
+						}
+					],
+					"pagination": {
+						"offset": 10,
+						"limit": 25
+					}
+				}`)
+			})
+
+			tasks, resp, err := client.Tasks.List(context.Background(), projectID, tt.options)
+			require.NoError(t, err)
+
+			expected := []*model.Task{{ID: 2}, {ID: 4}}
+			assert.Equal(t, expected, tasks)
+
+			assert.Equal(t, 10, resp.Pagination.Offset)
+			assert.Equal(t, 25, resp.Pagination.Limit)
+		})
+	}
+}
+
+func TestTasksService_Add_TaskCreateForm(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"title":"French",
+			"languageId":"en",
+			"type":1,
+			"fileIds":[1,2,3],
+			"labelIds":[1,2,3],
+			"excludeLabelIds":[4,5,6],
+			"status":"todo",
+			"description":"Proofread all French strings",
+			"splitContent":true,
+			"skipAssignedStrings":true,
+			"includePreTranslatedStringsOnly":true,
+			"assignees":[
+				{
+					"id":1,
+					"wordsCount":5
+				}
+			],
+			"deadline":"2023-09-27T07:00:14+00:00",
+			"startedAt":"2023-08-27T07:00:14+00:00",
+			"dateFrom":"2023-08-23T09:04:29+00:00",
+			"dateTo":"2023-09-23T09:04:29+00:00"
+		}`)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2,
+				"projectId": 2,
+				"creatorId": 6,
+				"type": 1,
+				"status": "todo",
+				"title": "French",
+				"assignees": [
+					{
+						"id": 12,
+						"username": "john_smith",
+						"fullName": "John Smith",
+						"avatarUrl": "",
+						"wordsCount": 5,
+						"wordsLeft": 3
+					}
+				],
+				"assignedTeams": [
+					{
+						"id": 1,
+						"wordsCount": 5
+					}
+				],
+				"progress": {
+					"total": 24,
+					"done": 15,
+					"percent": 62
+				},
+				"translateProgress": {
+					"total": 24,
+					"done": 15,
+					"percent": 62
+				},
+				"sourceLanguageId": "en",
+				"targetLanguageId": "fr",
+				"description": "Proofread all French strings",
+				"translationUrl": "/proofread/9092638ac9f2a2d1b5571d08edc53763/all/en-fr/10?task=dac37aff364d83899128e68afe0de4994",
+				"webUrl": "https://crowdin.com/project/example-project/tasks/1",
+				"wordsCount": 24,
+				"commentsCount": 0,
+				"deadline": "2023-09-27T07:00:14+00:00",
+				"startedAt": "2023-09-27T07:00:14+00:00",
+				"resolvedAt": "2023-09-27T07:00:14+00:00",
+				"timeRange": "2023-08-23T09:04:29+00:00|2019-07-23T09:04:29+00:00",
+				"workflowStepId": 10,
+				"buyUrl": "https://www.paypal.com/cgi-bin/webscr?cmd=...",
+				"createdAt": "2023-09-23T09:04:29+00:00",
+				"updatedAt": "2023-09-23T09:04:29+00:00",
+				"sourceLanguage": {
+					"id": "es",
+					"name": "Spanish",
+					"editorCode": "es",
+					"twoLettersCode": "es",
+					"threeLettersCode": "spa",
+					"locale": "es-ES",
+					"androidCode": "es-rES",
+					"osxCode": "es.lproj",
+					"osxLocale": "es",
+					"pluralCategoryNames": ["one"],
+					"pluralRules": "(n != 1)",
+					"pluralExamples": ["0, 2-999; 1.2, 2.07..."],
+					"textDirection": "ltr",
+					"dialectOf": "es"
+				},
+				"targetLanguages": [
+					{
+						"id": "es",
+						"name": "Spanish",
+						"editorCode": "es",
+						"twoLettersCode": "es",
+						"threeLettersCode": "spa",
+						"locale": "es-ES",
+						"androidCode": "es-rES",
+						"osxCode": "es.lproj",
+						"osxLocale": "es",
+						"pluralCategoryNames": ["one"],
+						"pluralRules": "(n != 1)",
+						"pluralExamples": ["0, 2-999; 1.2, 2.07..."],
+						"textDirection": "ltr",
+						"dialectOf": "es"
+					}
+				],
+				"labelIds": [13,27],
+				"excludeLabelIds": [5,8],
+				"precedingTaskId": 1,
+				"vendor": "gengo",
+				"filesCount": 3,
+				"fileIds": [24,25,38]
+			}
+		}`)
+	})
+
+	req := &model.TaskCreateForm{
+		Title:                           "French",
+		LanguageID:                      "en",
+		Type:                            ToPtr(model.TaskTypeProofread),
+		FileIDs:                         []int{1, 2, 3},
+		LabelIDs:                        []int{1, 2, 3},
+		ExcludeLabelIDs:                 []int{4, 5, 6},
+		Status:                          model.TaskStatusTodo,
+		Description:                     "Proofread all French strings",
+		SplitContent:                    ToPtr(true),
+		SkipAssignedStrings:             ToPtr(true),
+		IncludePreTranslatedStringsOnly: ToPtr(true),
+		Assignees:                       []model.CrowdinTaskAssignee{{ID: 1, WordsCount: 5}},
+		Deadline:                        "2023-09-27T07:00:14+00:00",
+		StartedAt:                       "2023-08-27T07:00:14+00:00",
+		DateFrom:                        "2023-08-23T09:04:29+00:00",
+		DateTo:                          "2023-09-23T09:04:29+00:00",
+	}
+	task, resp, err := client.Tasks.Add(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := &model.Task{
+		ID:        2,
+		ProjectID: 2,
+		CreatorID: 6,
+		Type:      1,
+		Status:    "todo",
+		Title:     "French",
+		Assignees: []*model.TaskAssignee{
+			{
+				ID:         12,
+				Username:   "john_smith",
+				FullName:   "John Smith",
+				AvatarURL:  "",
+				WordsCount: 5,
+				WordsLeft:  3,
+			},
+		},
+		AssignedTeams: []*model.TaskAssignedTeam{
+			{
+				ID:         1,
+				WordsCount: 5,
+			},
+		},
+		Progress: model.TaskProgress{
+			Total:   24,
+			Done:    15,
+			Percent: 62,
+		},
+		SourceLanguageID: "en",
+		TargetLanguageID: "fr",
+		Description:      "Proofread all French strings",
+		TranslationURL:   "/proofread/9092638ac9f2a2d1b5571d08edc53763/all/en-fr/10?task=dac37aff364d83899128e68afe0de4994",
+		WebURL:           "https://crowdin.com/project/example-project/tasks/1",
+		WordsCount:       24,
+		CommentsCount:    0,
+		Deadline:         "2023-09-27T07:00:14+00:00",
+		StartedAt:        "2023-09-27T07:00:14+00:00",
+		ResolvedAt:       "2023-09-27T07:00:14+00:00",
+		TimeRange:        "2023-08-23T09:04:29+00:00|2019-07-23T09:04:29+00:00",
+		WorkflowStepID:   10,
+		BuyURL:           "https://www.paypal.com/cgi-bin/webscr?cmd=...",
+		CreatedAt:        "2023-09-23T09:04:29+00:00",
+		UpdatedAt:        "2023-09-23T09:04:29+00:00",
+		SourceLanguage: &model.Language{
+			ID:                  "es",
+			Name:                "Spanish",
+			EditorCode:          "es",
+			TwoLettersCode:      "es",
+			ThreeLettersCode:    "spa",
+			Locale:              "es-ES",
+			AndroidCode:         "es-rES",
+			OSXCode:             "es.lproj",
+			OSXLocale:           "es",
+			PluralCategoryNames: []string{"one"},
+			PluralRules:         "(n != 1)",
+			PluralExamples:      []string{"0, 2-999; 1.2, 2.07..."},
+			TextDirection:       "ltr",
+			DialectOf:           "es",
+		},
+		TargetLanguages: []*model.Language{
+			{
+				ID:                  "es",
+				Name:                "Spanish",
+				EditorCode:          "es",
+				TwoLettersCode:      "es",
+				ThreeLettersCode:    "spa",
+				Locale:              "es-ES",
+				AndroidCode:         "es-rES",
+				OSXCode:             "es.lproj",
+				OSXLocale:           "es",
+				PluralCategoryNames: []string{"one"},
+				PluralRules:         "(n != 1)",
+				PluralExamples:      []string{"0, 2-999; 1.2, 2.07..."},
+				TextDirection:       "ltr",
+				DialectOf:           "es",
+			},
+		},
+		LabelIDs:        []int{13, 27},
+		ExcludeLabelIDs: []int{5, 8},
+		PrecedingTaskID: 1,
+		Vendor:          "gengo",
+		FilesCount:      3,
+		FileIDs:         []int{24, 25, 38},
+	}
+	assert.Equal(t, expected, task)
+}
+
+func TestTasksService_Add_LanguageServiceTaskCreateForm(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testBody(t, r, `{"title":"French","languageId":"en","type":3,"vendor":"crowdin_language_service","branchIds":[1,2,3]}`+"\n")
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2
+			}
+		}`)
+	})
+
+	req := &model.LanguageServiceTaskCreateForm{
+		Title:      "French",
+		LanguageID: "en",
+		Type:       model.TaskTypeProofreadByVendor,
+		Vendor:     model.TaskVendorCrowdinLanguageService,
+		BranchIDs:  []int{1, 2, 3},
+	}
+	task, resp, err := client.Tasks.Add(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.Equal(t, 2, task.ID)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+}
+
+func TestTasksService_Add_TaskCreateForm_WithRequestValidation(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *model.TaskCreateForm
+		err  string
+		pass bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &model.TaskCreateForm{},
+			err:  "title is required",
+		},
+		{
+			name: "invalid language",
+			req:  &model.TaskCreateForm{Title: "French"},
+			err:  "languageId is required",
+		},
+		{
+			name: "required type",
+			req:  &model.TaskCreateForm{Title: "French", LanguageID: "en"},
+			err:  "type is required and must be one of 0, 1",
+		},
+		{
+			name: "invalid type",
+			req:  &model.TaskCreateForm{Title: "French", LanguageID: "en", Type: ToPtr(model.TaskType(10))},
+			err:  "type is required and must be one of 0, 1",
+		},
+		{
+			name: "required fileIds/branchIds/stringIds",
+			req:  &model.TaskCreateForm{Title: "French", LanguageID: "en", Type: ToPtr(model.TaskTypeTranslate)},
+			err:  "one of stringIds, fileIds or branchIds is required",
+		},
+		{
+			name: "pass validation",
+			req: &model.TaskCreateForm{
+				Title:      "French",
+				LanguageID: "en",
+				Type:       ToPtr(model.TaskTypeProofread),
+				FileIDs:    []int{1, 2, 3},
+			},
+			pass: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.pass {
+				assert.Nil(t, tt.req.Validate())
+			} else {
+				assert.EqualError(t, tt.req.Validate(), tt.err)
+			}
+		})
+	}
+}
+
+func TestTasksService_Add_LanguageServiceTaskCreateForm_WithRequestValidation(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *model.LanguageServiceTaskCreateForm
+		err  string
+		pass bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &model.LanguageServiceTaskCreateForm{},
+			err:  "title is required",
+		},
+		{
+			name: "invalid language",
+			req:  &model.LanguageServiceTaskCreateForm{Title: "French"},
+			err:  "languageId is required",
+		},
+		{
+			name: "required type",
+			req:  &model.LanguageServiceTaskCreateForm{Title: "French", LanguageID: "en"},
+			err:  "type is required and must be one of 2, 3",
+		},
+		{
+			name: "invalid type",
+			req:  &model.LanguageServiceTaskCreateForm{Title: "French", LanguageID: "en", Type: 0},
+			err:  "type is required and must be one of 2, 3",
+		},
+		{
+			name: "required vendor",
+			req:  &model.LanguageServiceTaskCreateForm{Title: "French", LanguageID: "en", Type: model.TaskTypeTranslateByVendor},
+			err:  "vendor is required and must be \"crowdin_language_service\"",
+		},
+		{
+			name: "invalid vendor",
+			req: &model.LanguageServiceTaskCreateForm{
+				Title:      "French",
+				LanguageID: "en",
+				Type:       model.TaskTypeTranslateByVendor,
+				Vendor:     "invalid",
+			},
+			err: "vendor is required and must be \"crowdin_language_service\"",
+		},
+		{
+			name: "required fileIds/branchIds/stringIds",
+			req: &model.LanguageServiceTaskCreateForm{
+				Title:      "French",
+				LanguageID: "en",
+				Type:       model.TaskTypeTranslateByVendor,
+				Vendor:     model.TaskVendorCrowdinLanguageService,
+			},
+			err: "one of stringIds, fileIds or branchIds is required",
+		},
+		{
+			name: "pass validation",
+			req: &model.LanguageServiceTaskCreateForm{
+				Title:      "French",
+				LanguageID: "en",
+				Type:       model.TaskTypeTranslateByVendor,
+				Vendor:     model.TaskVendorCrowdinLanguageService,
+				BranchIDs:  []int{1, 2, 3},
+			},
+			pass: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.pass {
+				assert.Nil(t, tt.req.Validate())
+			} else {
+				assert.EqualError(t, tt.req.Validate(), tt.err)
+			}
+		})
+	}
+}
+
+func TestTasksService_Add_VendorOhtTaskCreateForm_WithRequestValidation(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *model.VendorOhtTaskCreateForm
+		err  string
+		pass bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &model.VendorOhtTaskCreateForm{},
+			err:  "title is required",
+		},
+		{
+			name: "invalid language",
+			req:  &model.VendorOhtTaskCreateForm{Title: "French"},
+			err:  "languageId is required",
+		},
+		{
+			name: "required type",
+			req:  &model.VendorOhtTaskCreateForm{Title: "French", LanguageID: "en"},
+			err:  "type is required and must be one of 2, 3",
+		},
+		{
+			name: "invalid type",
+			req:  &model.VendorOhtTaskCreateForm{Title: "French", LanguageID: "en", Type: 0},
+			err:  "type is required and must be one of 2, 3",
+		},
+		{
+			name: "required vendor",
+			req:  &model.VendorOhtTaskCreateForm{Title: "French", LanguageID: "en", Type: model.TaskTypeTranslateByVendor},
+			err:  "vendor is required and must be \"oht\"",
+		},
+		{
+			name: "invalid vendor",
+			req:  &model.VendorOhtTaskCreateForm{Title: "French", LanguageID: "en", Type: model.TaskTypeTranslateByVendor, Vendor: "invalid"},
+			err:  "vendor is required and must be \"oht\"",
+		},
+		{
+			name: "required fileIds/branchIds/stringIds",
+			req:  &model.VendorOhtTaskCreateForm{Title: "French", LanguageID: "en", Type: model.TaskTypeTranslateByVendor, Vendor: model.TaskVendorOht},
+			err:  "one of stringIds, fileIds or branchIds is required",
+		},
+		{
+			name: "pass validation",
+			req: &model.VendorOhtTaskCreateForm{
+				Title:      "French",
+				LanguageID: "en",
+				Type:       model.TaskTypeTranslateByVendor,
+				Vendor:     model.TaskVendorOht,
+				StringIDs:  []int{1, 2, 3},
+			},
+			pass: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.pass {
+				assert.Nil(t, tt.req.Validate())
+			} else {
+				assert.EqualError(t, tt.req.Validate(), tt.err)
+			}
+		})
+	}
+}
+
+func TestTasksService_Add_VendorGengoTaskCreateForm_WithRequestValidation(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *model.VendorGengoTaskCreateForm
+		err  string
+		pass bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &model.VendorGengoTaskCreateForm{},
+			err:  "title is required",
+		},
+		{
+			name: "invalid language",
+			req:  &model.VendorGengoTaskCreateForm{Title: "French"},
+			err:  "languageId is required",
+		},
+		{
+			name: "required type",
+			req:  &model.VendorGengoTaskCreateForm{Title: "French", LanguageID: "en"},
+			err:  "type is required and must be 2",
+		},
+		{
+			name: "invalid type",
+			req:  &model.VendorGengoTaskCreateForm{Title: "French", LanguageID: "en", Type: 0},
+			err:  "type is required and must be 2",
+		},
+		{
+			name: "required vendor",
+			req:  &model.VendorGengoTaskCreateForm{Title: "French", LanguageID: "en", Type: model.TaskTypeTranslateByVendor},
+			err:  "vendor is required and must be \"gengo\"",
+		},
+		{
+			name: "invalid vendor",
+			req:  &model.VendorGengoTaskCreateForm{Title: "French", LanguageID: "en", Type: model.TaskTypeTranslateByVendor, Vendor: "invalid"},
+			err:  "vendor is required and must be \"gengo\"",
+		},
+		{
+			name: "required fileIds/branchIds/stringIds",
+			req:  &model.VendorGengoTaskCreateForm{Title: "French", LanguageID: "en", Type: model.TaskTypeTranslateByVendor, Vendor: model.TaskVendorGengo},
+			err:  "one of stringIds, fileIds or branchIds is required",
+		},
+		{
+			name: "pass validation",
+			req: &model.VendorGengoTaskCreateForm{
+				Title:      "French",
+				LanguageID: "en",
+				Type:       model.TaskTypeTranslateByVendor,
+				Vendor:     model.TaskVendorGengo,
+				FileIDs:    []int{1, 2, 3},
+			},
+			pass: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.pass {
+				assert.Nil(t, tt.req.Validate())
+			} else {
+				assert.EqualError(t, tt.req.Validate(), tt.err)
+			}
+		})
+	}
+}
+
+func TestTasksService_Add_VendorManualTaskCreateForm_WithRequestValidation(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *model.VendorManualTaskCreateForm
+		err  string
+		pass bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &model.VendorManualTaskCreateForm{},
+			err:  "title is required",
+		},
+		{
+			name: "invalid language",
+			req:  &model.VendorManualTaskCreateForm{Title: "French"},
+			err:  "languageId is required",
+		},
+		{
+			name: "required type",
+			req:  &model.VendorManualTaskCreateForm{Title: "French", LanguageID: "en"},
+			err:  "type is required and must be one of 2, 3",
+		},
+		{
+			name: "invalid type",
+			req:  &model.VendorManualTaskCreateForm{Title: "French", LanguageID: "en", Type: 0},
+			err:  "type is required and must be one of 2, 3",
+		},
+		{
+			name: "required vendor",
+			req:  &model.VendorManualTaskCreateForm{Title: "French", LanguageID: "en", Type: model.TaskTypeTranslateByVendor},
+			err:  "vendor is required",
+		},
+		{
+			name: "required fileIds/branchIds/stringIds",
+			req:  &model.VendorManualTaskCreateForm{Title: "French", LanguageID: "en", Type: model.TaskTypeTranslateByVendor, Vendor: model.TaskVendorAlconost},
+			err:  "one of stringIds, fileIds or branchIds is required",
+		},
+
+		{
+			name: "pass validation",
+			req: &model.VendorManualTaskCreateForm{
+				Title:      "French",
+				LanguageID: "en",
+				Type:       model.TaskTypeTranslateByVendor,
+				Vendor:     model.TaskVendorAlconost,
+				BranchIDs:  []int{1, 2, 3},
+			},
+			pass: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.pass {
+				assert.Nil(t, tt.req.Validate())
+			} else {
+				assert.EqualError(t, tt.req.Validate(), tt.err)
+			}
+		})
+	}
+}
+
+func TestTasksService_Add_PendingTaskCreateForm_WithRequestValidation(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *model.PendingTaskCreateForm
+		err  string
+		pass bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &model.PendingTaskCreateForm{},
+			err:  "precedingTaskId is required",
+		},
+		{
+			name: "invalid type",
+			req:  &model.PendingTaskCreateForm{PrecedingTaskID: 1},
+			err:  "type is required and must be 1",
+		},
+		{
+			name: "required title",
+			req:  &model.PendingTaskCreateForm{PrecedingTaskID: 1, Type: model.TaskTypeProofread},
+			err:  "title is required",
+		},
+		{
+			name: "pass validation",
+			req:  &model.PendingTaskCreateForm{PrecedingTaskID: 1, Type: model.TaskTypeProofread, Title: "French"},
+			pass: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.pass {
+				assert.Nil(t, tt.req.Validate())
+			} else {
+				assert.EqualError(t, tt.req.Validate(), tt.err)
+			}
+		})
+	}
+}
+
+func TestTasksService_Add_LanguageServicePendingTaskCreateForm_WithRequestValidation(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *model.LanguageServicePendingTaskCreateForm
+		err  string
+		pass bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &model.LanguageServicePendingTaskCreateForm{},
+			err:  "precedingTaskId is required",
+		},
+		{
+			name: "invalid type",
+			req:  &model.LanguageServicePendingTaskCreateForm{PrecedingTaskID: 1},
+			err:  "type is required and must be 3",
+		},
+		{
+			name: "required title",
+			req:  &model.LanguageServicePendingTaskCreateForm{PrecedingTaskID: 1, Type: model.TaskTypeProofreadByVendor},
+			err:  "title is required",
+		},
+		{
+			name: "pass validation",
+			req:  &model.LanguageServicePendingTaskCreateForm{PrecedingTaskID: 1, Type: model.TaskTypeProofreadByVendor, Title: "French"},
+			pass: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.pass {
+				assert.Nil(t, tt.req.Validate())
+			} else {
+				assert.EqualError(t, tt.req.Validate(), tt.err)
+			}
+		})
+	}
+}
+
+func TestTasksService_Add_VendorManualPendingTaskCreateForm_WithRequestValidation(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *model.VendorManualPendingTaskCreateForm
+		err  string
+		pass bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &model.VendorManualPendingTaskCreateForm{},
+			err:  "precedingTaskId is required",
+		},
+		{
+			name: "invalid type",
+			req:  &model.VendorManualPendingTaskCreateForm{PrecedingTaskID: 1},
+			err:  "type is required and must be 3",
+		},
+		{
+			name: "required vendor",
+			req:  &model.VendorManualPendingTaskCreateForm{PrecedingTaskID: 1, Type: model.TaskTypeProofreadByVendor},
+			err:  "vendor is required",
+		},
+		{
+			name: "required title",
+			req:  &model.VendorManualPendingTaskCreateForm{PrecedingTaskID: 1, Type: model.TaskTypeProofreadByVendor, Vendor: model.TaskVendorAlconost},
+			err:  "title is required",
+		},
+		{
+			name: "pass validation",
+			req: &model.VendorManualPendingTaskCreateForm{
+				PrecedingTaskID: 1,
+				Type:            model.TaskTypeProofreadByVendor,
+				Vendor:          model.TaskVendorAlconost,
+				Title:           "French",
+			},
+			pass: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.pass {
+				assert.Nil(t, tt.req.Validate())
+			} else {
+				assert.EqualError(t, tt.req.Validate(), tt.err)
+			}
+		})
+	}
+}
+
+func TestTasksService_Add_EnterpriseTaskCreateForm_WithRequestValidation(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *model.EnterpriseTaskCreateForm
+		err  string
+		pass bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &model.EnterpriseTaskCreateForm{},
+			err:  "workflowStepId or type is required",
+		},
+		{
+			name: "one of workflowStepId or type is required",
+			req:  &model.EnterpriseTaskCreateForm{WorkflowStepID: 1, Type: ToPtr(model.TaskTypeProofread)},
+			err:  "workflowStepId and type can't be used in the same request",
+		},
+		{
+			name: "invalid type",
+			req:  &model.EnterpriseTaskCreateForm{Type: ToPtr(model.TaskType(10))},
+			err:  "type must be one of 0, 1",
+		},
+		{
+			name: "required title",
+			req:  &model.EnterpriseTaskCreateForm{Type: ToPtr(model.TaskTypeTranslate)},
+			err:  "title is required",
+		},
+		{
+			name: "required language",
+			req:  &model.EnterpriseTaskCreateForm{WorkflowStepID: 1, Title: "French"},
+			err:  "languageId is required",
+		},
+		{
+			name: "stringIds or fileIds is required",
+			req:  &model.EnterpriseTaskCreateForm{WorkflowStepID: 1, Title: "French", LanguageID: "en"},
+			err:  "one of stringIds or fileIds is required",
+		},
+		{
+			name: "pass validation",
+			req:  &model.EnterpriseTaskCreateForm{WorkflowStepID: 1, Title: "French", LanguageID: "en", FileIDs: []int{1}},
+			pass: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.pass {
+				assert.Nil(t, tt.req.Validate())
+			} else {
+				assert.EqualError(t, tt.req.Validate(), tt.err)
+			}
+		})
+	}
+}
+
+func TestTasksService_Add_EnterpriseVendorTaskCreateForm_WithRequestValidation(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *model.EnterpriseVendorTaskCreateForm
+		err  string
+		pass bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &model.EnterpriseVendorTaskCreateForm{},
+			err:  "workflowStepId is required",
+		},
+		{
+			name: "required title",
+			req:  &model.EnterpriseVendorTaskCreateForm{WorkflowStepID: 1},
+			err:  "title is required",
+		},
+		{
+			name: "required language",
+			req:  &model.EnterpriseVendorTaskCreateForm{WorkflowStepID: 1, Title: "French"},
+			err:  "languageId is required",
+		},
+		{
+			name: "stringIds or fileIds is required",
+			req:  &model.EnterpriseVendorTaskCreateForm{WorkflowStepID: 1, Title: "French", LanguageID: "en"},
+			err:  "one of stringIds or fileIds is required",
+		},
+		{
+			name: "pass validation",
+			req:  &model.EnterpriseVendorTaskCreateForm{WorkflowStepID: 1, Title: "French", LanguageID: "en", StringIDs: []int{1}},
+			pass: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.pass {
+				assert.Nil(t, tt.req.Validate())
+			} else {
+				assert.EqualError(t, tt.req.Validate(), tt.err)
+			}
+		})
+	}
+}
+
+func TestTasksService_Add_EnterprisePendingTaskCreateForm_WithRequestValidation(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *model.EnterprisePendingTaskCreateForm
+		err  string
+		pass bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &model.EnterprisePendingTaskCreateForm{},
+			err:  "precedingTaskId is required",
+		},
+		{
+			name: "invalid type",
+			req:  &model.EnterprisePendingTaskCreateForm{PrecedingTaskID: 1},
+			err:  "type is required and must be 1",
+		},
+		{
+			name: "invalid title",
+			req:  &model.EnterprisePendingTaskCreateForm{PrecedingTaskID: 1, Type: model.TaskTypeProofread},
+			err:  "title is required",
+		},
+		{
+			name: "pass validation",
+			req:  &model.EnterprisePendingTaskCreateForm{PrecedingTaskID: 1, Type: model.TaskTypeProofread, Title: "French"},
+			pass: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.pass {
+				assert.Nil(t, tt.req.Validate())
+			} else {
+				assert.EqualError(t, tt.req.Validate(), tt.err)
+			}
+		})
+	}
+}
+
+func TestTasksService_Edit(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks/2"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPatch)
+		testURL(t, r, path)
+		testBody(t, r, `[{"op":"replace","path":"/status","value":"in_progress"},{"op":"replace","path":"/title","value":"French"}]`+"\n")
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2,
+				"status": "in_progress",
+				"title": "French"
+			}
+		}`)
+	})
+
+	req := []*model.UpdateRequest{
+		{
+			Op:    "replace",
+			Path:  "/status",
+			Value: "in_progress",
+		},
+		{
+			Op:    "replace",
+			Path:  "/title",
+			Value: "French",
+		},
+	}
+	task, resp, err := client.Tasks.Edit(context.Background(), 1, 2, req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	assert.Equal(t, 2, task.ID)
+	assert.Equal(t, model.TaskStatusInProgress, task.Status)
+	assert.Equal(t, "French", task.Title)
+}
+
+func TestTasksService_Delete(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks/2"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodDelete)
+		testURL(t, r, path)
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	resp, err := client.Tasks.Delete(context.Background(), 1, 2)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}
+
+func TestTasksService_ListUserTasks(t *testing.T) {
+	tests := []struct {
+		name    string
+		options *model.UserTasksListOptions
+		want    string
+	}{
+		{
+			name:    "nil options",
+			options: nil,
+			want:    "",
+		},
+		{
+			name:    "empty options",
+			options: &model.UserTasksListOptions{},
+			want:    "",
+		},
+		{
+			name:    "with isArchived=0",
+			options: &model.UserTasksListOptions{IsArchived: ToPtr(0)},
+			want:    "?isArchived=0",
+		},
+		{
+			name: "with options",
+			options: &model.UserTasksListOptions{
+				OrderBy:    "createdAt desc,title",
+				Status:     []model.TaskStatus{model.TaskStatusTodo, model.TaskStatusInProgress},
+				IsArchived: ToPtr(1),
+				ListOptions: model.ListOptions{
+					Offset: 10,
+					Limit:  25,
+				},
+			},
+			want: "?isArchived=1&limit=25&offset=10&orderBy=createdAt+desc%2Ctitle&status=todo%2Cin_progress",
+		},
+	}
+
+	for _, tt := range tests {
+		client, mux, teardown := setupClient()
+		defer teardown()
+
+		t.Run(tt.name, func(t *testing.T) {
+			const path = "/api/v2/user/tasks"
+			mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+				testMethod(t, r, http.MethodGet)
+				testURL(t, r, path+tt.want)
+
+				fmt.Fprint(w, `{
+					"data": [
+						{
+							"data": {
+								"id": 2,
+								"isArchived": false
+							}
+						},
+						{
+							"data": {
+								"id": 4,
+								"isArchived": true
+							}
+						}
+					],
+					"pagination": {
+						"offset": 10,
+						"limit": 25
+					}
+				}`)
+			})
+
+			tasks, resp, err := client.Tasks.ListUserTasks(context.Background(), tt.options)
+			require.NoError(t, err)
+
+			expected := []*model.Task{
+				{ID: 2, IsArchived: ToPtr(false)},
+				{ID: 4, IsArchived: ToPtr(true)}}
+			assert.Equal(t, expected, tasks)
+
+			assert.Equal(t, 10, resp.Pagination.Offset)
+			assert.Equal(t, 25, resp.Pagination.Limit)
+		})
+	}
+}
+
+func TestTasksService_EditArchivedStatus(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const (
+		projectID = 123
+		path      = "/api/v2/tasks/2"
+	)
+
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPatch)
+		testURL(t, r, path+fmt.Sprintf("?projectId=%d", projectID))
+		testBody(t, r, `[{"op":"replace","path":"/isArchived","value":true}]`+"\n")
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2,
+				"isArchived": true
+			}
+		}`)
+	})
+
+	req := []*model.UpdateRequest{
+		{
+			Op:    "replace",
+			Path:  "/isArchived",
+			Value: true,
+		},
+	}
+	task, resp, err := client.Tasks.EditArchivedStatus(context.Background(), projectID, 2, req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	assert.Equal(t, 2, task.ID)
+	assert.Equal(t, true, *task.IsArchived)
+}
+
+func TestTasksService_ExportStrings(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks/2/exports"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"url": "https://production-enterprise-importer.downloads.crowdin.com/992000002/2/14.xliff",
+				"expireIn": "2023-09-27T07:00:14+00:00"
+			}
+		}`)
+	})
+
+	link, resp, err := client.Tasks.ExportStrings(context.Background(), 1, 2)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	assert.Equal(t, "https://production-enterprise-importer.downloads.crowdin.com/992000002/2/14.xliff", link.URL)
+	assert.Equal(t, "2023-09-27T07:00:14+00:00", link.ExpireIn)
+}
+
+func TestTasksService_ExportStrings_NoStrings(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks/2/exports"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	link, resp, err := client.Tasks.ExportStrings(context.Background(), 1, 2)
+	require.NoError(t, err)
+	assert.Nil(t, link)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}
+
+func TestTasksService_GetSettingsTepmlate(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks/settings-templates/2"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 1,
+				"name": "Default template",
+				"config": {
+					"languages": [
+						{
+							"languageId": "uk",
+							"userIds": [1]
+						}
+					]
+				},
+				"createdAt": "2023-09-23T11:26:54+00:00",
+				"updatedAt": "2023-09-23T11:26:54+00:00"
+			}
+		}`)
+	})
+
+	template, resp, err := client.Tasks.GetSettingsTemplate(context.Background(), 1, 2)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := &model.TaskSettingsTemplate{
+		ID:   1,
+		Name: "Default template",
+		Config: model.TaskSettingsTemplateConfig{
+			Languages: []model.TaskSettingsTemplateLanguage{
+				{
+					LanguageID: "uk",
+					UserIDs:    []int{1},
+				},
+			},
+		},
+		CreatedAt: "2023-09-23T11:26:54+00:00",
+		UpdatedAt: "2023-09-23T11:26:54+00:00",
+	}
+	assert.Equal(t, expected, template)
+}
+
+func TestTasksService_ListSettingsTepmlates(t *testing.T) {
+	tests := []struct {
+		name string
+		opts *model.ListOptions
+		want string
+	}{
+		{
+			name: "nil options",
+			opts: nil,
+			want: "",
+		},
+		{
+			name: "empty options",
+			opts: &model.ListOptions{},
+			want: "",
+		},
+		{
+			name: "with options",
+			opts: &model.ListOptions{
+				Offset: 10,
+				Limit:  25,
+			},
+			want: "?limit=25&offset=10",
+		},
+	}
+
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	for projectID, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path := fmt.Sprintf("/api/v2/projects/%d/tasks/settings-templates", projectID)
+			mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+				testMethod(t, r, http.MethodGet)
+				testURL(t, r, path+tt.want)
+
+				fmt.Fprint(w, `{
+					"data": [
+						{
+							"data": {
+								"id": 1,
+								"name": "Default template",
+								"config": {
+									"languages": [
+										{
+											"languageId": "uk",
+											"userIds": [1],
+											"teamIds": [2]
+										}
+									]
+								},
+								"createdAt": "2023-09-23T11:26:54+00:00",
+								"updatedAt": "2023-09-23T11:26:54+00:00"
+							}
+						}
+					],
+					"pagination": {
+						"offset": 0,
+						"limit": 25
+					}
+				}`)
+			})
+
+			templates, resp, err := client.Tasks.ListSettingsTemplates(context.Background(), projectID, tt.opts)
+			require.NoError(t, err)
+
+			expected := []*model.TaskSettingsTemplate{
+				{
+					ID:   1,
+					Name: "Default template",
+					Config: model.TaskSettingsTemplateConfig{
+						Languages: []model.TaskSettingsTemplateLanguage{
+							{
+								LanguageID: "uk",
+								UserIDs:    []int{1},
+								TeamIDs:    []int{2},
+							},
+						},
+					},
+					CreatedAt: "2023-09-23T11:26:54+00:00",
+					UpdatedAt: "2023-09-23T11:26:54+00:00",
+				},
+			}
+			assert.Equal(t, expected, templates)
+
+			assert.Equal(t, 0, resp.Pagination.Offset)
+			assert.Equal(t, 25, resp.Pagination.Limit)
+		})
+	}
+}
+
+func TestTasksService_AddSettingsTepmlates(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks/settings-templates"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testBody(t, r, `{"name":"Default template","config":{"languages":[{"languageId":"uk","userIds":[1]}]}}`+"\n")
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 1,
+				"name": "Default template",
+				"config": {
+					"languages": [
+						{
+							"languageId": "uk",
+							"userIds": [1]
+						}
+					]
+				},
+				"createdAt": "2023-09-23T11:26:54+00:00",
+				"updatedAt": "2023-09-23T11:26:54+00:00"
+			}
+		}`)
+	})
+
+	req := &model.TaskSettingsTemplateAddRequest{
+		Name: "Default template",
+		Config: model.TaskSettingsTemplateConfig{
+			Languages: []model.TaskSettingsTemplateLanguage{
+				{
+					LanguageID: "uk",
+					UserIDs:    []int{1},
+				},
+			},
+		},
+	}
+	template, resp, err := client.Tasks.AddSettingsTemplate(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	expected := &model.TaskSettingsTemplate{
+		ID:   1,
+		Name: "Default template",
+		Config: model.TaskSettingsTemplateConfig{
+			Languages: []model.TaskSettingsTemplateLanguage{
+				{
+					LanguageID: "uk",
+					UserIDs:    []int{1},
+				},
+			},
+		},
+		CreatedAt: "2023-09-23T11:26:54+00:00",
+		UpdatedAt: "2023-09-23T11:26:54+00:00",
+	}
+	assert.Equal(t, expected, template)
+}
+
+func TestTasksService_AddSettingsTepmlates_WithValidationErrors(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *model.TaskSettingsTemplateAddRequest
+		err  string
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &model.TaskSettingsTemplateAddRequest{},
+			err:  "name is required",
+		},
+		{
+			name: "empty languages",
+			req: &model.TaskSettingsTemplateAddRequest{
+				Name:   "Default template",
+				Config: model.TaskSettingsTemplateConfig{},
+			},
+			err: "config languages is required",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.EqualError(t, tt.req.Validate(), tt.err)
+		})
+	}
+}
+
+func TestTasksService_EditSettingsTepmlates(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks/settings-templates/2"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPatch)
+		testURL(t, r, path)
+		testBody(t, r, `[{"op":"replace","path":"/name","value":"Default template"}]`+"\n")
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 1,
+				"name": "Default template",
+				"config": {
+					"languages": [
+						{
+							"languageId": "uk",
+							"userIds": [1]
+						}
+					]
+				},
+				"createdAt": "2023-09-23T11:26:54+00:00",
+				"updatedAt": "2023-09-23T11:26:54+00:00"
+			}
+		}`)
+	})
+
+	req := []*model.UpdateRequest{
+		{
+			Op:    "replace",
+			Path:  "/name",
+			Value: "Default template",
+		},
+	}
+	template, resp, err := client.Tasks.EditSettingsTemplate(context.Background(), 1, 2, req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := &model.TaskSettingsTemplate{
+		ID:   1,
+		Name: "Default template",
+		Config: model.TaskSettingsTemplateConfig{
+			Languages: []model.TaskSettingsTemplateLanguage{
+				{
+					LanguageID: "uk",
+					UserIDs:    []int{1},
+				},
+			},
+		},
+		CreatedAt: "2023-09-23T11:26:54+00:00",
+		UpdatedAt: "2023-09-23T11:26:54+00:00",
+	}
+	assert.Equal(t, expected, template)
+}
+
+func TestTasksService_DeleteSettingsTepmlates(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks/settings-templates/2"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodDelete)
+		testURL(t, r, path)
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	resp, err := client.Tasks.DeleteSettingsTemplate(context.Background(), 1, 2)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}

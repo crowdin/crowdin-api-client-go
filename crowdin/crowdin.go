@@ -45,6 +45,7 @@ type Client struct {
 	TranslationMemory         *TranslationMemoryService
 	Users                     *UsersService
 	MachineTranslationEngines *MachineTranslationEnginesService
+	Tasks                     *TasksService
 	Reports                   *ReportsService
 }
 
@@ -99,6 +100,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.TranslationMemory = &TranslationMemoryService{client: c}
 	c.Users = &UsersService{client: c}
 	c.MachineTranslationEngines = &MachineTranslationEnginesService{client: c}
+	c.Tasks = &TasksService{client: c}
 	c.Reports = &ReportsService{client: c}
 
 	return c, nil
@@ -189,6 +191,10 @@ func (c *Client) do(r *http.Request, v any) (*Response, error) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return response, fmt.Errorf("client: error reading response body: %w", err)
+	}
+
+	if resp.StatusCode == http.StatusNoContent {
+		return response, nil
 	}
 
 	if code := resp.StatusCode; code >= http.StatusBadRequest && code <= 599 {
