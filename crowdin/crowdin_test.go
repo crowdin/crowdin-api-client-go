@@ -16,7 +16,7 @@ func setupClient() (client *Client, mux *http.ServeMux, teardown func()) {
 	mux = http.NewServeMux()
 	server := httptest.NewServer(mux)
 
-	client, _ = NewClient("access_token")
+	client, _ = NewClient("access_token", WithOrganization("demo"))
 	url, _ := url.Parse(server.URL)
 	client.baseURL = url
 
