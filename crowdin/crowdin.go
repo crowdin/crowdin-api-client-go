@@ -47,6 +47,7 @@ type Client struct {
 	MachineTranslationEngines *MachineTranslationEnginesService
 	Tasks                     *TasksService
 	Reports                   *ReportsService
+	Dictionaries              *DictionariesService
 	Webhooks                  *WebhooksService
 	OrganizationWebhooks      *OrganizationWebhooksService
 }
@@ -104,6 +105,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.MachineTranslationEngines = &MachineTranslationEnginesService{client: c}
 	c.Tasks = &TasksService{client: c}
 	c.Reports = &ReportsService{client: c}
+	c.Dictionaries = &DictionariesService{client: c}
 	c.Webhooks = &WebhooksService{client: c}
 	c.OrganizationWebhooks = &OrganizationWebhooksService{client: c}
 
