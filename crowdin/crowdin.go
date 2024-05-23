@@ -50,6 +50,7 @@ type Client struct {
 	Dictionaries              *DictionariesService
 	Webhooks                  *WebhooksService
 	OrganizationWebhooks      *OrganizationWebhooksService
+	Distributions             *DistributionsService
 }
 
 // NewClient creates a new Crowdin API client with provided options (ex. WithHTTPClient).
@@ -108,6 +109,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.Dictionaries = &DictionariesService{client: c}
 	c.Webhooks = &WebhooksService{client: c}
 	c.OrganizationWebhooks = &OrganizationWebhooksService{client: c}
+	c.Distributions = &DistributionsService{client: c}
 
 	return c, nil
 }
