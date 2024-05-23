@@ -12,61 +12,61 @@ type Event string
 
 const (
 	// Project file is added.
-	EventFileAdded Event = "file.added"
+	FileAdded Event = "file.added"
 	// Project file is updated.
-	EventFileUpdated Event = "file.updated"
+	FileUpdated Event = "file.updated"
 	// Project file is reverted.
-	EventFileReverted Event = "file.reverted"
+	FileReverted Event = "file.reverted"
 	// Project file is deleted.
-	EventFileDeleted Event = "file.deleted"
+	FileDeleted Event = "file.deleted"
 	// Project file is fully translated.
-	EventFileTranslated Event = "file.translated"
+	FileTranslated Event = "file.translated"
 	// Project file is fully reviewed.
-	EventFileApproved Event = "file.approved"
+	FileApproved Event = "file.approved"
 	// All strings in project are translated.
-	EventProjectTranslated Event = "project.translated"
+	ProjectTranslated Event = "project.translated"
 	// All strings in project are approved.
-	EventProjectApproved Event = "project.approved"
+	ProjectApproved Event = "project.approved"
 	// Project are successfully built.
-	EventProjectBuilt Event = "project.built"
+	ProjectBuilt Event = "project.built"
 	// Final translation of string is updated (using Replace in suggestions feature).
-	EventTranslationUpdated Event = "translation.updated"
+	TranslationUpdated Event = "translation.updated"
 	// Source string is added.
-	EventStringAdded Event = "string.added"
+	StringAdded Event = "string.added"
 	// Source string is updated.
-	EventStringUpdated Event = "string.updated"
+	StringUpdated Event = "string.updated"
 	// Source string is deleted.
-	EventStringDeleted Event = "string.deleted"
+	StringDeleted Event = "string.deleted"
 	// String comment/issue is added.
-	EventStringCommentCreated Event = "stringComment.created"
+	StringCommentCreated Event = "stringComment.created"
 	// String comment/issue is updated.
-	EventStringCommentUpdated Event = "stringComment.updated"
+	StringCommentUpdated Event = "stringComment.updated"
 	// String comment/issue is deleted.
-	EventStringCommentDeleted Event = "stringComment.deleted"
+	StringCommentDeleted Event = "stringComment.deleted"
 	// String comment/issue is restored.
-	EventStringCommentRestored Event = "stringComment.restored"
+	StringCommentRestored Event = "stringComment.restored"
 	// One of source strings is translated.
-	EventSuggestionAdded Event = "suggestion.added"
+	SuggestionAdded Event = "suggestion.added"
 	// Translation for source string is updated (using Replace in suggestions feature).
-	EventSuggestionUpdated Event = "suggestion.updated"
+	SuggestionUpdated Event = "suggestion.updated"
 	// One of translations is deleted.
-	EventSuggestionDeleted Event = "suggestion.deleted"
+	SuggestionDeleted Event = "suggestion.deleted"
 	// Translation for string is approved.
-	EventSuggestionApproved Event = "suggestion.approved"
+	SuggestionApproved Event = "suggestion.approved"
 	// Approval for previously added translation is removed.
-	EventSuggestionDisapproved Event = "suggestion.disapproved"
+	SuggestionDisapproved Event = "suggestion.disapproved"
 	// Task is added.
-	EventTaskAdded Event = "task.added"
+	TaskAdded Event = "task.added"
 	// Task status was changed.
-	EventTaskStatusChanged Event = "task.statusChanged"
+	TaskStatusChanged Event = "task.statusChanged"
 	// Task is deleted.
-	EventTaskDeleted Event = "task.deleted"
+	TaskDeleted Event = "task.deleted"
 
 	// Organization webhook events.
 	// Project is created.
-	EventProjectCreated Event = "project.created"
+	ProjectCreated Event = "project.created"
 	// Project is deleted.
-	EventProjectDeleted Event = "project.deleted"
+	ProjectDeleted Event = "project.deleted"
 )
 
 // ContentType is a type that represents the content type of a webhook.

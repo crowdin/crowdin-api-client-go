@@ -294,7 +294,7 @@ func TestWebhooksService_Add(t *testing.T) {
 	req := &model.WebhookAddRequest{
 		Name:            "Proofread",
 		URL:             "https://webhook.site/1c20d9b5-6e6a-4522-974d-9da7ea7595c9",
-		Events:          []model.Event{model.EventFileApproved},
+		Events:          []model.Event{model.FileApproved},
 		RequestType:     "POST",
 		IsActive:        ToPtr(true),
 		BatchingEnabled: ToPtr(false),
@@ -330,7 +330,7 @@ func TestWebhooksService_Add_requiredFields(t *testing.T) {
 	req := &model.WebhookAddRequest{
 		Name:        "Proofread",
 		URL:         "https://webhook.site/1c20d9b5-6e6a-4522-974d-9da7ea7595c9",
-		Events:      []model.Event{model.EventFileApproved, model.EventFileTranslated},
+		Events:      []model.Event{model.FileApproved, model.FileTranslated},
 		RequestType: "POST",
 	}
 	webhook, resp, err := client.Webhooks.Add(context.Background(), 1, req)
@@ -375,7 +375,7 @@ func TestWebhooksService_Add_requestValidation(t *testing.T) {
 			req: &model.WebhookAddRequest{
 				Name:   "Proofread",
 				URL:    "https://webhook.site/1c20d9b5-6e6a-4522-974d-9da7ea7595c9",
-				Events: []model.Event{model.EventFileApproved},
+				Events: []model.Event{model.FileApproved},
 			},
 			err: "requestType is required",
 		},
@@ -384,7 +384,7 @@ func TestWebhooksService_Add_requestValidation(t *testing.T) {
 			req: &model.WebhookAddRequest{
 				Name:        "Proofread",
 				URL:         "https://webhook.site/1c20d9b5-6e6a-4522-974d-9da7ea7595c9",
-				Events:      []model.Event{model.EventFileApproved},
+				Events:      []model.Event{model.FileApproved},
 				RequestType: "PUT",
 			},
 			err: "requestType must be GET or POST",
