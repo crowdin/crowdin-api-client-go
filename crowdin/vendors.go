@@ -12,7 +12,7 @@ import (
 //
 // Use API to get the list of the Vendors you already invited to your organization.
 //
-// Crowdin API docs: https://developer.crowdin.com/enterprise/api/v2/#operation/api.teams.members.delete
+// Crowdin API docs: https://developer.crowdin.com/enterprise/api/v2/#tag/Vendors
 type VendorsService struct {
 	client *Client
 }
