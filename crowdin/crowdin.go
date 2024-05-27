@@ -53,6 +53,7 @@ type Client struct {
 	Distributions             *DistributionsService
 	SecurityLogs              *SecurityLogsService
 	Vendors                   *VendorsService
+	Fields                    *FieldsService
 }
 
 // NewClient creates a new Crowdin API client with provided options (ex. WithHTTPClient).
@@ -114,6 +115,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.Distributions = &DistributionsService{client: c}
 	c.SecurityLogs = &SecurityLogsService{client: c}
 	c.Vendors = &VendorsService{client: c}
+	c.Fields = &FieldsService{client: c}
 
 	return c, nil
 }
