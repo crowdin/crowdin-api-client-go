@@ -52,6 +52,8 @@ type Client struct {
 	OrganizationWebhooks      *OrganizationWebhooksService
 	Distributions             *DistributionsService
 	SecurityLogs              *SecurityLogsService
+	Vendors                   *VendorsService
+	Fields                    *FieldsService
 	Teams                     *TeamsService
 }
 
@@ -113,6 +115,8 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.OrganizationWebhooks = &OrganizationWebhooksService{client: c}
 	c.Distributions = &DistributionsService{client: c}
 	c.SecurityLogs = &SecurityLogsService{client: c}
+	c.Vendors = &VendorsService{client: c}
+	c.Fields = &FieldsService{client: c}
 	c.Teams = &TeamsService{client: c}
 
 	return c, nil
