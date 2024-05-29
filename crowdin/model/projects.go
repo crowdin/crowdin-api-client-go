@@ -267,7 +267,7 @@ type ProjectsAddRequest struct {
 	// Workflow Template Steps Configuration.
 	// Note. Must be used together with `templateId`. Can't be used with
 	//       `vendorId`, `mtEngineId` in same request.
-	Steps []WorkflowTemplateStepConfig `json:"steps,omitempty"`
+	Steps []*WorkflowTemplateStep `json:"steps,omitempty"`
 	// Group Identifier.
 	GroupID int `json:"groupId,omitempty"`
 	// Specify Vendor Identifier, if no Vendor is assigned to Workflow step yet.
@@ -328,31 +328,6 @@ type NotificationSettings struct {
 	// Notify project managers about language translation/validation completion.
 	// Default: false.
 	ManagerLanguageCompleted *bool `json:"managerLanguageCompleted,omitempty"`
-}
-
-// TODO: Move to the Workflow service later.
-//
-// WorkflowTemplateStepConfig represents a workflow template
-// step configuration and is used in the ProjectsAddRequest.
-type WorkflowTemplateStepConfig struct {
-	// Workflow Template Step Identifier.
-	ID int `json:"id"`
-	// Target Languages Identifiers.
-	Languages []string `json:"languages"`
-	// User Identifiers.
-	// Note: Use only with `Translation` and `Proofreading` step types.
-	Assignees []int `json:"assignees"`
-
-	// Vendor Identifier.
-	VendorID int `json:"vendorId,omitempty"`
-
-	// Use only if TM Pre-translation is part of your Workflow Template.
-	Config struct {
-		// Minimum match for TM suggestions.
-		MinRelevant int `json:"minRelevant"`
-		// Improves TM suggestions.
-		AutoSubstitution bool `json:"autoSubstitution"`
-	} `json:"config,omitempty"`
 }
 
 // Validate checks if the add request is valid.
