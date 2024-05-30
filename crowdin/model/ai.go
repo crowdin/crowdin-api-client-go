@@ -20,6 +20,7 @@ const (
 	ModeAdvanced PromptMode = "advanced"
 )
 
+// Prompt represents an AI prompt.
 type Prompt struct {
 	ID                int          `json:"id"`
 	Name              string       `json:"name"`
@@ -33,33 +34,44 @@ type Prompt struct {
 	UpdatedAt         string       `json:"updatedAt"`
 }
 
-type PromptConfig struct {
-	Mode                      PromptMode `json:"mode"`
-	CompanyDescription        *string    `json:"companyDescription,omitempty"`
-	ProjectDescription        *string    `json:"projectDescription,omitempty"`
-	AudienceDescription       *string    `json:"audienceDescription,omitempty"`
-	OtherLanguageTranslations struct {
-		IsEnabled   *bool `json:"isEnabled,omitempty"`
-		LanguageIDs []int `json:"languageIds,omitempty"`
-	} `json:"otherLanguageTranslations,omitempty"`
-	GlossaryTerms            *bool   `json:"glossaryTerms,omitempty"`
-	TMSuggestions            *bool   `json:"tmSuggestions,omitempty"`
-	FileContent              *bool   `json:"fileContent,omitempty"`
-	FileContext              *bool   `json:"fileContext,omitempty"`
-	PublicProjectDescription *bool   `json:"publicProjectDescription,omitempty"`
-	SiblingsStrings          *bool   `json:"siblingsStrings,omitempty"`
-	FilteredStrings          *bool   `json:"filteredStrings,omitempty"`
-	Prompt                   *string `json:"prompt,omitempty"`
-}
+type (
+	// PromptConfig represents the configuration of an AI prompt.
+	PromptConfig struct {
+		Mode                      PromptMode                 `json:"mode"`
+		CompanyDescription        *string                    `json:"companyDescription,omitempty"`
+		ProjectDescription        *string                    `json:"projectDescription,omitempty"`
+		AudienceDescription       *string                    `json:"audienceDescription,omitempty"`
+		OtherLanguageTranslations *OtherLanguageTranslations `json:"otherLanguageTranslations,omitempty"`
+		GlossaryTerms             *bool                      `json:"glossaryTerms,omitempty"`
+		TMSuggestions             *bool                      `json:"tmSuggestions,omitempty"`
+		FileContent               *bool                      `json:"fileContent,omitempty"`
+		FileContext               *bool                      `json:"fileContext,omitempty"`
+		PublicProjectDescription  *bool                      `json:"publicProjectDescription,omitempty"`
+		SiblingsStrings           *bool                      `json:"siblingsStrings,omitempty"`
+		FilteredStrings           *bool                      `json:"filteredStrings,omitempty"`
+		Prompt                    *string                    `json:"prompt,omitempty"`
+	}
 
+	OtherLanguageTranslations struct {
+		IsEnabled   *bool    `json:"isEnabled,omitempty"`
+		LanguageIDs []string `json:"languageIds,omitempty"`
+	}
+)
+
+// PromptResponse defines the structure of a response when
+// getting a single AI prompt.
 type PromptResponse struct {
 	Data *Prompt `json:"data"`
 }
 
+// PromptsListResponse defines the structure of a response when
+// getting a list of AI prompts.
 type PromptsListResponse struct {
 	Data []*PromptResponse `json:"data"`
 }
 
+// AIPromtsListOptions specifies the optional parameters to the
+// AIService.ListPrompts method.
 type AIPromtsListOptions struct {
 	// Allows to filter the prompts available for the specific action.
 	ProjectID int `json:"projectId,omitempty"`
@@ -70,6 +82,8 @@ type AIPromtsListOptions struct {
 	ListOptions
 }
 
+// Values returns the url.Values encoding of AIPromtsListOptions.
+// It implements the crowdin.ListOptionsProvider interface.
 func (o *AIPromtsListOptions) Values() (url.Values, bool) {
 	if o == nil {
 		return nil, false
@@ -87,6 +101,7 @@ func (o *AIPromtsListOptions) Values() (url.Values, bool) {
 	return v, len(v) > 0
 }
 
+// PromptAddRequest defines the structure of a request to add an AI prompt.
 type PromptAddRequest struct {
 	// AI prompt name.
 	Name string `json:"name"`
@@ -104,32 +119,29 @@ type PromptAddRequest struct {
 	Config PromptConfig `json:"config"`
 }
 
+// Validate checks if the request is valid.
+// It implements the crowdin.RequestValidator interface.
 func (r *PromptAddRequest) Validate() error {
 	if r == nil {
 		return ErrNilRequest
 	}
+	if r.Name == "" {
+		return errors.New("name is required")
+	}
+	if r.Action == "" {
+		return errors.New("action is required")
+	}
+	if r.AIProviderID == 0 {
+		return errors.New("aiProviderId is required")
+	}
+	if r.AIModelID == "" {
+		return errors.New("aiModelId is required")
+	}
+	if r.Config.Mode == "" {
+		return errors.New("config.mode is required")
+	}
 
 	return nil
-}
-
-type Provider struct {
-	ID                   int    `json:"id"`
-	Name                 string `json:"name"`
-	Type                 string `json:"type"`
-	Credentials          any    `json:"credentials"`
-	Config               any    `json:"config"`
-	IsEnabled            bool   `json:"isEnabled"`
-	UseSystemCredentials bool   `json:"useSystemCredentials"`
-	CreatedAt            string `json:"createdAt"`
-	UpdatedAt            string `json:"updatedAt"`
-}
-
-type ProviderResponse struct {
-	Data *Provider `json:"data"`
-}
-
-type ProvidersListResponse struct {
-	Data []*ProviderResponse `json:"data"`
 }
 
 type ProviderType string
@@ -143,6 +155,32 @@ const (
 	CustomAI     ProviderType = "custom_ai"
 )
 
+// Provider represents an AI provider.
+type Provider struct {
+	ID                   int               `json:"id"`
+	Name                 string            `json:"name"`
+	Type                 ProviderType      `json:"type"`
+	Credentials          map[string]string `json:"credentials"`
+	Config               ProviderConfig    `json:"config"`
+	IsEnabled            bool              `json:"isEnabled"`
+	UseSystemCredentials bool              `json:"useSystemCredentials"`
+	CreatedAt            string            `json:"createdAt"`
+	UpdatedAt            string            `json:"updatedAt"`
+}
+
+// ProviderResponse defines the structure of a response when
+// getting a single AI provider.
+type ProviderResponse struct {
+	Data *Provider `json:"data"`
+}
+
+// ProvidersListResponse defines the structure of a response when
+// getting a list of AI providers.
+type ProvidersListResponse struct {
+	Data []*ProviderResponse `json:"data"`
+}
+
+// ProviderAddRequest defines the structure of a request to add an AI provider.
 type ProviderAddRequest struct {
 	// AI provider name.
 	Name string `json:"name"`
@@ -151,9 +189,9 @@ type ProviderAddRequest struct {
 	Type ProviderType `json:"type"`
 	// User’s own AI provider credentials.
 	// Note: Use only if useSystemCredentials is set to `false`.
-	Credentials any `json:"credentials,omitempty"`
+	Credentials map[string]string `json:"credentials,omitempty"`
 	// AI provider configuration.
-	Config any `json:"config,omitempty"`
+	Config ProviderConfig `json:"config,omitempty"`
 	// Defines whether to AI provider is enabled. Default: true.
 	IsEnabled *bool `json:"isEnabled,omitempty"`
 	// Enables the paid service AI provider via Crowdin.
@@ -162,6 +200,22 @@ type ProviderAddRequest struct {
 	UseSystemCredentials *bool `json:"useSystemCredentials,omitempty"`
 }
 
+// ProviderConfig represents the configuration of an AI provider.
+type ProviderConfig struct {
+	// Action rules.
+	ActionRules []ActionRule `json:"actionRules"`
+}
+
+// ActionRule represents an action rule of an AI provider.
+type ActionRule struct {
+	// Action name.
+	Action PromptAction `json:"action"`
+	// Available AI provider model ids.
+	AvailableAIModelIDs []string `json:"availableAiModelIds"`
+}
+
+// Validate checks if the request is valid.
+// It implements the crowdin.RequestValidator interface.
 func (r *ProviderAddRequest) Validate() error {
 	if r == nil {
 		return ErrNilRequest
@@ -176,24 +230,34 @@ func (r *ProviderAddRequest) Validate() error {
 	return nil
 }
 
+// ProviderModel represents an AI provider model.
 type ProviderModel struct {
-	ID int `json:"id"`
+	ID string `json:"id"`
 }
 
+// ProviderModelResponse defines the structure of a response when
+// getting an AI provider model.
 type ProviderModelResponse struct {
 	Data *ProviderModel `json:"data"`
 }
 
+// ProviderModelsListResponse defines the structure of a response when
+// getting a list of AI provider models.
 type ProviderModelsListResponse struct {
 	Data []*ProviderModelResponse `json:"data"`
 }
 
+// ProxyChatCompletion represents an AI proxy chat completion.
 type ProxyChatCompletion struct{}
 
+// ProxyChatCompletionResponse defines the structure of a response when
+// getting an AI proxy chat completion.
 type ProxyChatCompletionResponse struct {
 	Data *ProxyChatCompletion `json:"data"`
 }
 
+// CreateProxyChatCompletionRequest defines the structure of a request
+// to create an AI proxy chat completion.
 type CreateProxyChatCompletionRequest struct {
 	// ID of the model to use.
 	ModelID string `json:"modelId,omitempty"`
@@ -202,6 +266,8 @@ type CreateProxyChatCompletionRequest struct {
 	Stream *bool `json:"stream,omitempty"`
 }
 
+// Validate checks if the request is valid.
+// It implements the crowdin.RequestValidator interface.
 func (r *CreateProxyChatCompletionRequest) Validate() error {
 	if r == nil {
 		return ErrNilRequest
