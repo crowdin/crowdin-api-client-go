@@ -56,6 +56,7 @@ type Client struct {
 	Fields                    *FieldsService
 	Teams                     *TeamsService
 	Workflows                 *WorkflowsService
+	AI                        *AIService
 	Notifications             *NotificationsService
 }
 
@@ -121,6 +122,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.Fields = &FieldsService{client: c}
 	c.Teams = &TeamsService{client: c}
 	c.Workflows = &WorkflowsService{client: c}
+	c.AI = &AIService{client: c}
 	c.Notifications = &NotificationsService{client: c}
 
 	return c, nil
