@@ -495,7 +495,7 @@ func TestTranslationsService_BuildProjectTranslation(t *testing.T) {
 
 	cases := []struct {
 		name     string
-		req      model.BuildProjectTranslationRequest
+		req      model.BuildProjectTranslationRequester
 		expected string
 	}{
 		{
@@ -601,7 +601,7 @@ func TestTranslationsService_BuildProjectTranslation(t *testing.T) {
 func TestTranslationsService_BuildProjectTranslation_WithValidationError(t *testing.T) {
 	cases := []struct {
 		name          string
-		req           model.BuildProjectTranslationRequest
+		req           model.BuildProjectTranslationRequester
 		expectedError string
 	}{
 		{
