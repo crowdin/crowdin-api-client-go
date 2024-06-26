@@ -66,7 +66,7 @@ func (s *GlossariesService) UpdateConcept(ctx context.Context, glossaryID, conce
 //
 // https://developer.crowdin.com/api/v2/#operation/api.glossaries.concepts.delete
 func (s *GlossariesService) DeleteConcept(ctx context.Context, glossaryID, conceptID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/glossaries/%d/concepts/%d", glossaryID, conceptID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/glossaries/%d/concepts/%d", glossaryID, conceptID), nil)
 }
 
 // GetGlossary returns a specific glossary by its identifier.
@@ -127,7 +127,7 @@ func (s *GlossariesService) EditGlossary(ctx context.Context, glossaryID int, re
 //
 // https://developer.crowdin.com/api/v2/#operation/api.glossaries.delete
 func (s *GlossariesService) DeleteGlossary(ctx context.Context, glossaryID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/glossaries/%d", glossaryID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/glossaries/%d", glossaryID), nil)
 }
 
 // ExportGlossary performs an export of a glossary.
@@ -279,12 +279,12 @@ func (s *GlossariesService) ClearGlossary(ctx context.Context, glossaryID int, o
 		path += "?" + v.Encode()
 	}
 
-	return s.client.Delete(ctx, path)
+	return s.client.Delete(ctx, path, nil)
 }
 
 // DeleteTerm deletes a specific term from a glossary.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.glossaries.terms.delete
 func (s *GlossariesService) DeleteTerm(ctx context.Context, glossaryID, termID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/glossaries/%d/terms/%d", glossaryID, termID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/glossaries/%d/terms/%d", glossaryID, termID), nil)
 }

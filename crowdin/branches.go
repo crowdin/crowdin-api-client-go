@@ -15,11 +15,6 @@ type BranchesService struct {
 
 // List returns a list of project branches.
 //
-// Query parameters:
-// - name: Filter branches by name.
-// - limit: A maximum number of items to retrieve (default 25, max 500).
-// - offset: A starting offset in the collection of items (default 0).
-//
 // https://developer.crowdin.com/api/v2/#operation/api.projects.branches.getMany
 func (s *BranchesService) List(ctx context.Context, projectID int, opts *model.BranchesListOptions) (
 	[]*model.Branch, *Response, error,
@@ -78,7 +73,7 @@ func (s *BranchesService) Edit(ctx context.Context, projectID, branchID int, req
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.branches.delete
 func (s *BranchesService) Delete(ctx context.Context, projectID, branchID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/branches/%d", projectID, branchID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/branches/%d", projectID, branchID), nil)
 }
 
 // Merge merges a project branch.

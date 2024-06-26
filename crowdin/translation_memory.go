@@ -82,7 +82,7 @@ func (s *TranslationMemoryService) EditTM(ctx context.Context, tmID int, req []*
 //
 // https://developer.crowdin.com/api/v2/#operation/api.tms.delete
 func (s *TranslationMemoryService) DeleteTM(ctx context.Context, tmID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/tms/%d", tmID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/tms/%d", tmID), nil)
 }
 
 // ExportTM creates a new translation memory export.
@@ -241,12 +241,12 @@ func (s *TranslationMemoryService) EditTMSegment(ctx context.Context, tmID, segm
 //
 // https://developer.crowdin.com/api/v2/#operation/api.tms.segments.delete
 func (s *TranslationMemoryService) DeleteTMSegment(ctx context.Context, tmID, segmentID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/tms/%d/segments/%d", tmID, segmentID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/tms/%d/segments/%d", tmID, segmentID), nil)
 }
 
 // ClearTM removes all segments from a specific translation memory.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.tms.segments.clear
 func (s *TranslationMemoryService) ClearTM(ctx context.Context, tmID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/tms/%d/segments", tmID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/tms/%d/segments", tmID), nil)
 }

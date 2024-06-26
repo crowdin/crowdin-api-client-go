@@ -87,5 +87,5 @@ func (s *OrganizationWebhooksService) Edit(ctx context.Context, organizationWebh
 //
 // https://developer.crowdin.com/api/v2/#operation/api.webhooks.delete
 func (s *OrganizationWebhooksService) Delete(ctx context.Context, organizationWebhookID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/webhooks/%d", organizationWebhookID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/webhooks/%d", organizationWebhookID), nil)
 }

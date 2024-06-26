@@ -270,6 +270,7 @@ func (r *FileAddRequest) Validate() error {
 	if r.BranchID > 0 && r.DirectoryID > 0 {
 		return errors.New("branchId and directoryId cannot be used in the same request")
 	}
+
 	return nil
 }
 

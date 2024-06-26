@@ -96,7 +96,7 @@ func (s *ScreenshotsService) EditScreenshot(ctx context.Context, projectID, scre
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.projects.screenshots.delete
 func (s *ScreenshotsService) DeleteScreenshot(ctx context.Context, projectID, screenshotID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/screenshots/%d", projectID, screenshotID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/screenshots/%d", projectID, screenshotID), nil)
 }
 
 // ListTags returns a list of all tags for the screenshot.
@@ -196,12 +196,12 @@ func (s *ScreenshotsService) EditTag(ctx context.Context, projectID, screenshotI
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.screenshots.tags.deleteMany
 func (s *ScreenshotsService) ClearTags(ctx context.Context, projectID, screenshotID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/screenshots/%d/tags", projectID, screenshotID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/screenshots/%d/tags", projectID, screenshotID), nil)
 }
 
 // DeleteTag deletes a specific tag by its identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.screenshots.tags.delete
 func (s *ScreenshotsService) DeleteTag(ctx context.Context, projectID, screenshotID, tagID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/screenshots/%d/tags/%d", projectID, screenshotID, tagID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/screenshots/%d/tags/%d", projectID, screenshotID, tagID), nil)
 }

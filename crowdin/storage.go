@@ -79,5 +79,5 @@ func (s *StorageService) Get(ctx context.Context, id int) (*model.Storage, *Resp
 // Delete deletes a file from the storage by its identifier.
 // https://developer.crowdin.com/api/v2/#operation/api.storages.delete
 func (s *StorageService) Delete(ctx context.Context, id int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/storages/%d", id))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/storages/%d", id), nil)
 }

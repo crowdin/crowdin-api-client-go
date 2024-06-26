@@ -18,11 +18,6 @@ type LanguagesService struct {
 
 // List returns a list of all supported languages.
 //
-// Query parameters:
-//
-//	limit: A maximum number of items to retrieve (default 25, max 500).
-//	offset: A starting offset in the collection of items (default 0).
-//
 // https://developer.crowdin.com/api/v2/#operation/api.languages.getMany
 func (s *LanguagesService) List(ctx context.Context, opts *model.ListOptions) ([]*model.Language, *Response, error) {
 	res := new(model.LanguagesListResponse)
@@ -62,11 +57,10 @@ func (s *LanguagesService) Add(ctx context.Context, req *model.AddLanguageReques
 // Edit updates a custom language by its identifier.
 //
 // Request body:
-//
-//		op: The operation to perform. Enum: replace, test
-//		path: A JSON Pointer as defined in RFC 6901.
-//	          Enum: "/name" "/textDirection" "/pluralCategoryNames" "/threeLettersCode" "/localeCode" "/dialectOf"
-//		value: The value to be used within the operations. The value must be one of string or array of strings.
+//   - op: The operation to perform. Enum: replace, test
+//   - path: A JSON Pointer as defined in RFC 6901.
+//     Enum: "/name" "/textDirection" "/pluralCategoryNames" "/threeLettersCode" "/localeCode" "/dialectOf"
+//   - value: The value to be used within the operations. The value must be one of string or array of strings.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.languages.patch
 func (s *LanguagesService) Edit(ctx context.Context, id string, req []*model.UpdateRequest) (*model.Language, *Response, error) {
@@ -80,5 +74,5 @@ func (s *LanguagesService) Edit(ctx context.Context, id string, req []*model.Upd
 //
 // https://developer.crowdin.com/api/v2/#operation/api.languages.delete
 func (s *LanguagesService) Delete(ctx context.Context, id string) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/languages/%s", id))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/languages/%s", id), nil)
 }

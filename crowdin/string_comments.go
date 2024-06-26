@@ -80,5 +80,5 @@ func (s *StringCommentsService) Edit(ctx context.Context, projectID, commentID i
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.comments.delete
 func (s *StringCommentsService) Delete(ctx context.Context, projectID, commentID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/comments/%d", projectID, commentID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/comments/%d", projectID, commentID), nil)
 }

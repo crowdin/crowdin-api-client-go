@@ -87,7 +87,7 @@ func (s *ApplicationsService) DeleteInstallation(ctx context.Context, applicatio
 		path += "?force=true"
 	}
 
-	return s.client.Delete(ctx, path)
+	return s.client.Delete(ctx, path, nil)
 }
 
 // GetData returns application data.
@@ -140,5 +140,5 @@ func (s *ApplicationsService) EditData(ctx context.Context, applicationID, path 
 //
 // https://developer.crowdin.com/api/v2/#operation/api.applications.api.delete
 func (s *ApplicationsService) DeleteData(ctx context.Context, applicationID, path string) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/applications/%s/api/%s", applicationID, path))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/applications/%s/api/%s", applicationID, path), nil)
 }

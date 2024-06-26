@@ -21,14 +21,6 @@ type SourceFilesService struct {
 
 // ListDirectories returns a list of directories in the project.
 //
-// Query parameters:
-// - branchId: The identifier of the branch (filter by branch).
-// - directoryId: The identifier of the directory (filter by directory).
-// - filter: Filter directories by name.
-// - recursion: List directories recursively.
-// - limit: A maximum number of items to retrieve (default 25, max 500).
-// - offset: A starting offset in the collection of items (default 0).
-//
 // https://developer.crowdin.com/api/v2/#operation/api.projects.directories.getMany
 func (s *SourceFilesService) ListDirectories(ctx context.Context, projectID int, opts *model.DirectoryListOptions) (
 	[]*model.Directory, *Response, error,
@@ -91,18 +83,10 @@ func (s *SourceFilesService) EditDirectory(ctx context.Context, projectID, direc
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.directories.delete
 func (s *SourceFilesService) DeleteDirectory(ctx context.Context, projectID, directoryID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/directories/%d", projectID, directoryID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/directories/%d", projectID, directoryID), nil)
 }
 
 // ListFiles returns a list of files in the project.
-//
-// Query parameters:
-// - branchId: The identifier of the branch (filter by branch).
-// - directoryId: The identifier of the directory (filter by directory).
-// - filter: Filter files by name.
-// - recursion: List files recursively.
-// - limit: A maximum number of items to retrieve (default 25, max 500).
-// - offset: A starting offset in the collection of items (default 0).
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.getMany
 func (s *SourceFilesService) ListFiles(ctx context.Context, projectID int, opts *model.FileListOptions) (
@@ -175,7 +159,7 @@ func (s *SourceFilesService) EditFile(ctx context.Context, projectID, fileID int
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.delete
 func (s *SourceFilesService) DeleteFile(ctx context.Context, projectID, fileID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d", projectID, fileID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d", projectID, fileID), nil)
 }
 
 // DownloadFilePreview returns a download link for a specific file preview.

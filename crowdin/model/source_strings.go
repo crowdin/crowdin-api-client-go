@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"strings"
 )
 
 // SourceString represents the text units for translation.
@@ -49,7 +48,7 @@ type SourceStringsListOptions struct {
 	DenormalizePlaceholders *int `json:"denormalizePlaceholders,omitempty"`
 	// Filter strings by labelIds (Label Identifiers).
 	// Example: labelIds=1,2,3,4,5.
-	LabelIDs []string `json:"labelIds,omitempty"`
+	LabelIDs []int `json:"labelIds,omitempty"`
 	// File Identifier.
 	// Note: Can't be used with `directoryId` or `branchId` in same request.
 	FileID int `json:"fileId,omitempty"`
@@ -61,12 +60,12 @@ type SourceStringsListOptions struct {
 	DirectoryID int `json:"directoryId,omitempty"`
 	// Filter strings by CroQL.
 	// Note: Can be used only with `denormalizePlaceholders`, `offset` and
-	//       `limit` in same request.
+	// `limit` in same request.
 	CroQL string `json:"croql,omitempty"`
 	// Filter strings by `identifier`, `text` or `context`.
 	Filter string `json:"filter,omitempty"`
 	// Specify field to be the target of filtering. It can be one scope or
-	// a list of comma-separated scopes. Enum: "identifier" "text" "context".
+	// a list of comma-separated scopes. Enum: identifier, text, context.
 	Scope string `json:"scope,omitempty"`
 
 	ListOptions
@@ -85,7 +84,7 @@ func (o *SourceStringsListOptions) Values() (url.Values, bool) {
 		v.Add("denormalizePlaceholders", fmt.Sprintf("%d", *o.DenormalizePlaceholders))
 	}
 	if len(o.LabelIDs) > 0 {
-		v.Add("labelIds", strings.Join(o.LabelIDs, ","))
+		v.Add("labelIds", JoinSlice(o.LabelIDs))
 	}
 	if o.FileID > 0 {
 		v.Add("fileId", fmt.Sprintf("%d", o.FileID))
@@ -137,12 +136,12 @@ type SourceStringsAddRequest struct {
 	// Text for translation.
 	// It can be a string or map of strings.
 	// Example:
-	// "text": "Not all videos are shown to users. See more"
+	//  "text": "Not all videos are shown to users. See more"
 	// or
-	// "text": {
-	//  "one": "string",
-	//  "other": "strings"
-	// }
+	//  "text": {
+	//   "one": "string",
+	//   "other": "strings"
+	//  }
 	Text any `json:"text"`
 	// File identifier.
 	FileID int `json:"fileId"`
@@ -276,5 +275,6 @@ func (o *SourceStringsUploadRequest) Validate() error {
 	if o.BranchID == 0 {
 		return errors.New("branchId is required")
 	}
+
 	return nil
 }

@@ -78,7 +78,7 @@ func (s *BundlesService) Edit(ctx context.Context, projectID, bundleID int, req 
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.bundles.delete
 func (s *BundlesService) Delete(ctx context.Context, projectID, bundleID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/bundles/%d", projectID, bundleID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/bundles/%d", projectID, bundleID), nil)
 }
 
 // Download returns a download link for the bundle.

@@ -28,7 +28,7 @@ type LabelsListResponse struct {
 type LabelsListOptions struct {
 	// Sort labels by the specified field. Enum: id, title. Default: id.
 	// Example: orderBy=title desc,id
-	OrderBy string `url:"orderBy,omitempty"`
+	OrderBy string `json:"orderBy,omitempty"`
 
 	ListOptions
 }
