@@ -105,6 +105,19 @@ func TestStringTranslationsService_ListApprovals(t *testing.T) {
 	}
 }
 
+func TestStringTranslationsService_ListApprovals_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/approvals", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.StringTranslations.ListApprovals(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestStringTranslationsService_GetApproval(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -316,6 +329,19 @@ func TestStringTranslationsService_ListLanguageTranslations(t *testing.T) {
 	}
 }
 
+func TestStringTranslationsService_ListLanguageTranslations_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/languages/uk/translations", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.StringTranslations.ListLanguageTranslations(context.Background(), 1, "uk", nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestStringTranslationsService_ListStringTranslations(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -426,6 +452,19 @@ func TestStringTranslationsService_ListStringTranslations(t *testing.T) {
 	}
 }
 
+func TestStringTranslationsService_ListStringTranslations_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/translations", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.StringTranslations.ListStringTranslations(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestStringTranslationsService_TranslationAlignment(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -485,35 +524,6 @@ func TestStringTranslationsService_TranslationAlignment(t *testing.T) {
 	}
 	assert.Equal(t, expected, res)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-}
-
-func TestStringTranslationsService_TranslationAlignment_WithValidationError(t *testing.T) {
-	cases := []struct {
-		req         *model.TranslationAlignmentRequest
-		expectedErr string
-	}{
-		{
-			req:         nil,
-			expectedErr: "request cannot be nil",
-		},
-		{
-			req:         &model.TranslationAlignmentRequest{},
-			expectedErr: "source language ID is required",
-		},
-		{
-			req:         &model.TranslationAlignmentRequest{SourceLanguageID: "en"},
-			expectedErr: "target language ID is required",
-		},
-		{
-			req:         &model.TranslationAlignmentRequest{SourceLanguageID: "en", TargetLanguageID: "de"},
-			expectedErr: "text is required",
-		},
-	}
-
-	for _, tt := range cases {
-		err := tt.req.Validate()
-		assert.EqualError(t, err, tt.expectedErr)
-	}
 }
 
 func TestStringTranslationsService_GetTranslation(t *testing.T) {
@@ -650,33 +660,6 @@ func TestStringTranslationsService_AddTranslation(t *testing.T) {
 	}
 	assert.Equal(t, expected, translation)
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
-}
-
-func TestStringTranslationsService_AddTranslation_WithValidationError(t *testing.T) {
-	cases := []struct {
-		req         *model.TranslationAddRequest
-		expectedErr string
-	}{
-		{
-			req:         nil,
-			expectedErr: "request cannot be nil",
-		},
-		{
-			req:         &model.TranslationAddRequest{},
-			expectedErr: "string ID is required",
-		},
-		{
-			req:         &model.TranslationAddRequest{StringID: 123},
-			expectedErr: "language ID is required",
-		},
-		{
-			req:         &model.TranslationAddRequest{StringID: 123, LanguageID: "uk"},
-			expectedErr: "text is required",
-		},
-	}
-	for _, tt := range cases {
-		assert.EqualError(t, tt.req.Validate(), tt.expectedErr)
-	}
 }
 
 func TestStringTranslationsService_DeleteStringTranslations(t *testing.T) {
@@ -889,6 +872,19 @@ func TestStringTranslationsService_ListVotes(t *testing.T) {
 	}
 }
 
+func TestStringTranslationsService_ListVotes_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/votes", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.StringTranslations.ListVotes(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestStringTranslationsService_AddVote(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -932,38 +928,6 @@ func TestStringTranslationsService_AddVote(t *testing.T) {
 	}
 	assert.Equal(t, expected, vote)
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
-}
-
-func TestStringTranslationsService_AddVote_WithValidationError(t *testing.T) {
-	cases := []struct {
-		req         *model.VoteAddRequest
-		expectedErr string
-	}{
-		{
-			req:         nil,
-			expectedErr: "request cannot be nil",
-		},
-		{
-			req:         &model.VoteAddRequest{},
-			expectedErr: "invalid vote type: \"\"",
-		},
-
-		{
-			req:         &model.VoteAddRequest{Mark: "test", TranslationID: 19069345},
-			expectedErr: "invalid vote type: \"test\"",
-		},
-		{
-			req:         &model.VoteAddRequest{TranslationID: 19069345},
-			expectedErr: "invalid vote type: \"\"",
-		},
-		{
-			req:         &model.VoteAddRequest{Mark: "up"},
-			expectedErr: "translation ID is required",
-		},
-	}
-	for _, tt := range cases {
-		assert.EqualError(t, tt.req.Validate(), tt.expectedErr)
-	}
 }
 
 func TestStringTranslationsService_CancelVote(t *testing.T) {

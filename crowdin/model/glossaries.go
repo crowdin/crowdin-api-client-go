@@ -106,6 +106,10 @@ type (
 // Validate checks if the request is valid.
 // It implements the crowdin.RequestValidator interface.
 func (r *ConceptUpdateRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
+
 	return nil
 }
 
@@ -146,6 +150,8 @@ type GlossariesListOptions struct {
 	// Group Identifier.
 	// Note: Set 0 to see glossaries of root group.
 	GroupID *int `json:"groupId,omitempty"`
+	// List glossaries of specific user.
+	UserID int `json:"userId,omitempty"`
 
 	ListOptions
 }
@@ -164,6 +170,9 @@ func (o *GlossariesListOptions) Values() (url.Values, bool) {
 	}
 	if o.GroupID != nil {
 		v.Add("groupId", fmt.Sprintf("%d", *o.GroupID))
+	}
+	if o.UserID != 0 {
+		v.Add("userId", fmt.Sprintf("%d", o.UserID))
 	}
 
 	return v, len(v) > 0

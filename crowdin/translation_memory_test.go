@@ -141,6 +141,19 @@ func TestTranslationMemoryService_ListTMs(t *testing.T) {
 	}
 }
 
+func TestTranslationMemoryService_ListTMs_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/tms", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.TranslationMemory.ListTMs(context.Background(), nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestTranslationMemoryService_AddTM(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -188,30 +201,6 @@ func TestTranslationMemoryService_AddTM(t *testing.T) {
 		CreatedAt:         "2023-09-16T13:42:04+00:00",
 	}
 	assert.Equal(t, expected, tm)
-}
-
-func TestTranslationMemoryService_AddTM_ValidationError(t *testing.T) {
-	tests := []struct {
-		req *model.TranslationMemoryAddRequest
-		err string
-	}{
-		{
-			req: nil,
-			err: "request cannot be nil",
-		},
-		{
-			req: &model.TranslationMemoryAddRequest{},
-			err: "name is required",
-		},
-		{
-			req: &model.TranslationMemoryAddRequest{Name: "Knowledge Base's TM"},
-			err: "languageId is required",
-		},
-	}
-
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.err)
-	}
 }
 
 func TestTranslationMemoryService_EditTM(t *testing.T) {
@@ -357,26 +346,6 @@ func TestTranslationMemoryService_ExportTM(t *testing.T) {
 		FinishedAt: "2023-09-23T11:26:54+00:00",
 	}
 	assert.Equal(t, expected, export)
-}
-
-func TestTranslationMemoryService_ExportTM_ValidationError(t *testing.T) {
-	tests := []struct {
-		req *model.TranslationMemoryExportRequest
-		err string
-	}{
-		{
-			req: nil,
-			err: "request cannot be nil",
-		},
-		{
-			req: &model.TranslationMemoryExportRequest{Format: "unknown"},
-			err: "unsupported format: \"unknown\"",
-		},
-	}
-
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.err)
-	}
 }
 
 func TestTranslationMemoryService_CheckTMExportStatus(t *testing.T) {
@@ -534,30 +503,6 @@ func TestTranslationMemoryService_ImportTM(t *testing.T) {
 	assert.Equal(t, expected, importData)
 }
 
-func TestTranslationMemoryService_ImportTM_ValidationError(t *testing.T) {
-	tests := []struct {
-		req *model.TranslationMemoryImportRequest
-		err string
-	}{
-		{
-			req: nil,
-			err: "request cannot be nil",
-		},
-		{
-			req: &model.TranslationMemoryImportRequest{},
-			err: "storageId is required",
-		},
-		{
-			req: &model.TranslationMemoryImportRequest{StorageID: -1},
-			err: "storageId is required",
-		},
-	}
-
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.err)
-	}
-}
-
 func TestTranslationMemoryService_CheckTMImportStatus(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -691,64 +636,17 @@ func TestTranslationMemoryService_ConcordanceSearch(t *testing.T) {
 	assert.Equal(t, expected, tmList)
 }
 
-func TestTranslationMemoryService_ConcordanceSearch_ValidationError(t *testing.T) {
-	tests := []struct {
-		req *model.TMConcordanceSearchRequest
-		err string
-	}{
-		{
-			req: nil,
-			err: "request cannot be nil",
-		},
-		{
-			req: &model.TMConcordanceSearchRequest{},
-			err: "sourceLanguageId is required",
-		},
-		{
-			req: &model.TMConcordanceSearchRequest{SourceLanguageID: "en"},
-			err: "targetLanguageId is required",
-		},
-		{
-			req: &model.TMConcordanceSearchRequest{SourceLanguageID: "en", TargetLanguageID: "de"},
-			err: "autoSubstitution is required",
-		},
-		{
-			req: &model.TMConcordanceSearchRequest{SourceLanguageID: "en", TargetLanguageID: "de", AutoSubstitution: ToPtr(true)},
-			err: "minRelevant is required",
-		},
-		{
-			req: &model.TMConcordanceSearchRequest{
-				SourceLanguageID: "en",
-				TargetLanguageID: "de",
-				AutoSubstitution: ToPtr(true),
-				MinRelevant:      0,
-			},
-			err: "minRelevant is required",
-		},
-		{
-			req: &model.TMConcordanceSearchRequest{
-				SourceLanguageID: "en",
-				TargetLanguageID: "de",
-				AutoSubstitution: ToPtr(true),
-				MinRelevant:      60,
-			},
-			err: "expressions cannot be empty",
-		},
-		{
-			req: &model.TMConcordanceSearchRequest{
-				SourceLanguageID: "en",
-				TargetLanguageID: "de",
-				AutoSubstitution: ToPtr(true),
-				MinRelevant:      60,
-				Expressions:      []string{},
-			},
-			err: "expressions cannot be empty",
-		},
-	}
+func TestTranslationMemoryService_ConcordanceSearch_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
 
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.err)
-	}
+	mux.HandleFunc("/api/v2/projects/1/tms/concordance", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.TranslationMemory.ConcordanceSearch(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestTranslationMemoryService_GetTMSegment(t *testing.T) {
@@ -900,6 +798,19 @@ func TestTranslationMemoryService_ListTMSegments(t *testing.T) {
 	}
 }
 
+func TestTranslationMemoryService_ListTMSegments_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/tms/2/segments", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.TranslationMemory.ListTMSegments(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestTranslationMemoryService_CreateTMSegment(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -957,26 +868,6 @@ func TestTranslationMemoryService_CreateTMSegment(t *testing.T) {
 		},
 	}
 	assert.Equal(t, expected, segment)
-}
-
-func TestTranslationMemoryService_CreateTMSegment_ValidationError(t *testing.T) {
-	tests := []struct {
-		req *model.TMSegmentCreateRequest
-		err string
-	}{
-		{
-			req: nil,
-			err: "request cannot be nil",
-		},
-		{
-			req: &model.TMSegmentCreateRequest{},
-			err: "records is required",
-		},
-	}
-
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.err)
-	}
 }
 
 func TestTranslationMemoryService_EditTMSegment(t *testing.T) {

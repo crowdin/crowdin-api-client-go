@@ -176,7 +176,7 @@ type TranslateRequest struct {
 	// Target Language Identifier.
 	TargetLanguageID string `json:"targetLanguageId"`
 	// Select a provider for language recognition.
-	// Enum: "crowdin" "engine".
+	// Enum: crowdin, engine.
 	// Note: Is required if the source language is not selected.
 	LanguageRecognitionProvider LanguageRecognitionProvider `json:"languageRecognitionProvider,omitempty"`
 	// Strings that should be translated.

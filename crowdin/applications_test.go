@@ -278,31 +278,6 @@ func TestApplicationsService_Install(t *testing.T) {
 	}
 }
 
-func TestApplicationsService_Install_validationErrors(t *testing.T) {
-	tests := []struct {
-		name string
-		req  *model.InstallApplicationRequest
-		err  string
-	}{
-		{
-			name: "nil request",
-			req:  nil,
-			err:  "request cannot be nil",
-		},
-		{
-			name: "empty request",
-			req:  &model.InstallApplicationRequest{},
-			err:  "url is required",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
-}
-
 func TestApplicationsService_EditInstallation(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()

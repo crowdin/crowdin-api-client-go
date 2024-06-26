@@ -154,6 +154,19 @@ func TestReportsService_ListArchive(t *testing.T) {
 	})
 }
 
+func TestReportsService_ListArchive_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/users/1/reports/archives", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Reports.ListArchives(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestReportsService_DeleteArchive(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -413,73 +426,6 @@ func TestReportsService_Generate(t *testing.T) {
 	assert.Equal(t, excepted, status)
 }
 
-func TestReportsService_Generate_WithRequestValidation(t *testing.T) {
-	tests := []struct {
-		name string
-		req  *model.ReportGenerateRequest
-		err  string
-		pass bool
-	}{
-		{
-			name: "nil request",
-			req:  nil,
-			err:  "request cannot be nil",
-		},
-		{
-			name: "empty request",
-			req:  &model.ReportGenerateRequest{},
-			err:  "name is required",
-		},
-		{
-			name: "required schema",
-			req:  &model.ReportGenerateRequest{Name: model.ReportTopMembers},
-			err:  "schema is required",
-		},
-		{
-			name: "required schema.mode (ContributionRawDataSchema)",
-			req: &model.ReportGenerateRequest{
-				Name:   model.ReportTopMembers,
-				Schema: &model.ContributionRawDataSchema{},
-			},
-			err: "mode is required",
-		},
-		{
-			name: "valid schema (ContributionRawDataSchema)",
-			req: &model.ReportGenerateRequest{
-				Name:   model.ReportContributionRawData,
-				Schema: &model.ContributionRawDataSchema{Mode: model.ReportModeApprovals},
-			},
-			pass: true,
-		},
-		{
-			name: "valid schema (CostsEstimationPostEditingSchema)",
-			req: &model.ReportGenerateRequest{
-				Name:   model.ReportCostsEstimationPostEditing,
-				Schema: &model.CostsEstimationPostEditingSchema{Unit: model.ReportUnitWords},
-			},
-			pass: true,
-		},
-		{
-			name: "valid schema (ReportTransactionCostsPostEditing)",
-			req: &model.ReportGenerateRequest{
-				Name:   model.ReportTransactionCostsPostEditing,
-				Schema: &model.TransactionCostsPostEditingSchema{Unit: model.ReportUnitWords},
-			},
-			pass: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.pass {
-				assert.Nil(t, tt.req.Validate())
-			} else {
-				assert.EqualError(t, tt.req.Validate(), tt.err)
-			}
-		})
-	}
-}
-
 func TestReportsService_CheckStatus(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -721,6 +667,19 @@ func TestReportsService_ListSettingsTemplates(t *testing.T) {
 	})
 }
 
+func TestReportsService_ListSettingsTemplates_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/reports/settings-templates", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Reports.ListSettingsTemplates(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestReportsService_AddSettingsTemplate(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -821,60 +780,6 @@ func TestReportsService_AddSettingsTemplate(t *testing.T) {
 		_, _, err = client.Reports.AddSettingsTemplate(context.Background(), 0, req)
 		require.NoError(t, err)
 	})
-}
-
-func TestReportsService_AddSettingsTemplate_WithValidationError(t *testing.T) {
-	tests := []struct {
-		name string
-		req  *model.ReportSettingsTemplateAddRequest
-		err  string
-	}{
-		{
-			name: "nil request",
-			req:  nil,
-			err:  "request cannot be nil",
-		},
-		{
-			name: "empty request",
-			req:  &model.ReportSettingsTemplateAddRequest{},
-			err:  "name is required",
-		},
-		{
-			name: "required currency",
-			req:  &model.ReportSettingsTemplateAddRequest{Name: "Default template"},
-			err:  "currency is required",
-		},
-		{
-			name: "required unit",
-			req:  &model.ReportSettingsTemplateAddRequest{Name: "Default template", Currency: "USD"},
-			err:  "unit is required",
-		},
-		{
-			name: "required config",
-			req: &model.ReportSettingsTemplateAddRequest{
-				Name:     "Default template",
-				Currency: "USD",
-				Unit:     model.ReportUnitWords,
-			},
-			err: "config is required",
-		},
-		{
-			name: "required config fields",
-			req: &model.ReportSettingsTemplateAddRequest{
-				Name:     "Default template",
-				Currency: "USD",
-				Unit:     model.ReportUnitWords,
-				Config:   &model.ReportSettingsTemplateConfig{},
-			},
-			err: "config fields are required",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
 }
 
 func TestReportsService_EditSettingsTemplate(t *testing.T) {
@@ -1270,65 +1175,6 @@ func TestReportsService_GenerateOrganizationReport(t *testing.T) {
 		assert.NotNil(t, resp)
 		assert.Equal(t, "50fb3506-4127-4ba8-8296-f97dc7e3e0c3", status.Identifier)
 	})
-}
-
-func TestReportsService_GenerateOrganizationReport_WithRequestValidation(t *testing.T) {
-	tests := []struct {
-		name string
-		req  *model.GroupReportGenerateRequest
-		err  string
-	}{
-		{
-			name: "nil request",
-			req:  nil,
-			err:  "request cannot be nil",
-		},
-		{
-			name: "empty request",
-			req:  &model.GroupReportGenerateRequest{},
-			err:  "name is required",
-		},
-		{
-			name: "required schema",
-			req:  &model.GroupReportGenerateRequest{Name: model.ReportGroupTranslationCostsPostEditing},
-			err:  "schema is required",
-		},
-		{
-			name: "required schema.baseRates",
-			req: &model.GroupReportGenerateRequest{
-				Name:   model.ReportGroupTranslationCostsPostEditing,
-				Schema: &model.GroupTransactionCostsPostEditingSchema{},
-			},
-			err: "baseRates is required",
-		},
-		{
-			name: "required schema.individualRates",
-			req: &model.GroupReportGenerateRequest{
-				Name: model.ReportGroupTranslationCostsPostEditing,
-				Schema: &model.GroupTransactionCostsPostEditingSchema{
-					BaseRates: &model.ReportBaseRates{},
-				},
-			},
-			err: "individualRates is required",
-		},
-		{
-			name: "required schema.netRateSchemes",
-			req: &model.GroupReportGenerateRequest{
-				Name: model.ReportGroupTranslationCostsPostEditing,
-				Schema: &model.GroupTransactionCostsPostEditingSchema{
-					BaseRates:       &model.ReportBaseRates{},
-					IndividualRates: []*model.ReportIndividualRates{},
-				},
-			},
-			err: "netRateSchemes is required",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
 }
 
 func TestReportsService_CheckOrganizationReportStatus(t *testing.T) {

@@ -71,3 +71,16 @@ func TestVendorsService_List(t *testing.T) {
 	assert.Equal(t, 10, resp.Pagination.Offset)
 	assert.Equal(t, 25, resp.Pagination.Limit)
 }
+
+func TestVendorsService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/vendors", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Vendors.List(context.Background(), nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}

@@ -260,6 +260,19 @@ func TestWebhooksService_List(t *testing.T) {
 	}
 }
 
+func TestWebhooksService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/webhooks", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Webhooks.List(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestWebhooksService_Add(t *testing.T) {
 	client, mux, teardowm := setupClient()
 	defer teardowm()
@@ -337,65 +350,6 @@ func TestWebhooksService_Add_requiredFields(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	assert.Equal(t, 4, webhook.ID)
-}
-
-func TestWebhooksService_Add_requestValidation(t *testing.T) {
-	tests := []struct {
-		name string
-		req  *model.WebhookAddRequest
-		err  string
-	}{
-		{
-			name: "nil request",
-			req:  nil,
-			err:  "request cannot be nil",
-		},
-		{
-			name: "empty request",
-			req:  &model.WebhookAddRequest{},
-			err:  "name is required",
-		},
-		{
-			name: "url is required",
-			req: &model.WebhookAddRequest{
-				Name: "Proofread",
-			},
-			err: "url is required",
-		},
-		{
-			name: "events is required",
-			req: &model.WebhookAddRequest{
-				Name: "Proofread",
-				URL:  "https://webhook.site/1c20d9b5-6e6a-4522-974d-9da7ea7595c9",
-			},
-			err: "events is required",
-		},
-		{
-			name: "requestType is required",
-			req: &model.WebhookAddRequest{
-				Name:   "Proofread",
-				URL:    "https://webhook.site/1c20d9b5-6e6a-4522-974d-9da7ea7595c9",
-				Events: []model.Event{model.FileApproved},
-			},
-			err: "requestType is required",
-		},
-		{
-			name: "requestType is invalid",
-			req: &model.WebhookAddRequest{
-				Name:        "Proofread",
-				URL:         "https://webhook.site/1c20d9b5-6e6a-4522-974d-9da7ea7595c9",
-				Events:      []model.Event{model.FileApproved},
-				RequestType: "PUT",
-			},
-			err: "requestType must be GET or POST",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
 }
 
 func TestWebhooksService_Edit(t *testing.T) {

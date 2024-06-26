@@ -149,6 +149,19 @@ func TestBundlesService_List(t *testing.T) {
 	assert.Equal(t, 25, resp.Pagination.Limit)
 }
 
+func TestBundlesService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/2/bundles", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Bundles.List(context.Background(), 2, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestBundlesService_Add(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -222,38 +235,6 @@ func TestBundlesService_Add(t *testing.T) {
 		UpdatedAt:                    "2023-09-20T12:22:20+00:00",
 	}
 	assert.Equal(t, expected, bundle)
-}
-
-func TestBundlesService_Add_WithValidationError(t *testing.T) {
-	tests := []struct {
-		req         *model.BundleAddRequest
-		expectedErr string
-	}{
-		{
-			req:         nil,
-			expectedErr: "request cannot be nil",
-		},
-		{
-			req:         &model.BundleAddRequest{},
-			expectedErr: "name is required",
-		},
-		{
-			req:         &model.BundleAddRequest{Name: "Resx bundle"},
-			expectedErr: "format is required",
-		},
-		{
-			req:         &model.BundleAddRequest{Name: "Resx bundle", Format: "crowdin-resx"},
-			expectedErr: "sourcePatterns is required",
-		},
-		{
-			req:         &model.BundleAddRequest{Name: "Resx bundle", Format: "crowdin-resx", SourcePatterns: []string{"/master"}},
-			expectedErr: "exportPattern is required",
-		},
-	}
-
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.expectedErr)
-	}
 }
 
 func TestBundlesService_Edit(t *testing.T) {
@@ -495,6 +476,19 @@ func TestBundlesService_ListFiles(t *testing.T) {
 	assert.Equal(t, 3, resp.Pagination.Limit)
 }
 
+func TestBundlesService_ListFiles_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/2/bundles/3/files", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Bundles.ListFiles(context.Background(), 2, 3, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestBundlesService_ListBranches(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -560,4 +554,17 @@ func TestBundlesService_ListBranches(t *testing.T) {
 
 	assert.Equal(t, 10, resp.Pagination.Offset)
 	assert.Equal(t, 3, resp.Pagination.Limit)
+}
+
+func TestBundlesService_ListBranches_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/2/bundles/3/branches", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Bundles.ListBranches(context.Background(), 2, 3, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }

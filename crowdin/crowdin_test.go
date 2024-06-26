@@ -276,5 +276,5 @@ func TestDelete(t *testing.T) {
 		}
 	})
 
-	_, _ = client.Delete(context.Background(), "/delete")
+	_, _ = client.Delete(context.Background(), "/delete", nil)
 }

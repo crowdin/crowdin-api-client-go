@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLanguageService_List(t *testing.T) {
@@ -107,6 +109,19 @@ func TestLanguageService_List(t *testing.T) {
 	if !reflect.DeepEqual(languages, want) {
 		t.Errorf("Languages.List returned %+v, want %+v", languages, want)
 	}
+}
+
+func TestLanguageService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/languages", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Languages.List(context.Background(), nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestLanguagesService_ListWithQueryParams(t *testing.T) {

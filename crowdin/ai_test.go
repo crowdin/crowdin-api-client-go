@@ -210,57 +210,6 @@ func TestAIService_AddPrompt(t *testing.T) {
 	assert.Equal(t, expected, prompt)
 }
 
-func TestAIService_AddPrompt_requestValidation(t *testing.T) {
-	tests := []struct {
-		name string
-		req  *model.PromptAddRequest
-		err  string
-	}{
-		{
-			name: "nil request",
-			req:  nil,
-			err:  "request cannot be nil",
-		},
-		{
-			name: "empty name",
-			req:  &model.PromptAddRequest{},
-			err:  "name is required",
-		},
-		{
-			name: "empty action",
-			req:  &model.PromptAddRequest{Name: "Pre-translate prompt"},
-			err:  "action is required",
-		},
-		{
-			name: "empty aiProviderId",
-			req:  &model.PromptAddRequest{Name: "Pre-translate prompt", Action: "pre_translate"},
-			err:  "aiProviderId is required",
-		},
-		{
-			name: "empty aiModelId",
-			req:  &model.PromptAddRequest{Name: "Pre-translate prompt", Action: "pre_translate", AIProviderID: 1},
-			err:  "aiModelId is required",
-		},
-		{
-			name: "empty config mode",
-			req: &model.PromptAddRequest{
-				Name:         "Pre-translate prompt",
-				Action:       "pre_translate",
-				AIProviderID: 1,
-				AIModelID:    "gpt-3.5-turbo-instruct",
-				Config:       model.PromptConfig{},
-			},
-			err: "config.mode is required",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
-}
-
 func TestAIService_EditPrompt(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -577,36 +526,6 @@ func TestAIService_AddProvider(t *testing.T) {
 	assert.Equal(t, expected, provider)
 }
 
-func TestAIService_AddProvider_requestValidation(t *testing.T) {
-	tests := []struct {
-		name string
-		req  *model.ProviderAddRequest
-		err  string
-	}{
-		{
-			name: "nil request",
-			req:  nil,
-			err:  "request cannot be nil",
-		},
-		{
-			name: "empty name",
-			req:  &model.ProviderAddRequest{},
-			err:  "name is required",
-		},
-		{
-			name: "empty type",
-			req:  &model.ProviderAddRequest{Name: "OpenAI"},
-			err:  "type is required",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
-}
-
 func TestAIService_EditProvider(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -748,24 +667,4 @@ func TestAIService_CreateProxyChatCompletion(t *testing.T) {
 
 	expected := &model.ProxyChatCompletion{}
 	assert.Equal(t, expected, completion)
-}
-
-func TestAIService_CreateProxyChatCompletion_requestValidation(t *testing.T) {
-	tests := []struct {
-		name string
-		req  *model.CreateProxyChatCompletionRequest
-		err  string
-	}{
-		{
-			name: "nil request",
-			req:  nil,
-			err:  "request cannot be nil",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
 }

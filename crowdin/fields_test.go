@@ -167,6 +167,19 @@ func TestFieldsService_List(t *testing.T) {
 	}
 }
 
+func TestFieldsService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/fields", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Fields.List(context.Background(), nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestFieldsService_Add(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -249,55 +262,6 @@ func TestFieldsService_Add(t *testing.T) {
 		UpdatedAt:   "2023-09-23T09:04:29+00:00",
 	}
 	assert.Equal(t, expected, field)
-}
-
-func TestFieldsService_Add_requestValidation(t *testing.T) {
-	tests := []struct {
-		name string
-		req  *model.FieldAddRequest
-		err  string
-	}{
-		{
-			name: "nil request",
-			req:  nil,
-			err:  "request cannot be nil",
-		},
-		{
-			name: "empty request",
-			req:  &model.FieldAddRequest{},
-			err:  "name is required",
-		},
-		{
-			name: "missing slug",
-			req: &model.FieldAddRequest{
-				Name: "Custom field",
-			},
-			err: "slug is required",
-		},
-		{
-			name: "missing type",
-			req: &model.FieldAddRequest{
-				Name: "Custom field",
-				Slug: "custom-field",
-			},
-			err: "type is required",
-		},
-		{
-			name: "missing entities",
-			req: &model.FieldAddRequest{
-				Name: "Custom field",
-				Slug: "custom-field",
-				Type: model.TypeSelect,
-			},
-			err: "entities is required",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
 }
 
 func TestFieldsService_Edit(t *testing.T) {

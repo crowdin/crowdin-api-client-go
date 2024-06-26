@@ -89,6 +89,19 @@ func TestDictionariesService_List(t *testing.T) {
 	}
 }
 
+func TestDictionariesService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/2/dictionaries", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Dictionaries.List(context.Background(), 2, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestDictionariesService_Edit(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()

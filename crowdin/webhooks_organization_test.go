@@ -261,6 +261,19 @@ func TestOrganizationWebhooksService_List(t *testing.T) {
 	}
 }
 
+func TestOrganizationWebhooksService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/webhooks", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.OrganizationWebhooks.List(context.Background(), nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestOrganizationWebhooksService_Add(t *testing.T) {
 	client, mux, teardowm := setupClient()
 	defer teardowm()

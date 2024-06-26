@@ -179,29 +179,6 @@ func TestTranslationsService_ApplyPreTranslation_WithRequiredFields(t *testing.T
 	require.NoError(t, err)
 }
 
-func TestTranslationsService_ApplyPreTranslation_WithValidateError(t *testing.T) {
-	cases := []struct {
-		req           *model.PreTranslationRequest
-		expectedError string
-	}{
-		{
-			req:           nil,
-			expectedError: "request cannot be nil",
-		},
-		{
-			req:           &model.PreTranslationRequest{},
-			expectedError: "languageIds is required",
-		},
-		{
-			req:           &model.PreTranslationRequest{LanguageIDs: []string{"uk"}},
-			expectedError: "fileIds is required",
-		},
-	}
-	for _, tt := range cases {
-		assert.EqualError(t, tt.req.Validate(), tt.expectedError)
-	}
-}
-
 func TestTranslationsService_BuildProjectDirectoryTranslation(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -259,35 +236,6 @@ func TestTranslationsService_BuildProjectDirectoryTranslation(t *testing.T) {
 	}
 	assert.Equal(t, expected, buildTranslation)
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
-}
-
-func TestTranslationsService_BuildProjectDirectoryTranslation_WithValidationError(t *testing.T) {
-	cases := []struct {
-		req           *model.BuildProjectDirectoryTranslationRequest
-		expectedError string
-	}{
-		{
-			req:           nil,
-			expectedError: "request cannot be nil",
-		},
-		{
-			req: &model.BuildProjectDirectoryTranslationRequest{
-				SkipUntranslatedStrings: ToPtr(true),
-				SkipUntranslatedFiles:   ToPtr(true),
-			},
-			expectedError: "skipUntranslatedStrings and skipUntranslatedFiles must not be true at the same request",
-		},
-		{
-			req: &model.BuildProjectDirectoryTranslationRequest{
-				ExportWithMinApprovalsCount:     ToPtr(1),
-				ExportStringsThatPassedWorkflow: ToPtr(true),
-			},
-			expectedError: "exportWithMinApprovalsCount and exportStringsThatPassedWorkflow must not be true at the same request",
-		},
-	}
-	for _, tt := range cases {
-		assert.EqualError(t, tt.req.Validate(), tt.expectedError)
-	}
 }
 
 func TestTranslationsService_BuildProjectFileTranslation(t *testing.T) {
@@ -357,41 +305,6 @@ func TestTranslationsService_BuildProjectFileTranslation_WithRequiredFields(t *t
 	req := &model.BuildProjectFileTranslationRequest{TargetLanguageID: "uk"}
 	_, _, err := client.Translations.BuildProjectFileTranslation(context.Background(), 1, 2, req, "")
 	require.NoError(t, err)
-}
-
-func TestTranslationsService_BuildProjectFileTranslation_WithValidationError(t *testing.T) {
-	cases := []struct {
-		req           *model.BuildProjectFileTranslationRequest
-		expectedError string
-	}{
-		{
-			req:           nil,
-			expectedError: "request cannot be nil",
-		},
-		{
-			req:           &model.BuildProjectFileTranslationRequest{},
-			expectedError: "targetLanguageId is required",
-		},
-		{
-			req: &model.BuildProjectFileTranslationRequest{
-				TargetLanguageID:        "uk",
-				SkipUntranslatedStrings: ToPtr(true),
-				SkipUntranslatedFiles:   ToPtr(true),
-			},
-			expectedError: "skipUntranslatedStrings and skipUntranslatedFiles must not be true at the same request",
-		},
-		{
-			req: &model.BuildProjectFileTranslationRequest{
-				TargetLanguageID:                "uk",
-				ExportWithMinApprovalsCount:     ToPtr(1),
-				ExportStringsThatPassedWorkflow: ToPtr(true),
-			},
-			expectedError: "exportWithMinApprovalsCount and exportStringsThatPassedWorkflow must not be true at the same request",
-		},
-	}
-	for _, tt := range cases {
-		assert.EqualError(t, tt.req.Validate(), tt.expectedError)
-	}
 }
 
 func TestTranslationsService_ListProjectBuilds(t *testing.T) {
@@ -489,13 +402,26 @@ func TestTranslationsService_ListProjectBuilds(t *testing.T) {
 	}
 }
 
+func TestTranslationsService_ListProjectBuilds_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/translations/build", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Translations.ListProjectBuilds(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestTranslationsService_BuildProjectTranslation(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
 	cases := []struct {
 		name     string
-		req      model.BuildProjectTranslationRequest
+		req      model.BuildProjectTranslationRequester
 		expected string
 	}{
 		{
@@ -601,7 +527,7 @@ func TestTranslationsService_BuildProjectTranslation(t *testing.T) {
 func TestTranslationsService_BuildProjectTranslation_WithValidationError(t *testing.T) {
 	cases := []struct {
 		name          string
-		req           model.BuildProjectTranslationRequest
+		req           model.BuildProjectTranslationRequester
 		expectedError string
 	}{
 		{
@@ -650,14 +576,6 @@ func TestTranslationsService_BuildProjectTranslation_WithValidationError(t *test
 	}
 }
 
-func TestTranslationsService_BuildProjectTranslation_WithNilRequest(t *testing.T) {
-	var req *model.BuildProjectRequest
-	assert.EqualError(t, req.Validate(), "request cannot be nil")
-
-	var reqPseudo *model.PseudoBuildProjectRequest
-	assert.EqualError(t, reqPseudo.Validate(), "request cannot be nil")
-}
-
 func TestTranslationsService_UploadTranslations(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -696,29 +614,6 @@ func TestTranslationsService_UploadTranslations(t *testing.T) {
 	}
 	assert.Equal(t, expected, uploadTranslations)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
-}
-
-func TestTranslationsService_UploadTranslations_WithValidationError(t *testing.T) {
-	cases := []struct {
-		req           *model.UploadTranslationsRequest
-		expectedError string
-	}{
-		{
-			req:           nil,
-			expectedError: "request cannot be nil",
-		},
-		{
-			req:           &model.UploadTranslationsRequest{},
-			expectedError: "storageId is required",
-		},
-		{
-			req:           &model.UploadTranslationsRequest{StorageID: 1, FileID: 2, BranchID: 3},
-			expectedError: "fileId and branchId can not be used at the same request",
-		},
-	}
-	for _, tt := range cases {
-		assert.EqualError(t, tt.req.Validate(), tt.expectedError)
-	}
 }
 
 func TestTranslationsService_DownloadProjectTranslations(t *testing.T) {
@@ -871,23 +766,4 @@ func TestTranslationsService_ExportProjectTranslation(t *testing.T) {
 	}
 	assert.Equal(t, expected, downloadLink)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-}
-
-func TestTranslationsService_ExportProjectTranslation_WithValidationError(t *testing.T) {
-	cases := []struct {
-		req           *model.ExportTranslationRequest
-		expectedError string
-	}{
-		{
-			req:           nil,
-			expectedError: "request cannot be nil",
-		},
-		{
-			req:           &model.ExportTranslationRequest{},
-			expectedError: "targetLanguageId is required",
-		},
-	}
-	for _, tt := range cases {
-		assert.EqualError(t, tt.req.Validate(), tt.expectedError)
-	}
 }

@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSourceStringsService_List(t *testing.T) {
@@ -93,6 +95,19 @@ func TestSourceStringsService_List(t *testing.T) {
 	}
 }
 
+func TestSourceStringsService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/2/strings", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.SourceStrings.List(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestSourceStringsService_ListQueryParams(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -105,7 +120,7 @@ func TestSourceStringsService_ListQueryParams(t *testing.T) {
 		{"empty query", nil, ""},
 		{"DenormalizePlaceholders=1", &model.SourceStringsListOptions{DenormalizePlaceholders: ToPtr(1)}, "denormalizePlaceholders=1"},
 		{"DenormalizePlaceholders=0", &model.SourceStringsListOptions{DenormalizePlaceholders: ToPtr(0)}, "denormalizePlaceholders=0"},
-		{"LabelIDs", &model.SourceStringsListOptions{LabelIDs: []string{"1", "2", "3", "4", "5"}}, "labelIds=1%2C2%2C3%2C4%2C5"},
+		{"LabelIDs", &model.SourceStringsListOptions{LabelIDs: []int{1, 2, 3, 4, 5}}, "labelIds=1%2C2%2C3%2C4%2C5"},
 		{"FileID", &model.SourceStringsListOptions{FileID: 1}, "fileId=1"},
 		{"BranchID", &model.SourceStringsListOptions{BranchID: 2}, "branchId=2"},
 		{"DirectoryID", &model.SourceStringsListOptions{DirectoryID: 3}, "directoryId=3"},
@@ -117,7 +132,7 @@ func TestSourceStringsService_ListQueryParams(t *testing.T) {
 			"all query params",
 			&model.SourceStringsListOptions{
 				DenormalizePlaceholders: ToPtr(1),
-				LabelIDs:                []string{"1", "2", "3", "4", "5"},
+				LabelIDs:                []int{1, 2, 3, 4, 5},
 				FileID:                  1,
 				BranchID:                2,
 				DirectoryID:             3,
@@ -514,6 +529,19 @@ func TestSourceStringsService_BatchOperations(t *testing.T) {
 	if !reflect.DeepEqual(sourceStrings, want) {
 		t.Errorf("SourceStrings.BatchOperations returned %+v, want %+v", sourceStrings, want)
 	}
+}
+
+func TestSourceStringsService_BatchOperations_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/strings", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.SourceStrings.BatchOperations(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestSourceStringsService_Edit(t *testing.T) {

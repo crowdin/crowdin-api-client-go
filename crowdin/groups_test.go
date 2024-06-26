@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGroupService_List(t *testing.T) {
@@ -71,6 +73,19 @@ func TestGroupService_List(t *testing.T) {
 	if !reflect.DeepEqual(resp.Pagination, expectedPagination) {
 		t.Errorf("Groups.List returned %+v, want %+v", resp.Pagination, expectedPagination)
 	}
+}
+
+func TestGroupService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/groups", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Groups.List(context.Background(), nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestGroupService_ListWithQueryParams(t *testing.T) {
@@ -266,21 +281,6 @@ func TestGroupService_AddWithEmptyRequest(t *testing.T) {
 	_, _, err := client.Groups.Add(context.Background(), nil)
 	if !errors.Is(err, model.ErrNilRequest) {
 		t.Errorf("Groups.Add expected error: %v, got: %v", model.ErrNilRequest, err)
-	}
-}
-
-func TestGroupService_AddValidationErrors(t *testing.T) {
-	client, _, teardown := setupClient()
-	defer teardown()
-
-	_, _, err := client.Groups.Add(context.Background(), &model.GroupsAddRequest{})
-	if err == nil {
-		t.Error("Groups.Add expected an error, got nil")
-	}
-
-	want := "name is required"
-	if err.Error() != want {
-		t.Errorf("Groups.Add returned %q, want %q", err.Error(), want)
 	}
 }
 
