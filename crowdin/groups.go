@@ -19,12 +19,6 @@ type GroupsService struct {
 
 // List returns a list of groups.
 //
-// Query parameters:
-//
-//	parentId: A parent group identifier (default 0 - groups of root group).
-//	limit: A maximum number of items to retrieve (default 25, max 500).
-//	offset: A starting offset in the collection of items (default 0).
-//
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.groups.getMany
 func (s *GroupsService) List(ctx context.Context, opts *model.GroupsListOptions) ([]*model.Group, *Response, error) {
 	res := new(model.GroupsListResponse)
@@ -64,10 +58,9 @@ func (s *GroupsService) Add(ctx context.Context, req *model.GroupsAddRequest) (*
 // Edit updates a group.
 //
 // Request body:
-//
-//	op: The operation to perform. Enum: replace, test.
-//	path: A JSON Pointer as defined in RFC 6901. Enum: "/name", "/description", "/parentId".
-//	value: The value to be used within the operations. The value must be one of string or integer.
+//   - op: The operation to perform. Enum: replace, test.
+//   - path: A JSON Pointer as defined in RFC 6901. Enum: "/name", "/description", "/parentId".
+//   - value: The value to be used within the operations. The value must be one of string or integer.
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.groups.patch
 func (s *GroupsService) Edit(ctx context.Context, id int, req []*model.UpdateRequest) (*model.Group, *Response, error) {
@@ -81,5 +74,5 @@ func (s *GroupsService) Edit(ctx context.Context, id int, req []*model.UpdateReq
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.groups.delete
 func (s *GroupsService) Delete(ctx context.Context, id int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/groups/%d", id))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/groups/%d", id), nil)
 }

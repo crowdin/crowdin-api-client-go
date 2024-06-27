@@ -514,11 +514,11 @@ type (
 	JavaScriptFileFormatSettings struct {
 		// File export pattern. Defines file name and path in resulting translations bundle.
 		// Note: Can't contain : * ? " < > | symbols.
-		ExportPattern string `json:"exportPattern,omitempty"`
+		ExportPattern *string `json:"exportPattern,omitempty"`
 		// Enum: "single" "double". Default: "single".
 		// single - Output will be enclosed in single quotes.
 		// double - Output will be enclosed in double quotes.
-		ExportQuotes string `json:"exportQuotes,omitempty"`
+		ExportQuotes *string `json:"exportQuotes,omitempty"`
 	}
 
 	StringCatalogFileFormatSettings struct {

@@ -84,7 +84,7 @@ func (s *MachineTranslationEnginesService) EditMT(ctx context.Context, mtID int,
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.mts.delete
 func (s *MachineTranslationEnginesService) DeleteMT(ctx context.Context, mtID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/mts/%d", mtID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/mts/%d", mtID), nil)
 }
 
 // Translate translates strings using a specific MTE.

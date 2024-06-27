@@ -53,11 +53,6 @@ func (s *TranslationStatusService) GetLanguageProgress(ctx context.Context, proj
 
 // GetProjectProgress returns the translation and proofreading progress on a project level.
 //
-// Query parameters:
-// - languageIds: Filter progress by Language Identifier.
-// - limit: A maximum number of items to retrieve (default 25, max 500).
-// - offset: A starting offset in the collection of items (default 0).
-//
 // https://developer.crowdin.com/api/v2/#operation/api.projects.languages.progress.getMany
 func (s *TranslationStatusService) GetProjectProgress(ctx context.Context, projectID int, opts *model.ProjectProgressListOptions) (
 	[]*model.TranslationProgress, *Response, error,
@@ -66,13 +61,6 @@ func (s *TranslationStatusService) GetProjectProgress(ctx context.Context, proje
 }
 
 // ListQAChecks returns a list of QA check issues.
-//
-// Query parameters:
-// - category: Filter progress by Category.
-// - validation: Filter progress by Validation type.
-// - languageId: Filter progress by Language Identifier.
-// - limit: A maximum number of items to retrieve (default 25, max 500).
-// - offset: A starting offset in the collection of items (default 0).
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.qa-checks.getMany
 func (s *TranslationStatusService) ListQAChecks(ctx context.Context, projectID int, opts *model.QACheckListOptions) (

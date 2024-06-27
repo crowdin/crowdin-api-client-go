@@ -111,14 +111,14 @@ type FieldsListResponse struct {
 // FieldsService.List method.
 type FieldsListOptions struct {
 	// Search fields by `slug` or `name`.
-	Search string `url:"search,omitempty"`
+	Search string `json:"search,omitempty"`
 	// Filter fields by entity.
 	// Enum: project, user, task, file, translation, string.
-	Entity FieldEntity `url:"entity,omitempty"`
+	Entity FieldEntity `json:"entity,omitempty"`
 	// Filter fields by type.
 	// Enum: checkbox, radiobuttons, date, datetime, number, labels,
 	// select, multiselect, text, textarea, url.
-	Type FieldType `url:"type,omitempty"`
+	Type FieldType `json:"type,omitempty"`
 
 	ListOptions
 }

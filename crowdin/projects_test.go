@@ -1565,8 +1565,8 @@ func TestProjectsService_AddFileFormatSettings_WithBodyParams(t *testing.T) {
 			req: &model.ProjectsAddFileFormatSettingsRequest{
 				Format: "android",
 				Settings: &model.JavaScriptFileFormatSettings{
-					ExportPattern: "pattern",
-					ExportQuotes:  "double",
+					ExportPattern: ToPtr("pattern"),
+					ExportQuotes:  ToPtr("double"),
 				},
 			},
 			expectedReqBody: `{"format":"android","settings":{"exportPattern":"pattern","exportQuotes":"double"}}` + "\n",

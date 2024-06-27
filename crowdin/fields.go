@@ -71,5 +71,5 @@ func (s *FieldsService) Edit(ctx context.Context, fieldID int, req []*model.Upda
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.fields.delete
 func (s *FieldsService) Delete(ctx context.Context, fieldID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/fields/%d", fieldID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/fields/%d", fieldID), nil)
 }

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"strings"
 )
 
 // Approval represents a Crowdin translation approval.
@@ -73,10 +72,10 @@ func (o *ApprovalsListOptions) Values() (url.Values, bool) {
 		v.Add("fileId", fmt.Sprintf("%d", o.FileID))
 	}
 	if len(o.LabelIDs) > 0 {
-		v.Add("labelIds", joinIntSlice(o.LabelIDs))
+		v.Add("labelIds", JoinSlice(o.LabelIDs))
 	}
 	if len(o.ExcludeLabelIDs) > 0 {
-		v.Add("excludeLabelIds", joinIntSlice(o.ExcludeLabelIDs))
+		v.Add("excludeLabelIds", JoinSlice(o.ExcludeLabelIDs))
 	}
 	if o.StringID > 0 {
 		v.Add("stringId", fmt.Sprintf("%d", o.StringID))
@@ -224,10 +223,10 @@ func (o *LanguageTranslationsListOptions) Values() (url.Values, bool) {
 		v.Add("orderBy", o.OrderBy)
 	}
 	if len(o.StringIDs) > 0 {
-		v.Add("stringIds", joinIntSlice(o.StringIDs))
+		v.Add("stringIds", JoinSlice(o.StringIDs))
 	}
 	if len(o.LabelIDs) > 0 {
-		v.Add("labelIds", joinIntSlice(o.LabelIDs))
+		v.Add("labelIds", JoinSlice(o.LabelIDs))
 	}
 	if o.FileID > 0 {
 		v.Add("fileId", fmt.Sprintf("%d", o.FileID))
@@ -443,10 +442,10 @@ func (o *VotesListOptions) Values() (url.Values, bool) {
 		v.Add("fileId", fmt.Sprintf("%d", o.FileID))
 	}
 	if len(o.LabelIDs) > 0 {
-		v.Add("labelIds", joinIntSlice(o.LabelIDs))
+		v.Add("labelIds", JoinSlice(o.LabelIDs))
 	}
 	if len(o.ExcludeLabelIDs) > 0 {
-		v.Add("excludeLabelIds", joinIntSlice(o.ExcludeLabelIDs))
+		v.Add("excludeLabelIds", JoinSlice(o.ExcludeLabelIDs))
 	}
 
 	return v, len(v) > 0
@@ -484,12 +483,4 @@ func (r *VoteAddRequest) Validate() error {
 		return errors.New("translation ID is required")
 	}
 	return nil
-}
-
-func joinIntSlice(s []int) string {
-	res := make([]string, len(s))
-	for i, v := range s {
-		res[i] = fmt.Sprintf("%d", v)
-	}
-	return strings.Join(res, ",")
 }

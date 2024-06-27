@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"strings"
 )
 
 // Screenshot represents a screenshot, which provides translators
@@ -70,15 +69,15 @@ type ScreenshotListOptions struct {
 	// Sort screenshots by specified field.
 	// Enum: id, name, tagsCount, createdAt, updatedAt. Default: id.
 	// Example: orderBy=createdAt desc,name,tagsCount
-	OrderBy string `url:"orderBy,omitempty"`
+	OrderBy string `json:"orderBy,omitempty"`
 	// String Identifier.
-	StringID int `url:"stringId,omitempty"`
+	StringID int `json:"stringId,omitempty"`
 	// Label Identifiers.
 	// Example: labelIds=1,2,3
-	LabelIDs []string `url:"labelIds,omitempty"`
+	LabelIDs []string `json:"labelIds,omitempty"`
 	// Label Identifiers to exclude.
 	// Example: excludeLabelIds=1,2,3
-	ExcludeLabelIDs []string `url:"excludeLabelIds,omitempty"`
+	ExcludeLabelIDs []string `json:"excludeLabelIds,omitempty"`
 
 	ListOptions
 }
@@ -99,10 +98,10 @@ func (o *ScreenshotListOptions) Values() (url.Values, bool) {
 		v.Add("stringId", fmt.Sprintf("%d", o.StringID))
 	}
 	if len(o.LabelIDs) > 0 {
-		v.Add("labelIds", strings.Join(o.LabelIDs, ","))
+		v.Add("labelIds", JoinSlice(o.LabelIDs))
 	}
 	if len(o.ExcludeLabelIDs) > 0 {
-		v.Add("excludeLabelIds", strings.Join(o.ExcludeLabelIDs, ","))
+		v.Add("excludeLabelIds", JoinSlice(o.ExcludeLabelIDs))
 	}
 
 	return v, len(v) > 0

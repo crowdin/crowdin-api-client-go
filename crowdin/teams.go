@@ -66,7 +66,7 @@ func (s *TeamsService) Edit(ctx context.Context, teamID int, req []*model.Update
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.teams.delete
 func (s *TeamsService) Delete(ctx context.Context, teamID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/teams/%d", teamID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/teams/%d", teamID), nil)
 }
 
 // ListMembers returns a list of team members.
@@ -121,14 +121,14 @@ func (s *TeamsService) AddMember(ctx context.Context, teamID int, req *model.Tea
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.teams.members.delete
 func (s *TeamsService) DeleteMember(ctx context.Context, teamID, memberID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/teams/%d/members/%d", teamID, memberID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/teams/%d/members/%d", teamID, memberID), nil)
 }
 
 // DeleteMembers deletes all members from the team.
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.teams.members.deleteMany
 func (s *TeamsService) DeleteMembers(ctx context.Context, teamID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/teams/%d/members", teamID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/teams/%d/members", teamID), nil)
 }
 
 // AddToProject adds a team to the project.

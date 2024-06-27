@@ -27,38 +27,38 @@ type Client struct {
 	userAgent    string
 	httpClient   *http.Client
 
-	Storages                  *StorageService
-	Languages                 *LanguagesService
-	Groups                    *GroupsService
-	Projects                  *ProjectsService
+	AI                        *AIService
+	Applications              *ApplicationsService
 	Branches                  *BranchesService
+	Bundles                   *BundlesService
+	Dictionaries              *DictionariesService
+	Distributions             *DistributionsService
+	Fields                    *FieldsService
+	Groups                    *GroupsService
+	Glossaries                *GlossariesService
+	Labels                    *LabelsService
+	Languages                 *LanguagesService
+	MachineTranslationEngines *MachineTranslationEnginesService
+	Notifications             *NotificationsService
+	OrganizationWebhooks      *OrganizationWebhooksService
+	Projects                  *ProjectsService
+	Reports                   *ReportsService
+	Screenshots               *ScreenshotsService
+	SecurityLogs              *SecurityLogsService
 	SourceFiles               *SourceFilesService
 	SourceStrings             *SourceStringsService
-	StringTranslations        *StringTranslationsService
+	Storages                  *StorageService
 	StringComments            *StringCommentsService
-	Translations              *TranslationsService
-	TranslationStatus         *TranslationStatusService
-	Screenshots               *ScreenshotsService
-	Bundles                   *BundlesService
-	Labels                    *LabelsService
-	Glossaries                *GlossariesService
-	TranslationMemory         *TranslationMemoryService
-	Users                     *UsersService
-	MachineTranslationEngines *MachineTranslationEnginesService
+	StringTranslations        *StringTranslationsService
 	Tasks                     *TasksService
-	Reports                   *ReportsService
-	Dictionaries              *DictionariesService
-	Webhooks                  *WebhooksService
-	OrganizationWebhooks      *OrganizationWebhooksService
-	Distributions             *DistributionsService
-	SecurityLogs              *SecurityLogsService
-	Vendors                   *VendorsService
-	Fields                    *FieldsService
 	Teams                     *TeamsService
+	TranslationMemory         *TranslationMemoryService
+	TranslationStatus         *TranslationStatusService
+	Translations              *TranslationsService
+	Users                     *UsersService
+	Vendors                   *VendorsService
+	Webhooks                  *WebhooksService
 	Workflows                 *WorkflowsService
-	AI                        *AIService
-	Notifications             *NotificationsService
-	Applications              *ApplicationsService
 }
 
 // NewClient creates a new Crowdin API client with provided options (ex. WithHTTPClient).
@@ -94,38 +94,38 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	}
 
 	// Initialize services.
-	c.Storages = &StorageService{client: c}
-	c.Languages = &LanguagesService{client: c}
-	c.Groups = &GroupsService{client: c}
-	c.Projects = &ProjectsService{client: c}
-	c.Branches = &BranchesService{client: c}
-	c.SourceFiles = &SourceFilesService{client: c}
-	c.Translations = &TranslationsService{client: c}
-	c.TranslationStatus = &TranslationStatusService{client: c}
-	c.SourceStrings = &SourceStringsService{client: c}
-	c.StringTranslations = &StringTranslationsService{client: c}
-	c.StringComments = &StringCommentsService{client: c}
-	c.Screenshots = &ScreenshotsService{client: c}
-	c.Bundles = &BundlesService{client: c}
-	c.Labels = &LabelsService{client: c}
-	c.Glossaries = &GlossariesService{client: c}
-	c.TranslationMemory = &TranslationMemoryService{client: c}
-	c.Users = &UsersService{client: c}
-	c.MachineTranslationEngines = &MachineTranslationEnginesService{client: c}
-	c.Tasks = &TasksService{client: c}
-	c.Reports = &ReportsService{client: c}
-	c.Dictionaries = &DictionariesService{client: c}
-	c.Webhooks = &WebhooksService{client: c}
-	c.OrganizationWebhooks = &OrganizationWebhooksService{client: c}
-	c.Distributions = &DistributionsService{client: c}
-	c.SecurityLogs = &SecurityLogsService{client: c}
-	c.Vendors = &VendorsService{client: c}
-	c.Fields = &FieldsService{client: c}
-	c.Teams = &TeamsService{client: c}
-	c.Workflows = &WorkflowsService{client: c}
 	c.AI = &AIService{client: c}
-	c.Notifications = &NotificationsService{client: c}
 	c.Applications = &ApplicationsService{client: c}
+	c.Branches = &BranchesService{client: c}
+	c.Bundles = &BundlesService{client: c}
+	c.Dictionaries = &DictionariesService{client: c}
+	c.Distributions = &DistributionsService{client: c}
+	c.Fields = &FieldsService{client: c}
+	c.Groups = &GroupsService{client: c}
+	c.Glossaries = &GlossariesService{client: c}
+	c.Labels = &LabelsService{client: c}
+	c.Languages = &LanguagesService{client: c}
+	c.MachineTranslationEngines = &MachineTranslationEnginesService{client: c}
+	c.Notifications = &NotificationsService{client: c}
+	c.OrganizationWebhooks = &OrganizationWebhooksService{client: c}
+	c.Projects = &ProjectsService{client: c}
+	c.Reports = &ReportsService{client: c}
+	c.Screenshots = &ScreenshotsService{client: c}
+	c.SecurityLogs = &SecurityLogsService{client: c}
+	c.SourceFiles = &SourceFilesService{client: c}
+	c.SourceStrings = &SourceStringsService{client: c}
+	c.Storages = &StorageService{client: c}
+	c.StringComments = &StringCommentsService{client: c}
+	c.StringTranslations = &StringTranslationsService{client: c}
+	c.Tasks = &TasksService{client: c}
+	c.Teams = &TeamsService{client: c}
+	c.TranslationMemory = &TranslationMemoryService{client: c}
+	c.TranslationStatus = &TranslationStatusService{client: c}
+	c.Translations = &TranslationsService{client: c}
+	c.Users = &UsersService{client: c}
+	c.Vendors = &VendorsService{client: c}
+	c.Webhooks = &WebhooksService{client: c}
+	c.Workflows = &WorkflowsService{client: c}
 
 	return c, nil
 }
@@ -332,17 +332,13 @@ func (c *Client) Get(ctx context.Context, path string, params ListOptionsProvide
 
 // Delete makes a DELETE request to the specified path.
 // If the provided parameter v is not nil, the result will be unmarshaled into it.
-func (c *Client) Delete(ctx context.Context, path string, v ...any) (*Response, error) {
+func (c *Client) Delete(ctx context.Context, path string, v any) (*Response, error) {
 	req, err := c.newRequest(ctx, "DELETE", path, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(v) > 0 {
-		return c.do(req, v[0])
-	}
-
-	return c.do(req, nil)
+	return c.do(req, v)
 }
 
 // handleErrorResponse checks the API response for errors and returns

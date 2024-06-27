@@ -64,7 +64,7 @@ func (s *StringTranslationsService) AddApproval(ctx context.Context, projectID, 
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.approvals.delete
 func (s *StringTranslationsService) RemoveApproval(ctx context.Context, projectID, approvalID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/approvals/%d", projectID, approvalID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/approvals/%d", projectID, approvalID), nil)
 }
 
 // TranslationAlignment aligns translations.
@@ -136,7 +136,7 @@ func (s *StringTranslationsService) DeleteStringTranslations(ctx context.Context
 	*Response, error,
 ) {
 	path := fmt.Sprintf("/api/v2/projects/%d/translations?stringId=%d&languageId=%s", projectID, stringID, languageID)
-	return s.client.Delete(ctx, path)
+	return s.client.Delete(ctx, path, nil)
 }
 
 // GetTranslation returns a single string translation by its identifier.
@@ -179,7 +179,7 @@ func (s *StringTranslationsService) RestoreTranslation(ctx context.Context, proj
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.delete
 func (s *StringTranslationsService) DeleteTranslation(ctx context.Context, projectID, translationID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/%d", projectID, translationID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/%d", projectID, translationID), nil)
 }
 
 // ListVotes lists translation votes.
@@ -231,5 +231,5 @@ func (s *StringTranslationsService) AddVote(ctx context.Context, projectID int, 
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.votes.delete
 func (s *StringTranslationsService) CancelVote(ctx context.Context, projectID, voteID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/votes/%d", projectID, voteID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/votes/%d", projectID, voteID), nil)
 }

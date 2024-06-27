@@ -414,8 +414,8 @@ type GroupReportGenerateRequest struct {
 	Name ReportName `json:"name"`
 	// Schema for the group report generation request.
 	// One of the following types:
-	//  - GroupCostsEstimationPostEditing
-	//  - GroupTopMembers
+	//  - GroupTransactionCostsPostEditingSchema
+	//  - GroupTopMembersSchema
 	Schema ReportGroupSchema `json:"schema"`
 }
 
@@ -423,14 +423,14 @@ type GroupReportGenerateRequest struct {
 // for a group report generation request.
 //
 // Schema can be one of the following types:
-//   - GroupCostsEstimationPostEditingSchema
+//   - GroupTransactionCostsPostEditingSchema
 //   - GroupTopMembersSchema
 type ReportGroupSchema interface {
 	ValidateGroupSchema() error
 }
 
 type (
-	// GroupCostsEstimationPostEditingSchema defines the schema for the group
+	// GroupTransactionCostsPostEditingSchema defines the schema for the group
 	// translation costs post-editing report.
 	GroupTransactionCostsPostEditingSchema struct {
 		// Project Identifier for which the report should be generated.

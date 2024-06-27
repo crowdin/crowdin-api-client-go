@@ -1,9 +1,6 @@
 package model
 
-import (
-	"net/url"
-	"strings"
-)
+import "net/url"
 
 // TranslationProgress defines the structure of a translations status progress.
 type TranslationProgress struct {
@@ -44,7 +41,7 @@ func (o *ProjectProgressListOptions) Values() (url.Values, bool) {
 
 	v, _ := o.ListOptions.Values()
 	if len(o.LanguageIDs) > 0 {
-		v.Add("languageIds", strings.Join(o.LanguageIDs, ","))
+		v.Add("languageIds", JoinSlice(o.LanguageIDs))
 	}
 
 	return v, len(v) > 0
@@ -107,13 +104,13 @@ func (o *QACheckListOptions) Values() (url.Values, bool) {
 
 	v, _ := o.ListOptions.Values()
 	if len(o.Category) > 0 {
-		v.Add("category", strings.Join(o.Category, ","))
+		v.Add("category", JoinSlice(o.Category))
 	}
 	if len(o.Validation) > 0 {
-		v.Add("validation", strings.Join(o.Validation, ","))
+		v.Add("validation", JoinSlice(o.Validation))
 	}
 	if len(o.LanguageIDs) > 0 {
-		v.Add("languageIds", strings.Join(o.LanguageIDs, ","))
+		v.Add("languageIds", JoinSlice(o.LanguageIDs))
 	}
 
 	return v, len(v) > 0

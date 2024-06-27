@@ -50,7 +50,7 @@ func (s *TasksService) Get(ctx context.Context, projectID, taskID int) (*model.T
 // Add creates a new task in a project.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.tasks.post
-func (s *TasksService) Add(ctx context.Context, projectID int, req model.TaskAddRequest) (*model.Task, *Response, error) {
+func (s *TasksService) Add(ctx context.Context, projectID int, req model.TaskAddRequester) (*model.Task, *Response, error) {
 	res := new(model.TaskResponse)
 	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/tasks", projectID), req, res)
 
@@ -96,7 +96,7 @@ func (s *TasksService) Edit(ctx context.Context, projectID, taskID int, req []*m
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.tasks.delete
 func (s *TasksService) Delete(ctx context.Context, projectID, taskID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/tasks/%d", projectID, taskID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/tasks/%d", projectID, taskID), nil)
 }
 
 // ListUserTasks returns a list of tasks assigned to the user.
@@ -212,5 +212,5 @@ func (s *TasksService) EditSettingsTemplate(ctx context.Context, projectID, task
 //
 // https://developer.crowdin.com/api/v2/string-based/#operation/api.projects.tasks.settings-templates.delete
 func (s *TasksService) DeleteSettingsTemplate(ctx context.Context, projectID, taskSettingTemplateID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/tasks/settings-templates/%d", projectID, taskSettingTemplateID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/tasks/settings-templates/%d", projectID, taskSettingTemplateID), nil)
 }
