@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSourceStringsService_List(t *testing.T) {
@@ -91,6 +93,19 @@ func TestSourceStringsService_List(t *testing.T) {
 	if !reflect.DeepEqual(resp.Pagination, expectedPagination) {
 		t.Errorf("SourceStrings.List pagination returned %+v, want %+v", resp.Pagination, expectedPagination)
 	}
+}
+
+func TestSourceStringsService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/2/strings", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.SourceStrings.List(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestSourceStringsService_ListQueryParams(t *testing.T) {
@@ -514,6 +529,19 @@ func TestSourceStringsService_BatchOperations(t *testing.T) {
 	if !reflect.DeepEqual(sourceStrings, want) {
 		t.Errorf("SourceStrings.BatchOperations returned %+v, want %+v", sourceStrings, want)
 	}
+}
+
+func TestSourceStringsService_BatchOperations_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/strings", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.SourceStrings.BatchOperations(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestSourceStringsService_Edit(t *testing.T) {

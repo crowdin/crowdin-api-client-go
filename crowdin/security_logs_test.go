@@ -118,6 +118,18 @@ func TestSecurityLogsService_ListUserLogs(t *testing.T) {
 	}
 }
 
+func TestSecurityLogsService_ListUserLogs_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/users/1/security-logs", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.SecurityLogs.ListUserLogs(context.Background(), 2, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
 func TestSecurityLogsService_ListOrganizationLogs(t *testing.T) {
 	tests := []struct {
 		name          string

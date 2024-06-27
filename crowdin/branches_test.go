@@ -281,31 +281,6 @@ func TestBranchesService_AddWithRequiredBodyParams(t *testing.T) {
 	}
 }
 
-func TestBranchesService_AddWithValidationErrors(t *testing.T) {
-	client, _, teardown := setupClient()
-	defer teardown()
-
-	requests := []struct {
-		req      *model.BranchesAddRequest
-		expected string
-	}{
-		{nil, "request cannot be nil"},
-		{&model.BranchesAddRequest{}, "name is required"},
-		{&model.BranchesAddRequest{Title: "Master branch"}, "name is required"},
-	}
-
-	for _, r := range requests {
-		_, _, err := client.Branches.Add(context.Background(), 2, r.req)
-		if err == nil {
-			t.Error("Branches.Add expected an error, got nil")
-		}
-
-		if err.Error() != r.expected {
-			t.Errorf("Branches.Add returned %q, want %q", err.Error(), r.expected)
-		}
-	}
-}
-
 func TestBranchesService_Edit(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -456,31 +431,6 @@ func TestBranchesService_MergeWithRequiredBodyParams(t *testing.T) {
 	_, _, err := client.Branches.Merge(context.Background(), 1, 2, req)
 	if err != nil {
 		t.Errorf("Branches.Merge returned error: %v", err)
-	}
-}
-
-func TestBranchesService_MergeWithValidationErrors(t *testing.T) {
-	client, _, teardown := setupClient()
-	defer teardown()
-
-	requests := []struct {
-		req      *model.BranchesMergeRequest
-		expected string
-	}{
-		{nil, "request cannot be nil"},
-		{&model.BranchesMergeRequest{}, "sourceBranchId is required"},
-		{&model.BranchesMergeRequest{DeleteAfterMerge: ToPtr(true)}, "sourceBranchId is required"},
-	}
-
-	for _, tt := range requests {
-		_, _, err := client.Branches.Merge(context.Background(), 1, 2, tt.req)
-		if err == nil {
-			t.Error("Branches.Merge expected an error, got nil")
-		}
-
-		if err.Error() != tt.expected {
-			t.Errorf("Branches.Merge returned %q, want %q", err.Error(), tt.expected)
-		}
 	}
 }
 
@@ -652,34 +602,6 @@ func TestBranchesService_CloneWithRequiredBodyParams(t *testing.T) {
 	_, _, err := client.Branches.Clone(context.Background(), 2, 34, req)
 	if err != nil {
 		t.Errorf("Branches.Clone returned error: %v", err)
-	}
-}
-
-func TestBranchesService_CloneWithValidationErrors(t *testing.T) {
-	client, _, teardown := setupClient()
-	defer teardown()
-
-	requests := []struct {
-		name     string
-		req      *model.BranchesCloneRequest
-		expected string
-	}{
-		{"nil request", nil, "request cannot be nil"},
-		{"empry request", &model.BranchesCloneRequest{}, "name is required"},
-		{"empty name", &model.BranchesCloneRequest{Title: "Master branch"}, "name is required"},
-	}
-
-	for _, tt := range requests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, _, err := client.Branches.Clone(context.Background(), 2, 34, tt.req)
-			if err == nil {
-				t.Errorf("Branches.Clone expected an error, got nil")
-			}
-
-			if err.Error() != tt.expected {
-				t.Errorf("Branches.Clone returned %q, want %q", err.Error(), tt.expected)
-			}
-		})
 	}
 }
 

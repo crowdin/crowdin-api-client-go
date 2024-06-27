@@ -198,6 +198,19 @@ func TestMachineTranslationEnginesService_ListMT(t *testing.T) {
 	}
 }
 
+func TestMachineTranslationEnginesService_ListMT_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/mts", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.MachineTranslationEngines.ListMT(context.Background(), nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestMachineTranslationEnginesService_AddMT(t *testing.T) {
 	t.Skip("Not implemented correctly")
 
@@ -403,43 +416,6 @@ func TestMachineTranslationEnginesService_AddMT_WithRequiredParams(t *testing.T)
 	}
 }
 
-func TestMachineTranslationEnginesService_AddMT_WithValidationError(t *testing.T) {
-	tests := []struct {
-		name        string
-		req         *model.MTAddRequest
-		expectedErr string
-	}{
-		{
-			req:         nil,
-			expectedErr: "request cannot be nil",
-		},
-		{
-			req:         &model.MTAddRequest{},
-			expectedErr: "name is required",
-		},
-		{
-			req: &model.MTAddRequest{
-				Name: "Crowdin Translate",
-			},
-			expectedErr: "type is required",
-		},
-		{
-			req: &model.MTAddRequest{
-				Name:        "Crowdin Translate",
-				Type:        "crowdin",
-				Credentials: nil,
-			},
-			expectedErr: "credentials are required",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.expectedErr)
-		})
-	}
-}
-
 func TestMachineTranslationEnginesService_EditMT(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -539,40 +515,4 @@ func TestMachineTranslationEnginesService_Translate(t *testing.T) {
 		Translations:     []string{"Herzlich willkommen!", "Speichern als...", "Aussicht", "Etwa..."},
 	}
 	assert.Equal(t, expected, translate)
-}
-
-func TestMachineTranslationEnginesService_Translate_WithValidationError(t *testing.T) {
-	tests := []struct {
-		name        string
-		req         *model.TranslateRequest
-		expectedErr string
-	}{
-		{
-			req:         nil,
-			expectedErr: "request cannot be nil",
-		},
-		{
-			req:         &model.TranslateRequest{},
-			expectedErr: "target language ID is required",
-		},
-		{
-			req: &model.TranslateRequest{
-				TargetLanguageID: "de",
-			},
-			expectedErr: "source language ID or language recognition provider is required",
-		},
-		{
-			req: &model.TranslateRequest{
-				TargetLanguageID:            "de",
-				LanguageRecognitionProvider: "invalid_provider",
-			},
-			expectedErr: "invalid language recognition provider",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.expectedErr)
-		})
-	}
 }

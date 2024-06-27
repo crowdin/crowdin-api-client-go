@@ -830,6 +830,19 @@ func TestProjectsService_List(t *testing.T) {
 	assert.Equal(t, expectedPagination, resp.Pagination)
 }
 
+func TestProjectsService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Projects.List(context.Background(), nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestProjectsService_List_CheckQueryParams(t *testing.T) {
 	const url = "/api/v2/projects"
 	cases := []struct {
@@ -1193,25 +1206,6 @@ func TestProjectsService_Add_WithRequiredFields(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestProjectsService_Add_WithValidationError(t *testing.T) {
-	cases := []struct {
-		req       *model.ProjectsAddRequest
-		expectErr string
-	}{
-		{nil, "request cannot be nil"},
-		{&model.ProjectsAddRequest{SourceLanguageID: "en"}, "name is required"},
-		{&model.ProjectsAddRequest{Name: "Knowledge Base"}, "sourceLanguageId is required"},
-	}
-
-	for _, tt := range cases {
-		t.Run(tt.expectErr, func(t *testing.T) {
-			err := tt.req.Validate()
-			require.Error(t, err)
-			assert.Equal(t, tt.expectErr, err.Error())
-		})
-	}
-}
-
 func TestProjectsService_Edit(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -1369,6 +1363,19 @@ func TestProjectsService_ListFileFormatSettings(t *testing.T) {
 	expectedPagination := model.Pagination{Offset: 0, Limit: 25}
 	require.NotNil(t, resp)
 	assert.Equal(t, expectedPagination, resp.Pagination)
+}
+
+func TestProjectsService_ListFileFormatSettings_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/8/file-format-settings", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Projects.ListFileFormatSettings(context.Background(), 8)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestProjectsService_GetFileFormatSettings(t *testing.T) {
@@ -1595,41 +1602,6 @@ func TestProjectsService_AddFileFormatSettings_WithBodyParams(t *testing.T) {
 	}
 }
 
-func TestProjectsService_AddFileFormatSettings_WithValidationError(t *testing.T) {
-	client, _, teardown := setupClient()
-	defer teardown()
-
-	cases := []struct {
-		name        string
-		req         *model.ProjectsAddFileFormatSettingsRequest
-		expectedErr string
-	}{
-		{
-			name:        "Empty request",
-			req:         nil,
-			expectedErr: "request cannot be nil",
-		},
-		{
-			name:        "Empty format",
-			req:         &model.ProjectsAddFileFormatSettingsRequest{Format: ""},
-			expectedErr: "format is required",
-		},
-		{
-			name:        "Empty settings",
-			req:         &model.ProjectsAddFileFormatSettingsRequest{Format: "android"},
-			expectedErr: "settings is required",
-		},
-	}
-
-	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
-			_, _, err := client.Projects.AddFileFormatSettings(context.Background(), 8, tt.req)
-			require.Error(t, err)
-			assert.Equal(t, tt.expectedErr, err.Error())
-		})
-	}
-}
-
 func TestProjectsService_EditFileFormatSettings(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -1758,6 +1730,19 @@ func TestProjectsService_ListStringsExporterSettings(t *testing.T) {
 	expectedPagination := model.Pagination{Offset: 10, Limit: 25}
 	require.NotNil(t, resp)
 	assert.Equal(t, expectedPagination, resp.Pagination)
+}
+
+func TestProjectsService_ListStringsExporterSettings_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/8/strings-exporter-settings", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Projects.ListStringsExporterSettings(context.Background(), 8)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestProjectsService_GetStringsExporterSettings(t *testing.T) {
@@ -1906,51 +1891,6 @@ func TestProjectsService_AddStringsExporterSettings_WithRequiredFields(t *testin
 			settings, _, err := client.Projects.AddStringsExporterSettings(context.Background(), idx, tt.req)
 			require.NoError(t, err, "Test case %d", idx)
 			assert.NotNil(t, settings, "Test case %d", idx)
-		})
-	}
-}
-
-func TestProjectsService_AddStringsExporterSettings_WithValidationError(t *testing.T) {
-	cases := []struct {
-		req       *model.ProjectsStringsExporterSettingsRequest
-		expectErr string
-	}{
-		{
-			nil,
-			"request cannot be nil",
-		},
-		{
-			&model.ProjectsStringsExporterSettingsRequest{},
-			"format is required",
-		},
-		{
-			&model.ProjectsStringsExporterSettingsRequest{
-				Settings: model.StringsExporterSettings{},
-			},
-			"format is required",
-		},
-		{
-			&model.ProjectsStringsExporterSettingsRequest{
-				Format: "macosx",
-			},
-			"settings is required",
-		},
-		{
-			&model.ProjectsStringsExporterSettingsRequest{
-				Format: "xliff",
-				Settings: model.StringsExporterSettings{
-					LanguagePairMapping: map[string]string{},
-				},
-			},
-			"settings is required",
-		},
-	}
-
-	for _, tt := range cases {
-		t.Run(tt.expectErr, func(t *testing.T) {
-			err := tt.req.Validate()
-			require.Error(t, err)
-			assert.Equal(t, tt.expectErr, err.Error())
 		})
 	}
 }

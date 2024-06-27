@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStoragesService_List(t *testing.T) {
@@ -54,6 +56,19 @@ func TestStoragesService_List(t *testing.T) {
 	if !reflect.DeepEqual(resp.Pagination, expectedPagination) {
 		t.Errorf("Storages.List pagination returned %+v, want %+v", resp.Pagination, expectedPagination)
 	}
+}
+
+func TestStoragesService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/storages", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Storages.List(context.Background(), nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestStoragesService_Get(t *testing.T) {

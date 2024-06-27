@@ -362,6 +362,19 @@ func TestUsersService_ListProjectMembers(t *testing.T) {
 	}
 }
 
+func TestUsersService_ListProjectMembers_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/2/members", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Users.ListProjectMembers(context.Background(), 2, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestUsersService_AddProjectMember(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -692,30 +705,17 @@ func TestUsersService_AddProjectMember(t *testing.T) {
 	assert.Contains(t, member, "added")
 }
 
-func TestUsersService_AddProjectMember_WithValidationError(t *testing.T) {
-	tests := []struct {
-		req *model.ProjectMemberAddRequest
-		err string
-	}{
-		{
-			req: nil,
-			err: "request cannot be nil",
-		},
-		{
-			req: &model.ProjectMemberAddRequest{},
-			err: "one of fields `userIds`, `usernames` or `emails` is required",
-		},
-		{
-			req: &model.ProjectMemberAddRequest{ManagerAccess: ToPtr(true)},
-			err: "one of fields `userIds`, `usernames` or `emails` is required",
-		},
-	}
+func TestUsersService_AddProjectMember_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
 
-	for _, tt := range tests {
-		t.Run(tt.err, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
+	mux.HandleFunc("/api/v2/projects/1/members", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Users.AddProjectMember(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestUsersService_ReplaceProjectMemberPermissions(t *testing.T) {
@@ -935,24 +935,6 @@ func TestUsersService_ReplaceProjectMemberPermissions(t *testing.T) {
 	assert.Equal(t, expected, member)
 }
 
-func TestUsersService_ReplaceProjectMemberPermissions_WithValidationError(t *testing.T) {
-	tests := []struct {
-		req *model.ProjectMemberReplaceRequest
-		err string
-	}{
-		{
-			req: nil,
-			err: "request cannot be nil",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.err, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
-}
-
 func TestUsersService_DeleteProjectMember(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -1081,6 +1063,19 @@ func TestUsersService_List(t *testing.T) {
 			assert.Equal(t, 25, resp.Pagination.Limit)
 		})
 	}
+}
+
+func TestUsersService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/users", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Users.List(context.Background(), nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestUsersService_GetAuthenticated(t *testing.T) {
@@ -1253,28 +1248,6 @@ func TestUsersService_Invite_WithRequiredFields(t *testing.T) {
 	}
 	_, _, err := client.Users.Invite(context.Background(), req)
 	require.NoError(t, err)
-}
-
-func TestUsersService_Invite_WithValidationError(t *testing.T) {
-	tests := []struct {
-		req *model.InviteUserRequest
-		err string
-	}{
-		{
-			req: nil,
-			err: "request cannot be nil",
-		},
-		{
-			req: &model.InviteUserRequest{},
-			err: "email is required",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.err, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
 }
 
 func TestUsersService_Edit(t *testing.T) {

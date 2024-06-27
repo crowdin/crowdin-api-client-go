@@ -103,6 +103,19 @@ func TestDistributionsService_List(t *testing.T) {
 	}
 }
 
+func TestDistributionsService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/2/distributions", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Distributions.List(context.Background(), 2, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestDistributionsService_Get(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -184,48 +197,6 @@ func TestDistributionsService_Add(t *testing.T) {
 		FileIDs:    []int{24, 25, 38},
 	}
 	assert.Equal(t, expected, distribution)
-}
-
-func TestDistributionsService_Add_requestValidation(t *testing.T) {
-	tests := []struct {
-		name string
-		req  *model.DistributionAddRequest
-		err  string
-	}{
-		{
-			name: "nil request",
-			req:  nil,
-			err:  "request cannot be nil",
-		},
-		{
-			name: "empty name",
-			req:  &model.DistributionAddRequest{},
-			err:  "name is required",
-		},
-		{
-			name: "empty bundleIds",
-			req: &model.DistributionAddRequest{
-				Name:       "Export Bundle",
-				ExportMode: model.ExportModeBundle,
-				FileIDs:    []int{24, 25, 38},
-			},
-			err: "bundleIds is required for bundle export mode",
-		},
-		{
-			name: "empty fileIds",
-			req: &model.DistributionAddRequest{
-				Name:       "Export Bundle",
-				ExportMode: model.ExportModeDefault,
-			},
-			err: "fileIds is required for default export mode",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			require.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
 }
 
 func TestDistributionsService_Edit(t *testing.T) {

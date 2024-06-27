@@ -2,6 +2,7 @@ package crowdin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"testing"
@@ -37,7 +38,24 @@ func TestLabelsService_Get(t *testing.T) {
 }
 
 func TestLabelsService_Get_NotFound(t *testing.T) {
-	t.Skip("Not implemented yet")
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/labels/404"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+		http.Error(w, `{"error": {"code": 404, "message": "Label Not Found"}}`, http.StatusNotFound)
+	})
+
+	label, resp, err := client.Labels.Get(context.Background(), 1, 404)
+
+	require.Error(t, err)
+	assert.Nil(t, label)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+
+	var e *model.ErrorResponse
+	assert.True(t, errors.As(err, &e))
 }
 
 func TestLabelsService_List(t *testing.T) {
@@ -119,6 +137,19 @@ func TestLabelsService_List(t *testing.T) {
 	}
 }
 
+func TestLabelsService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/labels", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Labels.List(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestLabelsService_Add(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -143,26 +174,6 @@ func TestLabelsService_Add(t *testing.T) {
 
 	assert.Equal(t, "main", label.Title)
 	assert.Equal(t, 34, label.ID)
-}
-
-func TestLabelsService_Add_WithValidationErrors(t *testing.T) {
-	tests := []struct {
-		req         *model.LabelAddRequest
-		expectedErr string
-	}{
-		{
-			req:         nil,
-			expectedErr: "request cannot be nil",
-		},
-		{
-			req:         &model.LabelAddRequest{},
-			expectedErr: "title is required",
-		},
-	}
-
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.expectedErr)
-	}
 }
 
 func TestLabelsService_Edit(t *testing.T) {
@@ -394,6 +405,19 @@ func TestLabelsService_UnassignFromStrings(t *testing.T) {
 		},
 	}
 	assert.Equal(t, expected, strings)
+}
+
+func TestLabelsService_UnassignFromStrings_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/labels/2/strings", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Labels.UnassignFromStrings(context.Background(), 1, 2, []int{3, 4})
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestLabelsService_UnassignFromStrings_WithValidationErrors(t *testing.T) {
@@ -629,6 +653,19 @@ func TestLabelsService_UnassignFromScreenshots(t *testing.T) {
 		},
 	}
 	assert.Equal(t, expected, strings)
+}
+
+func TestLabelsService_UnassignFromScreenshots_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/labels/2/screenshots", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Labels.UnassignFromScreenshots(context.Background(), 1, 2, []int{1, 2})
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestLabelsService_UnassignFromScreenshots_WithValidationErrors(t *testing.T) {

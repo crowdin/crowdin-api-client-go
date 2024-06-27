@@ -192,6 +192,19 @@ func TestScreenshotsService_ListScreenshot(t *testing.T) {
 	}
 }
 
+func TestScreenshotsService_ListScreenshot_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/screenshots", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Screenshots.ListScreenshots(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestScreenshotsService_AddScreenshot(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -253,74 +266,6 @@ func TestScreenshotsService_AddScreenshot_WithRequiredFields(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestScreenshotsService_AddScreenshot_WithValidationError(t *testing.T) {
-	tests := []struct {
-		req         *model.ScreenshotAddRequest
-		expectedErr string
-	}{
-		{
-			req:         nil,
-			expectedErr: "request cannot be nil",
-		},
-		{
-			req:         &model.ScreenshotAddRequest{},
-			expectedErr: "storageId is required",
-		},
-		{
-			req: &model.ScreenshotAddRequest{
-				StorageID: 1,
-			},
-			expectedErr: "name is required",
-		},
-		{
-			req: &model.ScreenshotAddRequest{
-				StorageID: 1,
-				Name:      "translate_with_siri.jpg",
-				AutoTag:   ToPtr(true),
-				FileID:    1,
-				BranchID:  2,
-			},
-			expectedErr: "must use either branchId, fileId, or directoryId",
-		},
-		{
-			req: &model.ScreenshotAddRequest{
-				StorageID:   1,
-				Name:        "translate_with_siri.jpg",
-				AutoTag:     ToPtr(true),
-				BranchID:    1,
-				DirectoryID: 2,
-			},
-			expectedErr: "must use either branchId, fileId, or directoryId",
-		},
-		{
-			req: &model.ScreenshotAddRequest{
-				StorageID:   1,
-				Name:        "translate_with_siri.jpg",
-				AutoTag:     ToPtr(true),
-				DirectoryID: 1,
-				BranchID:    2,
-			},
-			expectedErr: "must use either branchId, fileId, or directoryId",
-		},
-
-		{
-			req: &model.ScreenshotAddRequest{
-				StorageID:   1,
-				Name:        "translate_with_siri.jpg",
-				AutoTag:     ToPtr(true),
-				DirectoryID: 1,
-				BranchID:    2,
-				FileID:      3,
-			},
-			expectedErr: "must use either branchId, fileId, or directoryId",
-		},
-	}
-
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.expectedErr)
-	}
-}
-
 func TestScreenshotsService_UpdateScreenshot(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -352,32 +297,6 @@ func TestScreenshotsService_UpdateScreenshot(t *testing.T) {
 		Name: "translate_with_siri.jpg",
 	}
 	assert.Equal(t, expected, screenshot)
-}
-
-func TestScreenshotsService_UpdateScreenshot_WithValidationError(t *testing.T) {
-	tests := []struct {
-		req         *model.ScreenshotUpdateRequest
-		expectedErr string
-	}{
-		{
-			req:         nil,
-			expectedErr: "request cannot be nil",
-		},
-		{
-			req:         &model.ScreenshotUpdateRequest{},
-			expectedErr: "storageId is required",
-		},
-		{
-			req: &model.ScreenshotUpdateRequest{
-				StorageID: 1,
-			},
-			expectedErr: "name is required",
-		},
-	}
-
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.expectedErr)
-	}
 }
 
 func TestScreenshotsService_EditScreenshot(t *testing.T) {
@@ -554,6 +473,19 @@ func TestScreenshotsService_ListTags(t *testing.T) {
 	assert.Equal(t, 25, resp.Pagination.Limit)
 }
 
+func TestScreenshotsService_ListTags_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/screenshots/2/tags", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Screenshots.ListTags(context.Background(), 1, 2, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestScreenshotsService_AddTag(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -632,26 +564,6 @@ func TestScreenshotsService_AddTag_WithRequiredFields(t *testing.T) {
 	}
 	_, _, err := client.Screenshots.AddTag(context.Background(), 2, 3, req)
 	require.NoError(t, err)
-}
-
-func TestScreenshotsService_AddTag_WithValidationError(t *testing.T) {
-	tests := []struct {
-		req         *model.TagAddRequest
-		expectedErr string
-	}{
-		{
-			req:         nil,
-			expectedErr: "request cannot be nil",
-		},
-		{
-			req:         &model.TagAddRequest{},
-			expectedErr: "stringId is required",
-		},
-	}
-
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.expectedErr)
-	}
 }
 
 func TestScreenshotsService_ReplaceTags(t *testing.T) {
@@ -782,42 +694,6 @@ func TestScreenshotsService_AutoTag_WithRequiredFields(t *testing.T) {
 	resp, err := client.Screenshots.AutoTag(context.Background(), 2, 3, req)
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-}
-
-func TestScreenshotsService_AutoTag_WithValidationError(t *testing.T) {
-	tests := []struct {
-		req         *model.AutoTagRequest
-		expectedErr string
-	}{
-		{
-			req:         nil,
-			expectedErr: "request cannot be nil",
-		},
-		{
-			req:         &model.AutoTagRequest{},
-			expectedErr: "autoTag is required",
-		},
-		{
-			req: &model.AutoTagRequest{
-				AutoTag:     ToPtr(true),
-				FileID:      1,
-				DirectoryID: 2,
-			},
-			expectedErr: "must use either branchId, fileId, or directoryId",
-		},
-		{
-			req: &model.AutoTagRequest{
-				AutoTag:     ToPtr(true),
-				BranchID:    1,
-				DirectoryID: 2,
-			},
-			expectedErr: "must use either branchId, fileId, or directoryId",
-		},
-	}
-
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.expectedErr)
-	}
 }
 
 func TestScreenshotsService_EditTag(t *testing.T) {

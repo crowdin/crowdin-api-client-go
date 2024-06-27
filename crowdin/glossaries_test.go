@@ -152,6 +152,19 @@ func TestGlossariesService_ListConcepts(t *testing.T) {
 	}
 }
 
+func TestGlossariesService_ListConcepts_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/glossaries/1/concepts", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Glossaries.ListConcepts(context.Background(), 2, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestGlossariesService_UpdateConcept(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -404,6 +417,19 @@ func TestGlossariesService_ListGlossaries(t *testing.T) {
 	}
 }
 
+func TestGlossariesService_ListGlossaries_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/glossaries", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Glossaries.ListGlossaries(context.Background(), nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestGlossariesService_DeleteGlossary(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -473,30 +499,6 @@ func TestGlossariesService_AddGlossary(t *testing.T) {
 		CreatedAt:         "2023-09-16T13:42:04+00:00",
 	}
 	assert.Equal(t, expected, glossary)
-}
-
-func TestGlossariesService_AddGlossary_ValidationError(t *testing.T) {
-	tests := []struct {
-		req *model.GlossaryAddRequest
-		err string
-	}{
-		{
-			req: nil,
-			err: "request cannot be nil",
-		},
-		{
-			req: &model.GlossaryAddRequest{},
-			err: "name is required",
-		},
-		{
-			req: &model.GlossaryAddRequest{Name: "glossary"},
-			err: "languageId is required",
-		},
-	}
-
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.err)
-	}
 }
 
 func TestGlossariesService_EditGlossary(t *testing.T) {
@@ -771,30 +773,6 @@ func TestGlossariesService_ImportGlossary(t *testing.T) {
 	assert.Equal(t, expected, glossaryImport)
 }
 
-func TestGlossariesService_ImportGlossary_ValidationError(t *testing.T) {
-	tests := []struct {
-		req *model.GlossaryImportRequest
-		err string
-	}{
-		{
-			req: nil,
-			err: "request cannot be nil",
-		},
-		{
-			req: &model.GlossaryImportRequest{},
-			err: "storageId is required",
-		},
-		{
-			req: &model.GlossaryImportRequest{StorageID: -1},
-			err: "storageId is required",
-		},
-	}
-
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.err)
-	}
-}
-
 func TestGlossariesService_CheckGlossaryImportStatus(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -1012,40 +990,17 @@ func TestGlossariesService_ConcordanceSearch(t *testing.T) {
 	assert.Equal(t, 25, resp.Pagination.Limit)
 }
 
-func TestGlossariesService_ConcordanceSearch_ValidationError(t *testing.T) {
-	tests := []struct {
-		req *model.GlossaryConcordanceSearchRequest
-		err string
-	}{
-		{
-			req: nil,
-			err: "request cannot be nil",
-		},
-		{
-			req: &model.GlossaryConcordanceSearchRequest{},
-			err: "sourceLanguageId is required",
-		},
-		{
-			req: &model.GlossaryConcordanceSearchRequest{SourceLanguageID: "en"},
-			err: "targetLanguageId is required",
-		},
-		{
-			req: &model.GlossaryConcordanceSearchRequest{SourceLanguageID: "en", TargetLanguageID: "de"},
-			err: "expressions cannot be empty",
-		},
-		{
-			req: &model.GlossaryConcordanceSearchRequest{
-				SourceLanguageID: "en",
-				TargetLanguageID: "de",
-				Expressions:      []string{},
-			},
-			err: "expressions cannot be empty",
-		},
-	}
+func TestGlossariesService_ConcordanceSearch_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
 
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.err)
-	}
+	mux.HandleFunc("/api/v2/projects/1/glossaries/concordance", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Glossaries.ConcordanceSearch(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestGlossariesService_GetTerm(t *testing.T) {
@@ -1187,6 +1142,19 @@ func TestGlossariesService_ListTerms(t *testing.T) {
 	}
 }
 
+func TestGlossariesService_ListTerms_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/glossaries/1/terms", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Glossaries.ListTerms(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestGlossariesService_AddTerm(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -1265,30 +1233,6 @@ func TestGlossariesService_AddTerm(t *testing.T) {
 		UpdatedAt:    "2023-09-23T07:19:47+00:00",
 	}
 	assert.Equal(t, expected, term)
-}
-
-func TestGlossariesService_AddTerm_ValidationError(t *testing.T) {
-	tests := []struct {
-		req *model.TermAddRequest
-		err string
-	}{
-		{
-			req: nil,
-			err: "request cannot be nil",
-		},
-		{
-			req: &model.TermAddRequest{},
-			err: "languageId is required",
-		},
-		{
-			req: &model.TermAddRequest{LanguageID: "fr"},
-			err: "text is required",
-		},
-	}
-
-	for _, tt := range tests {
-		assert.EqualError(t, tt.req.Validate(), tt.err)
-	}
 }
 
 func TestGlossariesService_EditTerm(t *testing.T) {

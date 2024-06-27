@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTranslationStatusService_GetBranchProgress(t *testing.T) {
@@ -350,6 +352,19 @@ func TestTranslationStatusService_GetProjectProgress(t *testing.T) {
 	}
 }
 
+func TestTranslationStatusService_GetProjectProgress_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/languages/progress", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.TranslationStatus.GetProjectProgress(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestTranslationStatusService_ListQAChecks(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -414,6 +429,19 @@ func TestTranslationStatusService_ListQAChecks(t *testing.T) {
 	if !reflect.DeepEqual(resp.Pagination, expectedPagination) {
 		t.Errorf("TranslationStatus.ListQAChecks pagination returned %+v, want %+v", resp.Pagination, expectedPagination)
 	}
+}
+
+func TestTranslationStatusService_ListQAChecks_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/qa-checks", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.TranslationStatus.ListQAChecks(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func getJSONResponseMock() string {

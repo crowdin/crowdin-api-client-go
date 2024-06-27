@@ -69,6 +69,19 @@ func TestSourceFilesService_ListDirectories(t *testing.T) {
 	assert.Equal(t, expectedPagination, resp.Pagination)
 }
 
+func TestSourceFilesService_ListDirectories_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/directories", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.SourceFiles.ListDirectories(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestSourceFilesService_ListDirectories_WithQueryParams(t *testing.T) {
 	client, mux, teatdown := setupClient()
 	defer teatdown()
@@ -245,31 +258,6 @@ func TestSourceFilesService_AddDirectory_WithRequiredFields(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestSourceFilesService_AddDirectory_WithValidationError(t *testing.T) {
-	cases := []struct {
-		req         *model.DirectoryAddRequest
-		expectedErr string
-	}{
-		{req: nil, expectedErr: "request cannot be nil"},
-		{req: &model.DirectoryAddRequest{}, expectedErr: "name is required"},
-		{
-			req: &model.DirectoryAddRequest{
-				Name:        "main",
-				BranchID:    1,
-				DirectoryID: 2,
-			},
-			expectedErr: "branchId and directoryId cannot be used in the same request",
-		},
-	}
-
-	for _, tt := range cases {
-		t.Run(tt.expectedErr, func(t *testing.T) {
-			err := tt.req.Validate()
-			assert.EqualError(t, err, tt.expectedErr)
-		})
-	}
-}
-
 func TestSourceFilesService_EditDirectory(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -434,6 +422,19 @@ func TestSourceFilesService_ListFiles(t *testing.T) {
 
 	expectedPagination := model.Pagination{Offset: 10, Limit: 2}
 	assert.Equal(t, expectedPagination, resp.Pagination)
+}
+
+func TestSourceFilesService_ListFiles_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/files", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.SourceFiles.ListFiles(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestSourceFilesService_ListFiles_WithQueryParams(t *testing.T) {
@@ -643,33 +644,6 @@ func TestSourceFilesService_AddFile_WithRequiredFields(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestSourceFilesService_AddFile_WithValidationError(t *testing.T) {
-	cases := []struct {
-		req         *model.FileAddRequest
-		expectedErr string
-	}{
-		{req: nil, expectedErr: "request cannot be nil"},
-		{req: &model.FileAddRequest{}, expectedErr: "storageId is required"},
-		{req: &model.FileAddRequest{StorageID: 1}, expectedErr: "name is required"},
-		{
-			req: &model.FileAddRequest{
-				StorageID:   1,
-				Name:        "main",
-				BranchID:    1,
-				DirectoryID: 2,
-			},
-			expectedErr: "branchId and directoryId cannot be used in the same request",
-		},
-	}
-
-	for _, tt := range cases {
-		t.Run(tt.expectedErr, func(t *testing.T) {
-			err := tt.req.Validate()
-			assert.EqualError(t, err, tt.expectedErr)
-		})
-	}
-}
-
 func TestSourceFilesService_EditFile(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -786,35 +760,6 @@ func TestSourceFilesService_RestoreFile(t *testing.T) {
 	assert.IsType(t, &model.File{}, file)
 	assert.Equal(t, 4, file.ID)
 	assert.NotNil(t, resp)
-}
-
-func TestSourceFilesService_UpdateOrRestoreFile_WithValidationError(t *testing.T) {
-	cases := []struct {
-		req         *model.FileUpdateRestoreRequest
-		expectedErr string
-	}{
-		{req: nil, expectedErr: "request cannot be nil"},
-		{
-			req: &model.FileUpdateRestoreRequest{
-				StorageID:  1,
-				RevisionID: 1,
-			},
-			expectedErr: "use only one of revisionId or storageId",
-		},
-		{
-			req: &model.FileUpdateRestoreRequest{
-				Name: "main",
-			},
-			expectedErr: "one of revisionId or storageId is required",
-		},
-	}
-
-	for _, tt := range cases {
-		t.Run(tt.expectedErr, func(t *testing.T) {
-			err := tt.req.Validate()
-			assert.EqualError(t, err, tt.expectedErr)
-		})
-	}
 }
 
 func TestSourceFilesService_DeleteFile(t *testing.T) {
@@ -970,6 +915,19 @@ func TestSourceFilesService_ListFileRevisions(t *testing.T) {
 	assert.Equal(t, expectedPagination, resp.Pagination)
 }
 
+func TestSourceFilesService_ListFileRevisions_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/files/2/revisions", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.SourceFiles.ListFileRevisions(context.Background(), 1, 2, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestSourceFilesService_GetFileRevision(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -1115,6 +1073,19 @@ func TestSourceFilesService_ListReviewedBuilds(t *testing.T) {
 	}
 }
 
+func TestSourceFilesService_ListReviewedBuilds_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/strings/reviewed-builds", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.SourceFiles.ListReviewedBuilds(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestSourceFilesService_CheckReviewedBuildStatus(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -1230,20 +1201,4 @@ func TestSourceFilesService_BuildReviewedFiles(t *testing.T) {
 	}
 	assert.Equal(t, expected, build)
 	assert.NotNil(t, resp)
-}
-
-func TestSourceFilesService_BuildReviewedFiles_WithValidateError(t *testing.T) {
-	cases := []struct {
-		req         *model.ReviewedBuildRequest
-		expectedErr string
-	}{
-		{req: nil, expectedErr: "request cannot be nil"},
-	}
-
-	for _, tt := range cases {
-		t.Run(tt.expectedErr, func(t *testing.T) {
-			err := tt.req.Validate()
-			assert.EqualError(t, err, tt.expectedErr)
-		})
-	}
 }

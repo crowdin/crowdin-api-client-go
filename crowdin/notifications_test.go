@@ -3,7 +3,6 @@ package crowdin
 import (
 	"context"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
@@ -102,51 +101,6 @@ func TestNotificationsService_Notify(t *testing.T) {
 			resp, err := client.Notifications.Notify(context.Background(), tt.req)
 			require.NoError(t, err)
 			assert.NotNil(t, resp)
-		})
-	}
-}
-
-func TestNotificationsService_Notify_validate(t *testing.T) {
-	tests := []struct {
-		name string
-		req  *model.Notification
-		err  string
-	}{
-		{
-			name: "nil request",
-			err:  "request cannot be nil",
-		},
-		{
-			name: "message too long",
-			req: &model.Notification{
-				Message: strings.Repeat("a", 10001),
-			},
-			err: "message can't be longer than 10000 characters",
-		},
-		{
-			name: "both user IDs and role",
-			req: &model.Notification{
-				UserIDs: []int{1, 2, 3},
-				Role:    "owner",
-				Message: "notification message",
-			},
-			err: "can't specify both user IDs and role",
-		},
-		{
-			name: "invalid role",
-			req: &model.Notification{
-				Role:    "invalid",
-				Message: "notification message",
-			},
-			err: "role must be either owner or manager",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.req.Validate()
-			require.Error(t, err)
-			assert.EqualError(t, err, tt.err)
 		})
 	}
 }

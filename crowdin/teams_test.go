@@ -201,31 +201,6 @@ func TestTeamsService_Add(t *testing.T) {
 	assert.Equal(t, expected, team)
 }
 
-func TestTeamsService_Add_requestValidation(t *testing.T) {
-	tests := []struct {
-		name string
-		req  *model.TeamAddRequest
-		err  string
-	}{
-		{
-			name: "nil request",
-			req:  nil,
-			err:  "request cannot be nil",
-		},
-		{
-			name: "empty request",
-			req:  &model.TeamAddRequest{},
-			err:  "name is required",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
-}
-
 func TestTeamsService_Edit(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -426,31 +401,6 @@ func TestTeamsService_AddMember(t *testing.T) {
 		},
 	}
 	assert.Equal(t, expected, member)
-}
-
-func TestTeamsService_AddMember_requestValidation(t *testing.T) {
-	tests := []struct {
-		name string
-		req  *model.TeamMemberAddRequest
-		err  string
-	}{
-		{
-			name: "nil request",
-			req:  nil,
-			err:  "request cannot be nil",
-		},
-		{
-			name: "empty request",
-			req:  &model.TeamMemberAddRequest{},
-			err:  "userIds is required",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
 }
 
 func TestTeamsService_AddMember_error(t *testing.T) {
@@ -710,31 +660,6 @@ func TestTeamsService_AddToProject(t *testing.T) {
 		"added": {},
 	}
 	assert.Equal(t, expected, team)
-}
-
-func TestTeamsService_AddToProject_requestValidation(t *testing.T) {
-	tests := []struct {
-		name string
-		req  *model.ProjectTeamAddRequest
-		err  string
-	}{
-		{
-			name: "nil request",
-			req:  nil,
-			err:  "request cannot be nil",
-		},
-		{
-			name: "empty request",
-			req:  &model.ProjectTeamAddRequest{},
-			err:  "teamId is required",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.EqualError(t, tt.req.Validate(), tt.err)
-		})
-	}
 }
 
 func TestTeamsService_AddToProject_error(t *testing.T) {

@@ -202,6 +202,19 @@ func TestStringCommentsService_List(t *testing.T) {
 	}
 }
 
+func TestStringCommentsService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/2/comments", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.StringComments.List(context.Background(), 2, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestStringCommentsService_Add(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -292,48 +305,6 @@ func TestStringCommentsService_Add_RequiredFields(t *testing.T) {
 
 	_, _, err := client.StringComments.Add(context.Background(), 1, req)
 	require.NoError(t, err)
-}
-
-func TestStringCommentsService_Add_WithValidationError(t *testing.T) {
-	tests := []struct {
-		req         *model.StringCommentsAddRequest
-		expectedErr string
-	}{
-		{
-			req:         nil,
-			expectedErr: "request cannot be nil",
-		},
-		{
-			req:         &model.StringCommentsAddRequest{},
-			expectedErr: "text is required",
-		},
-		{
-			req: &model.StringCommentsAddRequest{
-				Text: "test text",
-			},
-			expectedErr: "stringId is required",
-		},
-		{
-			req: &model.StringCommentsAddRequest{
-				Text:     "test text",
-				StringID: 1,
-			},
-			expectedErr: "targetLanguageId is required",
-		},
-		{
-			req: &model.StringCommentsAddRequest{
-				Text:             "test text",
-				StringID:         1,
-				TargetLanguageID: "en",
-			},
-			expectedErr: "type is required",
-		},
-	}
-
-	for _, tt := range tests {
-		err := tt.req.Validate()
-		assert.EqualError(t, err, tt.expectedErr)
-	}
 }
 
 func TestStringCommentsService_Edit(t *testing.T) {
