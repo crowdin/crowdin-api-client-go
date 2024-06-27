@@ -165,7 +165,7 @@ const (
 	TaskVendorLanguageLineSolutions    TaskVendor = "languageline_solutions"
 )
 
-// TaskAddRequest is an interface encapsulating a request for task addition.
+// TaskAddRequester is an interface encapsulating a request for task addition.
 // The request body must conform to one of the following struct types:
 //
 //	TaskCreateForm
@@ -182,7 +182,7 @@ const (
 //	EnterpriseTaskCreateForm
 //	EnterpriseVendorTaskCreateForm
 //	EnterprisePendingTaskCreateForm
-type TaskAddRequest interface {
+type TaskAddRequester interface {
 	ValidateRequest() error
 }
 

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"strings"
 )
 
 // StringComment represents a Crowdin string comment.
@@ -61,21 +60,21 @@ type StringCommentsListOptions struct {
 	// Sort results by specified field.
 	// Enum: id, text, type, createdAt, resolvedAt, issueStatus, issueType.
 	// Example: orderBy=createdAt desc,text
-	OrderBy string `url:"orderBy,omitempty"`
+	OrderBy string `json:"orderBy,omitempty"`
 	// String Identifier.
-	StringID int `url:"stringId,omitempty"`
+	StringID int `json:"stringId,omitempty"`
 	// Defines string comment type.
 	// Enum: comment, issue.
 	// Note: `type=comment` can't be used with `issueType` or `issueStatus`
 	// in same request.
-	Type string `url:"type,omitempty"`
+	Type string `json:"type,omitempty"`
 	// Defines issue type. It can be one issue type or multiple issue types.
 	// Enum: general_question, translation_mistake, context_request, source_mistake.
 	// Example: issueType=general_question,translation_mistake
-	IssueType []string `url:"issueType,omitempty"`
+	IssueType []string `json:"issueType,omitempty"`
 	// Defines issue resolution status.
 	// Enum: resolved, unresolved.
-	IssueStatus string `url:"issueStatus,omitempty"`
+	IssueStatus string `json:"issueStatus,omitempty"`
 
 	ListOptions
 }
@@ -99,7 +98,7 @@ func (o *StringCommentsListOptions) Values() (url.Values, bool) {
 		v.Set("type", o.Type)
 	}
 	if o.IssueType != nil {
-		v.Set("issueType", strings.Join(o.IssueType, ","))
+		v.Set("issueType", JoinSlice(o.IssueType))
 	}
 	if o.IssueStatus != "" {
 		v.Set("issueStatus", o.IssueStatus)

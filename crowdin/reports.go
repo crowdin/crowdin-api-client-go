@@ -59,7 +59,7 @@ func (s *ReportsService) GetArchive(ctx context.Context, userID, archiveID int) 
 //
 // https://developer.crowdin.com/api/v2/#operation/api.users.reports.archives.delete
 func (s *ReportsService) DeleteArchive(ctx context.Context, userID, archiveID int) (*Response, error) {
-	return s.client.Delete(ctx, s.getArchivePath(fmt.Sprintf("archives/%d", archiveID), userID))
+	return s.client.Delete(ctx, s.getArchivePath(fmt.Sprintf("archives/%d", archiveID), userID), nil)
 }
 
 // ExportArchive exports a report archive in the specified file format. If no format is provided,
@@ -224,7 +224,7 @@ func (s *ReportsService) EditSettingsTemplate(ctx context.Context, projectID, se
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.reports.settings-templates.delete
 func (s *ReportsService) DeleteSettingsTemplate(ctx context.Context, projectID, settingsTemplateID int) (*Response, error) {
-	return s.client.Delete(ctx, s.getSettingsTemplatePath(projectID, settingsTemplateID))
+	return s.client.Delete(ctx, s.getSettingsTemplatePath(projectID, settingsTemplateID), nil)
 }
 
 // GenerateGroupReport generates a new group report.

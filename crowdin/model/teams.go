@@ -32,7 +32,7 @@ type TeamsListResponse struct {
 type TeamsListOptions struct {
 	// Sort teams by specified field.
 	// Enum: id, name, createdAt, updatedAt. Default: id.
-	OrderBy string `url:"orderBy,omitempty"`
+	OrderBy string `json:"orderBy,omitempty"`
 
 	ListOptions
 }

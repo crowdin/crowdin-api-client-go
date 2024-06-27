@@ -115,7 +115,7 @@ func (s *SourceStringsService) Edit(ctx context.Context, projectID, stringID int
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.strings.delete
 func (s *SourceStringsService) Delete(ctx context.Context, projectID, stringID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/%d", projectID, stringID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/%d", projectID, stringID), nil)
 }
 
 // GetUploadStatus returns the status of the uploaded strings.

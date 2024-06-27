@@ -82,11 +82,6 @@ func (s *TranslationsService) BuildProjectFileTranslation(
 
 // ListProjectBuilds returns a list of builds for a specific project.
 //
-// Query parameters:
-// - branchId: The identifier of the branch (filter by branch).
-// - limit: A maximum number of items to retrieve (default 25, max 500).
-// - offset: A starting offset in the collection of items (default 0).
-//
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.getMany
 func (s *TranslationsService) ListProjectBuilds(ctx context.Context, projectID int, opts *model.TranslationsBuildsListOptions) (
 	[]*model.TranslationsProjectBuild, *Response, error,
@@ -109,7 +104,7 @@ func (s *TranslationsService) ListProjectBuilds(ctx context.Context, projectID i
 // Request body can be either `model.BuildProjectRequest` or `model.PseudoBuildProjectRequest`.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.post
-func (s *TranslationsService) BuildProjectTranslation(ctx context.Context, projectID int, req model.BuildProjectTranslationRequest) (
+func (s *TranslationsService) BuildProjectTranslation(ctx context.Context, projectID int, req model.BuildProjectTranslationRequester) (
 	*model.TranslationsProjectBuild, *Response, error,
 ) {
 	res := new(model.TranslationsProjectBuildResponse)
@@ -158,7 +153,7 @@ func (s *TranslationsService) CheckBuildStatus(ctx context.Context, projectID, b
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.delete
 func (s *TranslationsService) CancelBuild(ctx context.Context, projectID, buildID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/builds/%d", projectID, buildID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/builds/%d", projectID, buildID), nil)
 }
 
 // ExportProjectTranslation exports project translations for a specific language.

@@ -95,7 +95,7 @@ func (s *UsersService) ReplaceProjectMemberPermissions(
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.members.delete
 func (s *UsersService) DeleteProjectMember(ctx context.Context, projectID, memberID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/members/%d", projectID, memberID), nil, nil)
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/members/%d", projectID, memberID), nil)
 }
 
 // Get returns information about a specific user.
@@ -166,5 +166,5 @@ func (s *UsersService) Edit(ctx context.Context, userID int, req []*model.Update
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.users.delete
 func (s *UsersService) Delete(ctx context.Context, userID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/users/%d", userID), nil, nil)
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/users/%d", userID), nil)
 }

@@ -98,5 +98,5 @@ func (s *WebhooksService) Edit(ctx context.Context, projectID, webhookID int, re
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.webhooks.delete
 func (s *WebhooksService) Delete(ctx context.Context, projectID, webhookID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/webhooks/%d", projectID, webhookID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/webhooks/%d", projectID, webhookID), nil)
 }

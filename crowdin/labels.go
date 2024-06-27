@@ -78,7 +78,7 @@ func (s *LabelsService) Edit(ctx context.Context, projectID, labelID int, req []
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.projects.labels.delete
 func (s *LabelsService) Delete(ctx context.Context, projectID, labelID int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/labels/%d", projectID, labelID))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/labels/%d", projectID, labelID), nil)
 }
 
 // AssignToStrings assigns label to strings and returns a list of strings
@@ -121,7 +121,7 @@ func (s *LabelsService) UnassignFromStrings(ctx context.Context, projectID, labe
 
 	res := new(model.SourceStringsListResponse)
 	path := "/api/v2/projects/%d/labels/%d/strings?stringIds=%s"
-	resp, err := s.client.Delete(ctx, fmt.Sprintf(path, projectID, labelID, model.JoinIntSlice(stringIDs)), res)
+	resp, err := s.client.Delete(ctx, fmt.Sprintf(path, projectID, labelID, model.JoinSlice(stringIDs)), res)
 	if err != nil {
 		return nil, resp, err
 	}
@@ -174,7 +174,7 @@ func (s *LabelsService) UnassignFromScreenshots(ctx context.Context, projectID, 
 
 	res := new(model.ScreenshotListResponse)
 	path := "/api/v2/projects/%d/labels/%d/screenshots?screenshotIds=%s"
-	resp, err := s.client.Delete(ctx, fmt.Sprintf(path, projectID, labelID, model.JoinIntSlice(screenshotIDs)), res)
+	resp, err := s.client.Delete(ctx, fmt.Sprintf(path, projectID, labelID, model.JoinSlice(screenshotIDs)), res)
 	if err != nil {
 		return nil, resp, err
 	}

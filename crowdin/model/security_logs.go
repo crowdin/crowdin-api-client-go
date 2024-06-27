@@ -62,16 +62,16 @@ const (
 // SecurityLogsService.ListUserLogs and SecurityLogsService.ListOrganizationLogs methods.
 type SecurityLogsListOptions struct {
 	// Event is the type of event to filter by.
-	Event LogEvent `url:"event,omitempty"`
+	Event LogEvent `json:"event,omitempty"`
 	// Date in UTC, ISO 8601. Example: createdAfter=2024-01-10T10:41:33+00:00.
-	CreatedAfter string `url:"createdAfter,omitempty"`
+	CreatedAfter string `json:"createdAfter,omitempty"`
 	// Date in UTC, ISO 8601. Example: createdBefore=2024-01-26T10:33:43+00:00.
-	CreatedBefore string `url:"createdBefore,omitempty"`
+	CreatedBefore string `json:"createdBefore,omitempty"`
 	// IPAddress is the IP address to filter by.
-	IPAddress string `url:"ipAddress,omitempty"`
+	IPAddress string `json:"ipAddress,omitempty"`
 	// Filter by user ID.
 	// Used for the organization logs.
-	UserID int `url:"userId,omitempty"`
+	UserID int `json:"userId,omitempty"`
 
 	ListOptions
 }

@@ -207,7 +207,7 @@ type TranslationsBuildsListOptions struct {
 	ListOptions
 
 	// Branch Identifier. Filter builds by branchId.
-	BranchID int `url:"branchId,omitempty"`
+	BranchID int `json:"branchId,omitempty"`
 }
 
 // Values returns the url.Values representation of the query options.
@@ -267,9 +267,9 @@ type TranslationsProjectBuildsListResponse struct {
 }
 
 type (
-	// BuildProjectTranslationRequest interface that allows accepting
+	// BuildProjectTranslationRequester interface that allows accepting
 	// BuildProjectRequest and PseudoBuildProjectRequest types.
-	BuildProjectTranslationRequest interface {
+	BuildProjectTranslationRequester interface {
 		ValidateBuildRequest() error
 	}
 
@@ -327,6 +327,7 @@ func (r *BuildProjectRequest) Validate() error {
 	if r == nil {
 		return ErrNilRequest
 	}
+
 	return r.ValidateBuildRequest()
 }
 
@@ -350,6 +351,7 @@ func (r *PseudoBuildProjectRequest) Validate() error {
 	if r == nil {
 		return ErrNilRequest
 	}
+
 	return r.ValidateBuildRequest()
 }
 
@@ -359,6 +361,7 @@ func (r *PseudoBuildProjectRequest) ValidateBuildRequest() error {
 		(*r.LengthTransformation < -50 || *r.LengthTransformation > 100) {
 		return errors.New("lengthTransformation must be from -50 to 100")
 	}
+
 	return nil
 }
 
@@ -461,6 +464,7 @@ func (r *ExportTranslationRequest) Validate() error {
 	if r.TargetLanguageID == "" {
 		return errors.New("targetLanguageId is required")
 	}
+
 	return nil
 }
 

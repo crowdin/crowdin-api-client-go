@@ -18,14 +18,6 @@ type ProjectsService struct {
 
 // List returns a list of projects.
 //
-// Query parameters:
-//
-//	userId: A user identifier.
-//	hasManagerAccess: Filter by projects with manager access (default 0). Enum: 0, 1.
-//	type: Set type to 1 to get all string based projects. Enum: 0, 1.
-//	limit: A maximum number of items to retrieve (default 25, max 500).
-//	offset: A starting offset in the collection of items (default 0).
-//
 // https://developer.crowdin.com/api/v2/#operation/api.projects.getMany
 func (s *ProjectsService) List(ctx context.Context, opts *model.ProjectsListOptions) ([]*model.Project, *Response, error) {
 	res := new(model.ProjectsListResponse)
@@ -65,10 +57,9 @@ func (s *ProjectsService) Add(ctx context.Context, req *model.ProjectsAddRequest
 // Edit updates a project by its identifier.
 //
 // Request body:
-//
-//	op: The operation to perform. Enum: add, replace, remove, test
-//	path: A JSON Pointer as defined in RFC 6901.
-//	value: The value to be used within the operations. The value must be one of string, integer, boolean and object
+//   - op: The operation to perform. Enum: add, replace, remove, test
+//   - path: A JSON Pointer as defined in RFC 6901.
+//   - value: The value to be used within the operations. The value must be one of string, integer, boolean and object
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.patch
 func (s *ProjectsService) Edit(ctx context.Context, id int, req []*model.UpdateRequest) (*model.Project, *Response, error) {
@@ -82,7 +73,7 @@ func (s *ProjectsService) Edit(ctx context.Context, id int, req []*model.UpdateR
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.delete
 func (s *ProjectsService) Delete(ctx context.Context, id int) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d", id))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d", id), nil)
 }
 
 // DownloadFileFormatSettingsCustomSegmentation returns a download link for custom segmentations
@@ -105,7 +96,7 @@ func (s *ProjectsService) DownloadFileFormatSettingsCustomSegmentation(ctx conte
 // https://developer.crowdin.com/api/v2/#operation/api.projects.file-format-settings.custom-segmentations.delete
 func (s *ProjectsService) ResetFileFormatSettingsCustomSegmentation(ctx context.Context, projectID, settingsID int) (*Response, error) {
 	path := fmt.Sprintf("/api/v2/projects/%d/file-format-settings/%d/custom-segmentations", projectID, settingsID)
-	return s.client.Delete(ctx, path)
+	return s.client.Delete(ctx, path, nil)
 }
 
 // ListFileFormatSettings returns a list of project file format settings by project identifier.
@@ -158,10 +149,9 @@ func (s *ProjectsService) AddFileFormatSettings(ctx context.Context, projectID i
 // EditFileFormatSettings updates a project file format settings by project and file format settings identifiers.
 //
 // Request body:
-//
-//	op: The operation to perform. Possible values: replace, test
-//	path: A JSON Pointer as defined in RFC 6901. Possible values: /format, /settings
-//	value: The value to be used within the operations. The value must be one of string or array of strings.
+//   - op: The operation to perform. Possible values: replace, test
+//   - path: A JSON Pointer as defined in RFC 6901. Possible values: /format, /settings
+//   - value: The value to be used within the operations. The value must be one of string or array of strings.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.file-format-settings.patch
 func (s *ProjectsService) EditFileFormatSettings(ctx context.Context, projectID, settingsID int, req []*model.UpdateRequest) (
@@ -179,7 +169,7 @@ func (s *ProjectsService) EditFileFormatSettings(ctx context.Context, projectID,
 // https://developer.crowdin.com/api/v2/#operation/api.projects.file-format-settings.delete
 func (s *ProjectsService) DeleteFileFormatSettings(ctx context.Context, projectID, settingsID int) (*Response, error) {
 	path := fmt.Sprintf("/api/v2/projects/%d/file-format-settings/%d", projectID, settingsID)
-	return s.client.Delete(ctx, path)
+	return s.client.Delete(ctx, path, nil)
 }
 
 // ListStringsExporterSettings returns a list of project strings exporter settings by project identifier.
@@ -266,5 +256,5 @@ func (s *ProjectsService) EditStringsExporterSettings(
 // https://developer.crowdin.com/api/v2/#operation/api.projects.strings-exporter-settings.delete
 func (s *ProjectsService) DeleteStringsExporterSettings(ctx context.Context, projectID, settingsID int) (*Response, error) {
 	path := fmt.Sprintf("/api/v2/projects/%d/strings-exporter-settings/%d", projectID, settingsID)
-	return s.client.Delete(ctx, path)
+	return s.client.Delete(ctx, path, nil)
 }

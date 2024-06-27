@@ -14,9 +14,9 @@ type NotificationsService struct {
 
 // Notify sends a notification to authenticated user or organization members.
 //
-//	To send a notification to an authenticated user, pass the request body with the `Message`.
-//	To send a notification to organization members, pass the request
-//	body with the `Message` and `UserIDs` or `Role`.
+// To send a notification to an authenticated user, pass the request body with the `Message`.
+// To send a notification to organization members, pass the request
+// body with the `Message` and `UserIDs` or `Role`.
 //
 // Send a notification to an authenticated user.
 //
@@ -45,9 +45,9 @@ func (s *NotificationsService) Notify(ctx context.Context, req *model.Notificati
 
 // NotifyProjectMembers sends a notification to project members.
 //
-//	The request body can be either by user IDs or by role.
-//	To send by user IDs, pass the request body with the `UserIDs` and `Message`.
-//	To send by role, pass the request body with the `Role` and `Message`.
+// The request body can be either by user IDs or by role.
+// To send by user IDs, pass the request body with the `UserIDs` and `Message`.
+// To send by role, pass the request body with the `Role` and `Message`.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.notify.post
 func (s *NotificationsService) NotifyProjectMembers(ctx context.Context, projectID int, req *model.Notification) (

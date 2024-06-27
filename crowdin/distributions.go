@@ -77,7 +77,7 @@ func (s *DistributionsService) Edit(ctx context.Context, projectID int, hash str
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.distributions.delete
 func (s *DistributionsService) Delete(ctx context.Context, projectID int, hash string) (*Response, error) {
-	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/distributions/%s", projectID, hash))
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/distributions/%s", projectID, hash), nil)
 }
 
 // GetRelease returns information about the distribution release.
