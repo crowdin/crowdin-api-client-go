@@ -151,6 +151,7 @@ func TestStorageService_Add(t *testing.T) {
 			t.Fatalf("Storages.Add failed to open temp file: %v", err)
 		}
 		defer os.RemoveAll(dir)
+		defer file.Close()
 
 		storage, _, err := client.Storages.Add(context.Background(), file)
 		if err != nil {
@@ -163,6 +164,11 @@ func TestStorageService_Add(t *testing.T) {
 		}
 		if !reflect.DeepEqual(storage, want) {
 			t.Errorf("Storages.Add returned %+v, want %+v", storage, want)
+		}
+
+		_, _, err = client.Storages.Add(context.Background(), nil)
+		if err == nil {
+			t.Errorf("Storages.Add should return an error, got nil")
 		}
 	}
 }
