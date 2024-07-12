@@ -198,6 +198,35 @@ func (c *Client) newRequest(ctx context.Context, method, path string, body any, 
 	return req, nil
 }
 
+// newUploadRequest creates an upload request.
+func (c *Client) newUploadRequest(ctx context.Context, method, path string, body io.Reader, opts ...RequestOption) (*http.Request, error) {
+	rel, err := url.Parse(path)
+	if err != nil {
+		return nil, err
+	}
+	u := c.baseURL.ResolveReference(rel)
+
+	req, err := http.NewRequestWithContext(ctx, method, u.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("User-Agent", c.userAgent)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
+
+	for _, opt := range opts {
+		if err := opt(req); err != nil {
+			return nil, err
+		}
+	}
+
+	if req.Header.Get("Content-Type") == "" {
+		req.Header.Set("Content-Type", "application/octet-stream")
+	}
+
+	return req, nil
+}
+
 // do sends an API request and returns the API response.
 func (c *Client) do(r *http.Request, v any) (*Response, error) {
 	resp, err := c.httpClient.Do(r)
@@ -256,6 +285,16 @@ func (c *Client) Post(ctx context.Context, path string, body, v any, opts ...Req
 	}
 
 	req, err := c.newRequest(ctx, "POST", path, body, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.do(req, v)
+}
+
+// Upload makes a POST request to the specified path with a file.
+func (c *Client) Upload(ctx context.Context, path string, file io.Reader, v any, opts ...RequestOption) (*Response, error) {
+	req, err := c.newUploadRequest(ctx, "POST", path, file, opts...)
 	if err != nil {
 		return nil, err
 	}
