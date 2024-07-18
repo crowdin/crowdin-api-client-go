@@ -2,6 +2,7 @@ package crowdin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"mime"
 	"net/url"
@@ -31,14 +32,13 @@ type StorageService struct {
 //
 // https://developer.crowdin.com/api/v2/#operation/api.storages.post
 func (s *StorageService) Add(ctx context.Context, file *os.File) (*model.Storage, *Response, error) {
-	mediaType := mime.TypeByExtension(filepath.Ext(file.Name()))
-	if mediaType == "" {
-		mediaType = "application/octet-stream"
+	if file == nil {
+		return nil, nil, errors.New("file is required")
 	}
 
 	res := new(model.StorageGetResponse)
-	resp, err := s.client.Post(ctx, "/api/v2/storages", file, res,
-		Header("Content-Type", mediaType),
+	resp, err := s.client.Upload(ctx, "/api/v2/storages", file, res,
+		Header("Content-Type", mime.TypeByExtension(filepath.Ext(file.Name()))),
 		Header("Crowdin-API-FileName", url.QueryEscape(filepath.Base(file.Name()))),
 	)
 
