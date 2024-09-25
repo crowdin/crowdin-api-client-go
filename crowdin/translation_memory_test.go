@@ -449,7 +449,7 @@ func TestTranslationMemoryService_ImportTM(t *testing.T) {
 				"attributes": {
 					"tmId": 10,
 					"storageId": 28,
-					"firstLineContainsHeader": 10,
+					"firstLineContainsHeader": true,
 					"scheme": {
 						"en": 0,
 						"de": 2
@@ -484,12 +484,12 @@ func TestTranslationMemoryService_ImportTM(t *testing.T) {
 		Attributes: struct {
 			TMID                    int            `json:"tmId"`
 			StorageID               int            `json:"storageId"`
-			FirstLineContainsHeader int            `json:"firstLineContainsHeader"`
+			FirstLineContainsHeader bool           `json:"firstLineContainsHeader"`
 			Scheme                  map[string]int `json:"scheme"`
 		}{
 			TMID:                    10,
 			StorageID:               28,
-			FirstLineContainsHeader: 10,
+			FirstLineContainsHeader: true,
 			Scheme: map[string]int{
 				"en": 0,
 				"de": 2,
@@ -522,7 +522,7 @@ func TestTranslationMemoryService_CheckTMImportStatus(t *testing.T) {
 				"attributes": {
 					"tmId": 10,
 					"storageId": 28,
-					"firstLineContainsHeader": 10,
+					"firstLineContainsHeader": true,
 					"scheme": {
 					"en": 0,
 					"de": 2
@@ -547,12 +547,12 @@ func TestTranslationMemoryService_CheckTMImportStatus(t *testing.T) {
 		Attributes: struct {
 			TMID                    int            `json:"tmId"`
 			StorageID               int            `json:"storageId"`
-			FirstLineContainsHeader int            `json:"firstLineContainsHeader"`
+			FirstLineContainsHeader bool           `json:"firstLineContainsHeader"`
 			Scheme                  map[string]int `json:"scheme"`
 		}{
 			TMID:                    10,
 			StorageID:               28,
-			FirstLineContainsHeader: 10,
+			FirstLineContainsHeader: true,
 			Scheme: map[string]int{
 				"en": 0,
 				"de": 2,
