@@ -249,6 +249,10 @@ type SourceStringsUploadRequest struct {
 	CleanupMode *bool `json:"cleanupMode,omitempty"`
 	// Options for importing strings.
 	ImportOptions *SourceStringsImportOptions `json:"importOptions,omitempty"`
+	// Option for updating strings. Default: "clear_translations_and_approvals".
+	// Enum: "clear_translations_and_approvals" "keep_translations" "keep_translations_and_approvals"
+	// Must be used together with updateStrings = true
+	UpdateOption string `json:"updateOption,omitempty"`
 }
 
 // SourceStringsImportOptions defines the options for importing strings.
