@@ -279,6 +279,9 @@ func (o *SourceStringsUploadRequest) Validate() error {
 	if o.BranchID == 0 {
 		return errors.New("branchId is required")
 	}
+	if o.UpdateOption != "" && !(*o.UpdateStrings) {
+		return errors.New("updateStrings must be set to true to use updateOption")
+	}
 
 	return nil
 }
