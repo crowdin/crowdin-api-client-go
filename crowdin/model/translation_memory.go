@@ -157,7 +157,7 @@ type TranslationMemoryImport struct {
 	Attributes struct {
 		TMID                    int            `json:"tmId"`
 		StorageID               int            `json:"storageId"`
-		FirstLineContainsHeader int            `json:"firstLineContainsHeader"`
+		FirstLineContainsHeader bool           `json:"firstLineContainsHeader"`
 		Scheme                  map[string]int `json:"scheme"`
 	} `json:"attributes"`
 	CreatedAt  string `json:"createdAt"`
