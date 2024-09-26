@@ -186,11 +186,27 @@ func TestSourceStringsUploadRequestValidate(t *testing.T) {
 			err:  "branchId is required",
 		},
 		{
+			name: "invalid request",
+			req: &SourceStringsUploadRequest{StorageID: 1, BranchID: 1, Type: "xlsx", ParserVersion: 1,
+				LabelIDs: []int{1, 2, 3}, UpdateStrings: toPtr(false), CleanupMode: toPtr(false),
+				ImportOptions: &SourceStringsImportOptions{FirstLineContainsHeader: toPtr(true),
+					ImportTranslations: toPtr(true), Scheme: map[string]int{"key": 0}}, UpdateOption: "clear_translations_and_approvals"},
+			err: "updateStrings must be set to true to use updateOption",
+		},
+		{
 			name: "valid request",
 			req: &SourceStringsUploadRequest{StorageID: 1, BranchID: 1, Type: "xlsx", ParserVersion: 1,
 				LabelIDs: []int{1, 2, 3}, UpdateStrings: toPtr(false), CleanupMode: toPtr(false),
 				ImportOptions: &SourceStringsImportOptions{FirstLineContainsHeader: toPtr(true),
 					ImportTranslations: toPtr(true), Scheme: map[string]int{"key": 0}}},
+			valid: true,
+		},
+		{
+			name: "valid request 2",
+			req: &SourceStringsUploadRequest{StorageID: 1, BranchID: 1, Type: "xlsx", ParserVersion: 1,
+				LabelIDs: []int{1, 2, 3}, UpdateStrings: toPtr(true), CleanupMode: toPtr(false),
+				ImportOptions: &SourceStringsImportOptions{FirstLineContainsHeader: toPtr(true),
+					ImportTranslations: toPtr(true), Scheme: map[string]int{"key": 0}}, UpdateOption: "clear_translations_and_approvals"},
 			valid: true,
 		},
 	}
