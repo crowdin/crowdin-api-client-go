@@ -114,8 +114,8 @@ func (o *ScreenshotListOptions) Values() (url.Values, bool) {
 	return v, len(v) > 0
 }
 
-func (r *ScreenshotListOptions) Validate() error {
-	if r.StringID > 0 && len(r.StringIDs) > 0 {
+func (o *ScreenshotListOptions) Validate() error {
+	if o.StringID > 0 && len(o.StringIDs) > 0 {
 		return errors.New("stringId and stringIds cannot be used in the same request")
 	}
 
