@@ -114,6 +114,14 @@ func (o *ScreenshotListOptions) Values() (url.Values, bool) {
 	return v, len(v) > 0
 }
 
+func (r *ScreenshotListOptions) Validate() error {
+	if r.StringID > 0 && len(r.StringIDs) > 0 {
+		return errors.New("stringId and stringIds cannot be used in the same request")
+	}
+
+	return nil
+}
+
 // ScreenshotAddRequest defines the structure of a request
 // to add a screenshot.
 type ScreenshotAddRequest struct {
