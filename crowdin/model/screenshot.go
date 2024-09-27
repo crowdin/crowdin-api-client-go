@@ -71,7 +71,11 @@ type ScreenshotListOptions struct {
 	// Example: orderBy=createdAt desc,name,tagsCount
 	OrderBy string `json:"orderBy,omitempty"`
 	// String Identifier.
-	StringID int `json:"stringId,omitempty"`
+	StringID int `json:"stringId,omitempty"` // Deprecated. Use StringIDs instead.
+	// String Identifiers.
+	// Example: stringIds=1,2,3,4,5
+	// Note: Cannot be used with stringId in the same request.
+	StringIDs []string `json:"stringIds,omitempty"`
 	// Label Identifiers.
 	// Example: labelIds=1,2,3
 	LabelIDs []string `json:"labelIds,omitempty"`
