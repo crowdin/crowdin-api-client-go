@@ -27,6 +27,13 @@ func TestScreenshotListOptionsValues(t *testing.T) {
 				ListOptions: ListOptions{Offset: 1, Limit: 10}},
 			out: "excludeLabelIds=4%2C5%2C6&labelIds=1%2C2%2C3&limit=10&offset=1&orderBy=createdAt+desc%2Cname%2CtagsCount&stringId=1",
 		},
+		{
+			name: "with all options",
+			opts: &ScreenshotListOptions{OrderBy: "createdAt desc,name,tagsCount", StringIDs: []string{"1", "2", "3"},
+				LabelIDs: []string{"1", "2", "3"}, ExcludeLabelIDs: []string{"4", "5", "6"},
+				ListOptions: ListOptions{Offset: 1, Limit: 10}},
+			out: "excludeLabelIds=4%2C5%2C6&labelIds=1%2C2%2C3&limit=10&offset=1&orderBy=createdAt+desc%2Cname%2CtagsCount&stringIds=1%2C2%2C3",
+		},
 	}
 
 	for _, tt := range tests {
