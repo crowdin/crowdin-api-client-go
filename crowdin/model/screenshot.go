@@ -101,6 +101,9 @@ func (o *ScreenshotListOptions) Values() (url.Values, bool) {
 	if o.StringID > 0 { // TODO: StringID is deprecated
 		v.Add("stringId", fmt.Sprintf("%d", o.StringID))
 	}
+	if len(o.StringIDs) > 0 {
+		v.Add("stringIds", JoinSlice(o.StringIDs))
+	}
 	if len(o.LabelIDs) > 0 {
 		v.Add("labelIds", JoinSlice(o.LabelIDs))
 	}
