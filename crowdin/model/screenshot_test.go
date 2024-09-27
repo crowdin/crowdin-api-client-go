@@ -51,7 +51,6 @@ func TestScreenshotListOptionsValues(t *testing.T) {
 }
 
 func TestScreenshotListOptionsValidate(t *testing.T) {
-	// my func, to validate
 	tests := []struct {
 		name  string
 		req   *ScreenshotListOptions
