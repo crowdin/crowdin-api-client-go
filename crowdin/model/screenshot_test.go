@@ -50,6 +50,34 @@ func TestScreenshotListOptionsValues(t *testing.T) {
 	}
 }
 
+func TestScreenshotListOptionsValidate(t *testing.T) {
+	// my func, to validate
+	tests := []struct {
+		name  string
+		req   *ScreenshotListOptions
+		err   string
+		valid bool
+	}{
+		{
+			name: "invalid case - using both stringId and stringIds in the same request",
+			req: &ScreenshotListOptions{OrderBy: "createdAt desc,name,tagsCount", StringID: 1, StringIDs: []string{"1", "2", "3"}, // TODO: StringID is deprecated
+				LabelIDs: []string{"1", "2", "3"}, ExcludeLabelIDs: []string{"4", "5", "6"},
+				ListOptions: ListOptions{Offset: 1, Limit: 10}},
+			err: "stringId and stringIds cannot be used in the same request",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.req.Validate(); tt.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.err)
+			}
+		})
+	}
+}
+
 func TestScreenshotAddRequestValidate(t *testing.T) {
 	tests := []struct {
 		name  string
