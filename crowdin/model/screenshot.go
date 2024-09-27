@@ -98,7 +98,7 @@ func (o *ScreenshotListOptions) Values() (url.Values, bool) {
 	if len(o.OrderBy) > 0 {
 		v.Add("orderBy", o.OrderBy)
 	}
-	if o.StringID > 0 {
+	if o.StringID > 0 { // TODO: StringID is deprecated
 		v.Add("stringId", fmt.Sprintf("%d", o.StringID))
 	}
 	if len(o.LabelIDs) > 0 {
