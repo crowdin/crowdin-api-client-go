@@ -52,6 +52,7 @@ const (
 	ReportTransactionCostsPostEditing ReportName = "translation-costs-pe"
 	ReportContributionRawData         ReportName = "contribution-raw-data"
 	ReportTopMembers                  ReportName = "top-members"
+	ReportPreTranslateEfficiency      ReportName = "pre-translate-efficiency"
 
 	// Organization reports.
 	ReportGroupTranslationCostsPostEditing ReportName = "group-translation-costs-pe"
