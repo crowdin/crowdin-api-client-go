@@ -1230,7 +1230,9 @@ func TestProjectsService_Edit(t *testing.T) {
 		fmt.Fprint(w, `{
 			"data": {
 				"id": 8,
-				"name": "New Name"
+				"name": "New Name",
+				"defaultTmId": 2,
+				"defaultGlossaryId": 2
 			}
 		}`)
 	})
@@ -1246,8 +1248,10 @@ func TestProjectsService_Edit(t *testing.T) {
 	require.NoError(t, err)
 
 	expectedProject := &model.Project{
-		ID:   8,
-		Name: "New Name",
+		ID:                8,
+		Name:              "New Name",
+		DefaultTMID:       2,
+		DefaultGlossaryID: 2,
 	}
 	assert.Equal(t, expectedProject, project)
 	assert.NotNil(t, resp)
