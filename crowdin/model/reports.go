@@ -427,6 +427,12 @@ func (r *ContributionRawDataSchema) ValidateSchema() error {
 	return nil
 }
 
+// ValidateSchema implements the ReportSchema interface and checks if the
+// PreTranslateEfficiency schema is valid.
+func (r *PreTranslateEfficiencySchema) ValidateSchema() error {
+	return nil
+}
+
 // GroupReportGenerateRequest defines the structure of a request to
 // generate a group or organization report.
 type GroupReportGenerateRequest struct {
