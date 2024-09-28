@@ -200,6 +200,7 @@ type ReportGenerateRequest struct {
 	//  - TransactionCostsPostEditingSchema
 	//  - TopMembersSchema
 	//  - ContributionRawDataSchema
+	//	- PreTranslateEfficiencySchema
 	Schema ReportSchema `json:"schema"`
 }
 
