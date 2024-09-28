@@ -99,6 +99,15 @@ func TestReportGenerateRequestValidate(t *testing.T) {
 			},
 			valid: true,
 		},
+		{
+			name: "valid schema (ReportPreTranslateEfficiencySchema)",
+			req: &ReportGenerateRequest{
+				Name:   ReportPreTranslateEfficiency,
+				Schema: &PreTranslateEfficiencySchema{Unit: ReportUnitStrings, PostEditingCategories: []string{"0-10"}},
+			},
+			valid: true,
+		},
+		// TODO: add any negative cases?
 	}
 
 	for _, tt := range tests {
