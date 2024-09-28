@@ -243,6 +243,13 @@ type ProjectsAddRequest struct {
 	TMContextType  string                 `json:"tmContextType,omitempty"`
 	TMPreTranslate *ProjectTMPreTranslate `json:"tmPreTranslate,omitempty"`
 	MTPreTranslate *ProjectMTPreTranslate `json:"mtPreTranslate,omitempty"`
+	// FIXME: missing fields for aiPreTranslate and assistActionAiPromptId ( TODO: create new issue )
+	// Translation Memory ID.
+	// Default: null
+	DefaultTMID int `json:"defaultTmId,omitempty"`
+	// Glossary ID.
+	// Default: null
+	DefaultGlossaryID int `json:"defaultGlossaryId,omitempty"`
 	// Context and max.length added in Crowdin will be visible in the downloaded files.
 	SaveMetaInfoInSource *bool `json:"saveMetaInfoInSource,omitempty"`
 	// Defines the project type. Use 0 for a file-based project and 1 for a string-based project.
