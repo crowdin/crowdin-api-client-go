@@ -361,6 +361,25 @@ type (
 		// Report date to in UTC, ISO 8601.
 		DateTo string `json:"dateTo,omitempty"`
 	}
+
+	// PreTranslateEfficiencySchema defines the schema for pre translate
+	// efficiency report.
+	PreTranslateEfficiencySchema struct {
+		// Report unit. Enum: strings, words, chars, chars_with_spaces.
+		// Default: words.
+		Unit ReportUnit `json:"unit,omitempty"`
+		// Export file format.
+		// Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Split into categories by edit distance.
+		PostEditingCategories []string `json:"postEditingCategories,omitempty"`
+		// Language Identifier for which the report should be generated.
+		LanguageID string `json:"languageId,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+	}
 )
 
 // Validate checks if the request is valid.
