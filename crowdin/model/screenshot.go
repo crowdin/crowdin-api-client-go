@@ -71,7 +71,11 @@ type ScreenshotListOptions struct {
 	// Example: orderBy=createdAt desc,name,tagsCount
 	OrderBy string `json:"orderBy,omitempty"`
 	// String Identifier.
-	StringID int `json:"stringId,omitempty"`
+	StringID int `json:"stringId,omitempty"` // Deprecated. Use StringIDs instead.
+	// String Identifiers.
+	// Example: stringIds=1,2,3,4,5
+	// Note: Cannot be used with stringId in the same request.
+	StringIDs []string `json:"stringIds,omitempty"`
 	// Label Identifiers.
 	// Example: labelIds=1,2,3
 	LabelIDs []string `json:"labelIds,omitempty"`
@@ -94,8 +98,11 @@ func (o *ScreenshotListOptions) Values() (url.Values, bool) {
 	if len(o.OrderBy) > 0 {
 		v.Add("orderBy", o.OrderBy)
 	}
-	if o.StringID > 0 {
+	if o.StringID > 0 { // TODO: StringID is deprecated
 		v.Add("stringId", fmt.Sprintf("%d", o.StringID))
+	}
+	if len(o.StringIDs) > 0 {
+		v.Add("stringIds", JoinSlice(o.StringIDs))
 	}
 	if len(o.LabelIDs) > 0 {
 		v.Add("labelIds", JoinSlice(o.LabelIDs))
@@ -105,6 +112,14 @@ func (o *ScreenshotListOptions) Values() (url.Values, bool) {
 	}
 
 	return v, len(v) > 0
+}
+
+func (o *ScreenshotListOptions) Validate() error {
+	if o.StringID > 0 && len(o.StringIDs) > 0 {
+		return errors.New("stringId and stringIds cannot be used in the same request")
+	}
+
+	return nil
 }
 
 // ScreenshotAddRequest defines the structure of a request
