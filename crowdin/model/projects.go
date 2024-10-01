@@ -61,8 +61,8 @@ type (
 		LanguageMapping                 map[string]LanguageMapping `json:"languageMapping,omitempty"`
 		DelayedWorkflowStart            bool                       `json:"delayedTranslations,omitempty"`
 		NotificationSettings            *NotificationSettings      `json:"notificationSettings,omitempty"`
-		DefaultTMID                     int                        `json:"defaultTmId,omitempty"`       // FIXME: shouldn't it be *int? looks like according to the API doc, this field is nullable
-		DefaultGlossaryID               int                        `json:"defaultGlossaryId,omitempty"` // FIXME: shouldn't it be *int?
+		DefaultTMID                     int                        `json:"defaultTmId,omitempty"`
+		DefaultGlossaryID               int                        `json:"defaultGlossaryId,omitempty"`
 		AssignedTMs                     map[int]map[string]int     `json:"assignedTms,omitempty"`
 		AssignedGlossaries              []int                      `json:"assignedGlossaries,omitempty"`
 		TMPenalties                     any                        `json:"tmPenalties,omitempty"`
