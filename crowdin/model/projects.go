@@ -253,11 +253,12 @@ type ProjectsAddRequest struct {
 	// segmentContext - searching by context.
 	// auto - context search for key-value formats and segment search for others.
 	// prevAndNextSegment - search by previous and next segment.
-	TMContextType          string                 `json:"tmContextType,omitempty"`
-	TMPreTranslate         *ProjectTMPreTranslate `json:"tmPreTranslate,omitempty"`
-	MTPreTranslate         *ProjectMTPreTranslate `json:"mtPreTranslate,omitempty"`
-	AiPreTranslate         *ProjectAiPreTranslate `json:"aiPreTranslate,omitempty"`
-	AssistActionAiPromptID int                    `json:"assistActionAiPromptId,omitempty"`
+	TMContextType  string                 `json:"tmContextType,omitempty"`
+	TMPreTranslate *ProjectTMPreTranslate `json:"tmPreTranslate,omitempty"`
+	MTPreTranslate *ProjectMTPreTranslate `json:"mtPreTranslate,omitempty"`
+	AiPreTranslate *ProjectAiPreTranslate `json:"aiPreTranslate,omitempty"`
+	// AI Prompt ID to be used as prompt for Assist action
+	AssistActionAiPromptID int `json:"assistActionAiPromptId,omitempty"`
 	// Translation Memory ID.
 	// Default: null
 	DefaultTMID int `json:"defaultTmId,omitempty"`
