@@ -107,7 +107,6 @@ func TestReportGenerateRequestValidate(t *testing.T) {
 			},
 			valid: true,
 		},
-		// TODO: add any negative cases?
 	}
 
 	for _, tt := range tests {
