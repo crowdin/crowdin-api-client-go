@@ -257,7 +257,7 @@ type ProjectsAddRequest struct {
 	TMPreTranslate         *ProjectTMPreTranslate `json:"tmPreTranslate,omitempty"`
 	MTPreTranslate         *ProjectMTPreTranslate `json:"mtPreTranslate,omitempty"`
 	AiPreTranslate         *ProjectAiPreTranslate `json:"aiPreTranslate,omitempty"`
-	AssistActionAiPromptId int                    `json:"assistActionAiPromptId,omitempty"`
+	AssistActionAiPromptID int                    `json:"assistActionAiPromptId,omitempty"`
 	// Translation Memory ID.
 	// Default: null
 	DefaultTMID int `json:"defaultTmId,omitempty"`
