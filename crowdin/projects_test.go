@@ -1028,6 +1028,15 @@ func TestProjectsService_Add(t *testing.T) {
 				},
 			},
 		},
+		AiPreTranslate: &model.ProjectAiPreTranslate{
+			Enabled: ToPtr(true),
+			AiPrompts: []model.ProjectAiPrompt{
+				{
+					AiPromptID:  1,
+					LanguageIDs: []string{"uk"},
+				},
+			},
+		},
 		DefaultTMID:                   1,
 		DefaultGlossaryID:             1,
 		SaveMetaInfoInSource:          ToPtr(true),
@@ -1134,6 +1143,17 @@ func TestProjectsService_Add(t *testing.T) {
 					"uk"
 				  ]
 				}
+			  ]
+			},
+			"aiPreTranslate": {
+			  "enabled": true,
+			  "aiPrompts": [
+			    {
+				  "aiPromptId": 1,
+				  "languageIds": [
+				    "uk"
+				  ]
+			    } 
 			  ]
 			},
 			"defaultTmId": 1,
