@@ -107,11 +107,24 @@ type (
 		MTs     []ProjectMTs `json:"mts,omitempty"`
 	}
 
+	ProjectAiPreTranslate struct {
+		Enabled   *bool             `json:"enabled,omitempty"`
+		AiPrompts []ProjectAiPrompt `json:"aiPrompts,omitempty"`
+	}
+
 	ProjectMTs struct {
 		MTID int `json:"mtId,omitempty"`
 		// Specify an array of languageIds to use specific languages, or use the string all
 		// to include all supported languages.
 		// Retrieve languageIds via the `List Supported Languages` endpoint
+		LanguageIDs []string `json:"languageIds,omitempty"`
+	}
+
+	ProjectAiPrompt struct {
+		AiPromptID int `json:"aiPromptId,omitempty"`
+		// Specify an array of languageIds to use specific languages, or use the string all
+		// to include all supported languages.
+		// Retrieve languageIds via the List Supported Languages endpoint
 		LanguageIDs []string `json:"languageIds,omitempty"`
 	}
 )
