@@ -1037,6 +1037,7 @@ func TestProjectsService_Add(t *testing.T) {
 				},
 			},
 		},
+		AssistActionAiPromptID:        1,
 		DefaultTMID:                   1,
 		DefaultGlossaryID:             1,
 		SaveMetaInfoInSource:          ToPtr(true),
@@ -1156,6 +1157,7 @@ func TestProjectsService_Add(t *testing.T) {
 			    } 
 			  ]
 			},
+			"assistActionAiPromptId": 1,
 			"defaultTmId": 1,
 			"defaultGlossaryId": 1,
 			"saveMetaInfoInSource": true,
