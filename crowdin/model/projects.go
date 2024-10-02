@@ -107,11 +107,24 @@ type (
 		MTs     []ProjectMTs `json:"mts,omitempty"`
 	}
 
+	ProjectAiPreTranslate struct {
+		Enabled   *bool             `json:"enabled,omitempty"`
+		AiPrompts []ProjectAiPrompt `json:"aiPrompts,omitempty"`
+	}
+
 	ProjectMTs struct {
 		MTID int `json:"mtId,omitempty"`
 		// Specify an array of languageIds to use specific languages, or use the string all
 		// to include all supported languages.
 		// Retrieve languageIds via the `List Supported Languages` endpoint
+		LanguageIDs []string `json:"languageIds,omitempty"`
+	}
+
+	ProjectAiPrompt struct {
+		AiPromptID int `json:"aiPromptId,omitempty"`
+		// Specify an array of languageIds to use specific languages, or use the string all
+		// to include all supported languages.
+		// Retrieve languageIds via the List Supported Languages endpoint
 		LanguageIDs []string `json:"languageIds,omitempty"`
 	}
 )
@@ -243,6 +256,15 @@ type ProjectsAddRequest struct {
 	TMContextType  string                 `json:"tmContextType,omitempty"`
 	TMPreTranslate *ProjectTMPreTranslate `json:"tmPreTranslate,omitempty"`
 	MTPreTranslate *ProjectMTPreTranslate `json:"mtPreTranslate,omitempty"`
+	AiPreTranslate *ProjectAiPreTranslate `json:"aiPreTranslate,omitempty"`
+	// AI Prompt ID to be used as prompt for Assist action
+	AssistActionAiPromptID int `json:"assistActionAiPromptId,omitempty"`
+	// Translation Memory ID.
+	// Default: null
+	DefaultTMID int `json:"defaultTmId,omitempty"`
+	// Glossary ID.
+	// Default: null
+	DefaultGlossaryID int `json:"defaultGlossaryId,omitempty"`
 	// Context and max.length added in Crowdin will be visible in the downloaded files.
 	SaveMetaInfoInSource *bool `json:"saveMetaInfoInSource,omitempty"`
 	// Defines the project type. Use 0 for a file-based project and 1 for a string-based project.

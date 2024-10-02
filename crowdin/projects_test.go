@@ -1028,6 +1028,18 @@ func TestProjectsService_Add(t *testing.T) {
 				},
 			},
 		},
+		AiPreTranslate: &model.ProjectAiPreTranslate{
+			Enabled: ToPtr(true),
+			AiPrompts: []model.ProjectAiPrompt{
+				{
+					AiPromptID:  1,
+					LanguageIDs: []string{"uk"},
+				},
+			},
+		},
+		AssistActionAiPromptID:        1,
+		DefaultTMID:                   1,
+		DefaultGlossaryID:             1,
 		SaveMetaInfoInSource:          ToPtr(true),
 		Type:                          ToPtr(0),
 		SkipUntranslatedFiles:         ToPtr(false),
@@ -1134,6 +1146,20 @@ func TestProjectsService_Add(t *testing.T) {
 				}
 			  ]
 			},
+			"aiPreTranslate": {
+			  "enabled": true,
+			  "aiPrompts": [
+			    {
+				  "aiPromptId": 1,
+				  "languageIds": [
+				    "uk"
+				  ]
+			    } 
+			  ]
+			},
+			"assistActionAiPromptId": 1,
+			"defaultTmId": 1,
+			"defaultGlossaryId": 1,
 			"saveMetaInfoInSource": true,
 			"type": 0,
 			"skipUntranslatedFiles": false,
@@ -1157,6 +1183,8 @@ func TestProjectsService_Add(t *testing.T) {
 				QAChecksIgnorableCategories: projectReq.QAChecksIgnorableCategories,
 				LanguageMapping:             projectReq.LanguageMapping,
 				NotificationSettings:        projectReq.NotificationSettings,
+				DefaultTMID:                 projectReq.DefaultTMID,
+				DefaultGlossaryID:           projectReq.DefaultGlossaryID,
 			},
 		})
 		require.NoError(t, err)
@@ -1178,6 +1206,8 @@ func TestProjectsService_Add(t *testing.T) {
 	assert.Equal(t, projectReq.QAChecksIgnorableCategories, project.QAChecksIgnorableCategories)
 	assert.Equal(t, projectReq.LanguageMapping, project.LanguageMapping)
 	assert.Equal(t, projectReq.NotificationSettings, project.NotificationSettings)
+	assert.Equal(t, projectReq.DefaultTMID, project.DefaultTMID)
+	assert.Equal(t, projectReq.DefaultGlossaryID, project.DefaultGlossaryID)
 
 	assert.NotNil(t, resp)
 }
@@ -1222,7 +1252,9 @@ func TestProjectsService_Edit(t *testing.T) {
 		fmt.Fprint(w, `{
 			"data": {
 				"id": 8,
-				"name": "New Name"
+				"name": "New Name",
+				"defaultTmId": 2,
+				"defaultGlossaryId": 2
 			}
 		}`)
 	})
@@ -1238,8 +1270,10 @@ func TestProjectsService_Edit(t *testing.T) {
 	require.NoError(t, err)
 
 	expectedProject := &model.Project{
-		ID:   8,
-		Name: "New Name",
+		ID:                8,
+		Name:              "New Name",
+		DefaultTMID:       2,
+		DefaultGlossaryID: 2,
 	}
 	assert.Equal(t, expectedProject, project)
 	assert.NotNil(t, resp)
