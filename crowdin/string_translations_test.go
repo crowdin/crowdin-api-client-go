@@ -212,6 +212,23 @@ func TestStringTranslationsService_AddApproval(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 }
 
+func TestStringTranslationsService_RemoveStringApprovals(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/approvals"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodDelete)
+		testURL(t, r, path+"?stringId=2345")
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	resp, err := client.StringTranslations.RemoveStringApprovals(context.Background(), 1, 2345)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}
+
 func TestStringTranslationsService_RemoveApproval(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()

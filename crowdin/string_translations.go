@@ -60,6 +60,13 @@ func (s *StringTranslationsService) AddApproval(ctx context.Context, projectID, 
 	return res.Data, resp, err
 }
 
+// RemoveStringApprovals removes translation approvals by its string identifier.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.approvals.deleteMany
+func (s *StringTranslationsService) RemoveStringApprovals(ctx context.Context, projectID, stringID int) (*Response, error) {
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/approvals?stringId=%d", projectID, stringID), nil)
+}
+
 // RemoveApproval removes a translation approval by its identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.approvals.delete
