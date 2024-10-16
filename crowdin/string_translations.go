@@ -139,10 +139,15 @@ func (s *StringTranslationsService) ListStringTranslations(ctx context.Context, 
 // DeleteStringTranslations deletes string translations by its identifiers.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.deleteMany
-func (s *StringTranslationsService) DeleteStringTranslations(ctx context.Context, projectID, stringID int, languageID string) (
+func (s *StringTranslationsService) DeleteStringTranslations(ctx context.Context, projectID, stringID int, languageID *string) (
 	*Response, error,
 ) {
-	path := fmt.Sprintf("/api/v2/projects/%d/translations?stringId=%d&languageId=%s", projectID, stringID, languageID)
+	path := fmt.Sprintf("/api/v2/projects/%d/translations?stringId=%d", projectID, stringID)
+
+	if languageID != nil {
+		path += fmt.Sprintf("&languageId=%s", *languageID)
+	}
+
 	return s.client.Delete(ctx, path, nil)
 }
 
