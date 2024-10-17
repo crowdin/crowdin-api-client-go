@@ -212,6 +212,23 @@ func TestStringTranslationsService_AddApproval(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 }
 
+func TestStringTranslationsService_RemoveStringApprovals(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/approvals"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodDelete)
+		testURL(t, r, path+"?stringId=2345")
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	resp, err := client.StringTranslations.RemoveStringApprovals(context.Background(), 1, 2345)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}
+
 func TestStringTranslationsService_RemoveApproval(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -662,7 +679,7 @@ func TestStringTranslationsService_AddTranslation(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 }
 
-func TestStringTranslationsService_DeleteStringTranslations(t *testing.T) {
+func TestStringTranslationsService_DeleteStringTranslationsWithLanguageId(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
@@ -674,7 +691,25 @@ func TestStringTranslationsService_DeleteStringTranslations(t *testing.T) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	resp, err := client.StringTranslations.DeleteStringTranslations(context.Background(), 1, 123, "de")
+	languageID := "de"
+	resp, err := client.StringTranslations.DeleteStringTranslations(context.Background(), 1, 123, &languageID)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}
+
+func TestStringTranslationsService_DeleteStringTranslationsWithoutLanguageId(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/projects/1/translations"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodDelete)
+		testURL(t, r, path+"?stringId=123")
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	resp, err := client.StringTranslations.DeleteStringTranslations(context.Background(), 1, 123, nil)
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
