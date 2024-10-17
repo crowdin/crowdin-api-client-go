@@ -691,8 +691,8 @@ func TestStringTranslationsService_DeleteStringTranslationsWithLanguageId(t *tes
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	languageId := "de"
-	resp, err := client.StringTranslations.DeleteStringTranslations(context.Background(), 1, 123, &languageId)
+	languageID := "de"
+	resp, err := client.StringTranslations.DeleteStringTranslations(context.Background(), 1, 123, &languageID)
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
