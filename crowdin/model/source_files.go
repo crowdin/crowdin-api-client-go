@@ -126,17 +126,17 @@ func (r *DirectoryAddRequest) Validate() error {
 
 // File represents a project file.
 type File struct {
-	ID          int            `json:"id"`
-	ProjectID   int            `json:"projectId"`
-	BranchID    *int           `json:"branchId,omitempty"`
-	DirectoryID *int           `json:"directoryId,omitempty"`
-	Name        string         `json:"name"`
-	Title       *string        `json:"title,omitempty"`
-	Context     *string        `json:"context,omitempty"`
-	Type        string         `json:"type"`
-	Path        string         `json:"path"`
-	Status      string         `json:"status"`
-	Fields      map[string]any `json:"fields,omitempty"`
+	ID          int     `json:"id"`
+	ProjectID   int     `json:"projectId"`
+	BranchID    *int    `json:"branchId,omitempty"`
+	DirectoryID *int    `json:"directoryId,omitempty"`
+	Name        string  `json:"name"`
+	Title       *string `json:"title,omitempty"`
+	Context     *string `json:"context,omitempty"`
+	Type        string  `json:"type"`
+	Path        string  `json:"path"`
+	Status      string  `json:"status"`
+	Fields      any     `json:"fields,omitempty"`
 
 	RevisionID             int            `json:"revisionId"`
 	Priority               string         `json:"priority"`

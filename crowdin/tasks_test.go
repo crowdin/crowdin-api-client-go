@@ -111,7 +111,10 @@ func TestTasksService_Get(t *testing.T) {
 				"fileIds": [24,25,38],
 				"branchIds": [24,25,38],
 				"fields": {
-					"fieldSlug": "fieldValue"
+					"some-field-1": "some value 1",
+					"some-field-2": 12,
+					"some-field-3": true,
+					"some-field-4": ["en","uk"]
 				}
 			}
 		}`)
@@ -206,7 +209,10 @@ func TestTasksService_Get(t *testing.T) {
 		FileIDs:         []int{24, 25, 38},
 		BranchIDs:       []int{24, 25, 38},
 		Fields: map[string]any{
-			"fieldSlug": "fieldValue",
+			"some-field-1": "some value 1",
+			"some-field-2": float64(12),
+			"some-field-3": true,
+			"some-field-4": []any{"en", "uk"},
 		},
 	}
 	assert.Equal(t, expected, task)
@@ -260,12 +266,31 @@ func TestTasksService_List(t *testing.T) {
 					"data": [
 						{
 							"data": {
-								"id": 2
+								"id": 2,
+								"fields": {
+									"some-field-1": "some value 1",
+									"some-field-2": 12,
+									"some-field-3": true,
+									"some-field-4": ["en","uk"]
+								}
 							}
 						},
 						{
 							"data": {
-								"id": 4
+								"id": 4,
+								"fields": []
+							}
+						},
+						{
+							"data": {
+								"id": 6,
+								"fields": {}
+							}
+						},
+						{
+							"data": {
+								"id": 8,
+								"fields": null
 							}
 						}
 					],
@@ -279,7 +304,19 @@ func TestTasksService_List(t *testing.T) {
 			tasks, resp, err := client.Tasks.List(context.Background(), projectID, tt.options)
 			require.NoError(t, err)
 
-			expected := []*model.Task{{ID: 2}, {ID: 4}}
+			expected := []*model.Task{
+				{
+					ID: 2,
+					Fields: map[string]any{
+						"some-field-1": "some value 1",
+						"some-field-2": float64(12),
+						"some-field-3": true,
+						"some-field-4": []any{"en", "uk"},
+					}},
+				{ID: 4, Fields: []any{}},
+				{ID: 6, Fields: map[string]any{}},
+				{ID: 8, Fields: nil},
+			}
 			assert.Equal(t, expected, tasks)
 
 			assert.Equal(t, 10, resp.Pagination.Offset)

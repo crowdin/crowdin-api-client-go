@@ -631,8 +631,19 @@ func TestEnterpriseTaskCreateFormValidate(t *testing.T) {
 			err:  "one of stringIds or fileIds is required",
 		},
 		{
-			name:  "valid validation",
-			req:   &EnterpriseTaskCreateForm{WorkflowStepID: 1, Title: "French", LanguageID: "en", FileIDs: []int{1}},
+			name: "valid data validation",
+			req: &EnterpriseTaskCreateForm{
+				WorkflowStepID: 1,
+				Title:          "French",
+				LanguageID:     "en",
+				FileIDs:        []int{1},
+				Fields: map[string]any{
+					"key_1": "value",
+					"key_2": 2,
+					"key_3": true,
+					"key_4": []string{"a", "b"},
+				},
+			},
 			valid: true,
 		},
 	}
@@ -681,8 +692,14 @@ func TestEnterpriseVendorTaskCreateFormValidate(t *testing.T) {
 			err:  "one of stringIds or fileIds is required",
 		},
 		{
-			name:  "valid validation",
-			req:   &EnterpriseVendorTaskCreateForm{WorkflowStepID: 1, Title: "French", LanguageID: "en", StringIDs: []int{1}},
+			name: "valid data validation",
+			req: &EnterpriseVendorTaskCreateForm{
+				WorkflowStepID: 1,
+				Title:          "French",
+				LanguageID:     "en",
+				StringIDs:      []int{1},
+				Fields:         nil,
+			},
 			valid: true,
 		},
 	}

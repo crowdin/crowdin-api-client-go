@@ -42,13 +42,34 @@ func TestSourceStringsService_List(t *testing.T) {
 						"createdAt": "2023-09-20T12:43:57+00:00",
 						"updatedAt": "2023-09-20T13:24:01+00:00",
 						"fields": {
-							"fieldSlug": "fieldValue"
+							"key_1": "value_1",
+							"key_2": 2,
+							"key_3": true,
+							"key_4": ["en", "uk"]
 						},
 						"fileId": 48,
 						"directoryId": 13,
 						"revision": 1
 					}
-			  	}
+				},
+				{
+					"data": {
+						"id": 2815,
+						"fields": []
+					}
+				},
+				{
+					"data": {
+						"id": 2816,
+						"fields": {}
+					}
+				},
+				{
+					"data": {
+						"id": 2817,
+						"fields": null
+					}
+				}
 			],
 			"pagination": {
 				"offset": 10,
@@ -79,10 +100,27 @@ func TestSourceStringsService_List(t *testing.T) {
 			WebURL:         "https://example.crowdin.com/editor/1/all/en-pl?filter=basic&value=0&view=comfortable#2",
 			CreatedAt:      ToPtr("2023-09-20T12:43:57+00:00"),
 			UpdatedAt:      ToPtr("2023-09-20T13:24:01+00:00"),
-			Fields:         map[string]interface{}{"fieldSlug": "fieldValue"},
-			FileID:         ToPtr(48),
-			DirectoryID:    ToPtr(13),
-			Revision:       ToPtr(1),
+			Fields: map[string]any{
+				"key_1": "value_1",
+				"key_2": float64(2),
+				"key_3": true,
+				"key_4": []any{"en", "uk"},
+			},
+			FileID:      ToPtr(48),
+			DirectoryID: ToPtr(13),
+			Revision:    ToPtr(1),
+		},
+		{
+			ID:     2815,
+			Fields: []any{},
+		},
+		{
+			ID:     2816,
+			Fields: map[string]any{},
+		},
+		{
+			ID:     2817,
+			Fields: nil,
 		},
 	}
 	if !reflect.DeepEqual(sourceStrings, want) {
@@ -196,9 +234,7 @@ func TestSourceStringsService_Get(t *testing.T) {
 				"webUrl": "https://example.crowdin.com/editor/1/all/en-pl?filter=basic&value=0&view=comfortable#2",
 				"createdAt": "2023-09-20T12:43:57+00:00",
 				"updatedAt": "2023-09-20T13:24:01+00:00",
-				"fields": {
-					"fieldSlug": "fieldValue"
-				},
+				"fields": [],
 				"fileId": 48,
 				"directoryId": 13,
 				"revision": 1
@@ -227,7 +263,7 @@ func TestSourceStringsService_Get(t *testing.T) {
 		WebURL:         "https://example.crowdin.com/editor/1/all/en-pl?filter=basic&value=0&view=comfortable#2",
 		CreatedAt:      ToPtr("2023-09-20T12:43:57+00:00"),
 		UpdatedAt:      ToPtr("2023-09-20T13:24:01+00:00"),
-		Fields:         map[string]interface{}{"fieldSlug": "fieldValue"},
+		Fields:         []any{},
 		FileID:         ToPtr(48),
 		DirectoryID:    ToPtr(13),
 		Revision:       ToPtr(1),
@@ -287,16 +323,28 @@ func TestSourceStringsService_Add(t *testing.T) {
 		IsHidden:   ToPtr(false),
 		MaxLength:  ToPtr(35),
 		LabelIDs:   []int{3, 5, 7},
-		Fields: map[string]string{
+		Fields: map[string]any{
 			"fieldSlug": "fieldValue",
-			"foo":       "bar",
+			"foo":       true,
 		},
 	}
 
 	mux.HandleFunc(fmt.Sprintf("/api/v2/projects/%d/strings", projectID), func(w http.ResponseWriter, r *http.Request) {
 		testURL(t, r, fmt.Sprintf("/api/v2/projects/%d/strings", projectID))
 		testMethod(t, r, http.MethodPost)
-		testBody(t, r, `{"text":"Not all videos are shown to users.","fileId":48,"identifier":"name","context":"shown on main page","isHidden":false,"maxLength":35,"labelIds":[3,5,7],"fields":{"fieldSlug":"fieldValue","foo":"bar"}}`+"\n")
+		testJSONBody(t, r, `{
+			"text": "Not all videos are shown to users.",
+			"fileId": 48,
+			"identifier": "name",
+			"context": "shown on main page",
+			"isHidden": false,
+			"maxLength": 35,
+			"labelIds": [3,5,7],
+			"fields": {
+				"fieldSlug": "fieldValue",
+				"foo": true
+			}
+		}`)
 
 		fmt.Fprint(w, `{
 			"data": {

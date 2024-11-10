@@ -80,8 +80,18 @@ func TestProjectsAddRequestValidate(t *testing.T) {
 			err:  "sourceLanguageId is required",
 		},
 		{
-			name:  "valid request",
-			req:   &ProjectsAddRequest{Name: "Knowledge Base", SourceLanguageID: "en", TargetLanguageIDs: []string{"fr"}},
+			name: "valid request",
+			req: &ProjectsAddRequest{
+				Name:              "Knowledge Base",
+				SourceLanguageID:  "en",
+				TargetLanguageIDs: []string{"fr"},
+				Fields: map[string]any{
+					"key_1": "value_1",
+					"key_2": 2,
+					"key_3": true,
+					"key_4": []string{"en", "uk"},
+				},
+			},
 			valid: true,
 		},
 	}

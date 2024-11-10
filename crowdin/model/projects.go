@@ -9,31 +9,31 @@ import (
 type (
 	// Project represents a Crowdin project.
 	Project struct {
-		ID                   int            `json:"id"`
-		GroupID              int            `json:"groupId,omitempty"`
-		Type                 int            `json:"type"`
-		UserID               int            `json:"userId"`
-		SourceLanguageID     string         `json:"sourceLanguageId"`
-		TargetLanguageIDs    []string       `json:"targetLanguageIds"`
-		LanguageAccessPolicy string         `json:"languageAccessPolicy"`
-		Name                 string         `json:"name"`
-		Cname                string         `json:"cname,omitempty"`
-		Identifier           string         `json:"identifier"`
-		Description          string         `json:"description"`
-		Visibility           string         `json:"visibility"`
-		Logo                 string         `json:"logo"`
-		IsExternal           bool           `json:"isExternal,omitempty"`
-		ExternalType         string         `json:"externalType,omitempty"`
-		WorkflowID           int            `json:"workflowId,omitempty"`
-		HasCrowdsourcing     bool           `json:"hasCrowdsourcing,omitempty"`
-		PublicDownloads      bool           `json:"publicDownloads"`
-		CreatedAt            string         `json:"createdAt"`
-		UpdatedAt            string         `json:"updatedAt"`
-		LastActivity         string         `json:"lastActivity"`
-		SourceLanguage       *Language      `json:"sourceLanguage"`
-		TargetLanguages      []*Language    `json:"targetLanguages"`
-		WebURL               string         `json:"webUrl"`
-		Fields               map[string]any `json:"fields,omitempty"`
+		ID                   int         `json:"id"`
+		GroupID              int         `json:"groupId,omitempty"`
+		Type                 int         `json:"type"`
+		UserID               int         `json:"userId"`
+		SourceLanguageID     string      `json:"sourceLanguageId"`
+		TargetLanguageIDs    []string    `json:"targetLanguageIds"`
+		LanguageAccessPolicy string      `json:"languageAccessPolicy"`
+		Name                 string      `json:"name"`
+		Cname                string      `json:"cname,omitempty"`
+		Identifier           string      `json:"identifier"`
+		Description          string      `json:"description"`
+		Visibility           string      `json:"visibility"`
+		Logo                 string      `json:"logo"`
+		IsExternal           bool        `json:"isExternal,omitempty"`
+		ExternalType         string      `json:"externalType,omitempty"`
+		WorkflowID           int         `json:"workflowId,omitempty"`
+		HasCrowdsourcing     bool        `json:"hasCrowdsourcing,omitempty"`
+		PublicDownloads      bool        `json:"publicDownloads"`
+		CreatedAt            string      `json:"createdAt"`
+		UpdatedAt            string      `json:"updatedAt"`
+		LastActivity         string      `json:"lastActivity"`
+		SourceLanguage       *Language   `json:"sourceLanguage"`
+		TargetLanguages      []*Language `json:"targetLanguages"`
+		WebURL               string      `json:"webUrl"`
+		Fields               any         `json:"fields,omitempty"`
 
 		ClientOrganizationID            int                        `json:"clientOrganizationId,omitempty"`
 		TranslateDuplicates             int                        `json:"translateDuplicates,omitempty"`

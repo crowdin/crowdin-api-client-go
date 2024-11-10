@@ -146,7 +146,12 @@ func TestSourceStringsAddRequestValidate(t *testing.T) {
 				Context:    "context",
 				IsHidden:   toPtr(false),
 				MaxLength:  toPtr(10),
-				Fields:     map[string]string{"key": "value"},
+				Fields: map[string]any{
+					"key_1": "value_1",
+					"key_2": 2,
+					"key_3": true,
+					"key_4": []string{"en", "uk"},
+				},
 			},
 			valid: true,
 		},

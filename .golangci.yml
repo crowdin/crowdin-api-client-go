@@ -28,7 +28,7 @@ linters:
     - unparam
     - whitespace
     - bidichk
-    - exportloopref
+    - copyloopvar
     - goconst
     - reassign
     - goimports

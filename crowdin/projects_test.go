@@ -799,12 +799,31 @@ func TestProjectsService_List(t *testing.T) {
 			"data": [
 				{
 					"data": {
-						"id": 1
+						"id": 1,
+						"fields": {
+							"key_1": "value",
+							"key_2": 2,
+							"key_3": true,
+							"key_4": ["en", "uk"]
+						}
 					}
 				},
 				{
 					"data": {
-						"id": 2
+						"id": 2,
+						"fields": []
+					}
+				},
+				{
+					"data": {
+						"id": 3,
+						"fields": {}
+					}
+				},
+				{
+					"data": {
+						"id": 4,
+						"fields": null
 					}
 				}
 			],
@@ -819,10 +838,17 @@ func TestProjectsService_List(t *testing.T) {
 	require.NoError(t, err)
 
 	expectedProjects := []*model.Project{
-		{ID: 1},
-		{ID: 2},
+		{ID: 1, Fields: map[string]any{
+			"key_1": "value",
+			"key_2": float64(2),
+			"key_3": true,
+			"key_4": []any{"en", "uk"},
+		}},
+		{ID: 2, Fields: []any{}},
+		{ID: 3, Fields: map[string]any{}},
+		{ID: 4, Fields: nil},
 	}
-	assert.Len(t, projects, 2)
+	assert.Len(t, projects, 4)
 	assert.Equal(t, expectedProjects, projects)
 
 	expectedPagination := model.Pagination{Offset: 10, Limit: 25}
@@ -1047,6 +1073,12 @@ func TestProjectsService_Add(t *testing.T) {
 		InContextProcessHiddenStrings: ToPtr(true),
 		InContextPseudoLanguageID:     "de",
 		TMContextType:                 "segmentContext",
+		Fields: map[string]any{
+			"key_1": "value_1",
+			"key_2": 2,
+			"key_3": true,
+			"key_4": []string{"en", "es"},
+		},
 	}
 
 	mux.HandleFunc("/api/v2/projects", func(w http.ResponseWriter, r *http.Request) {
@@ -1165,7 +1197,13 @@ func TestProjectsService_Add(t *testing.T) {
 			"skipUntranslatedFiles": false,
 			"inContext": true,
 			"inContextProcessHiddenStrings": true,
-			"inContextPseudoLanguageId": "de"
+			"inContextPseudoLanguageId": "de",
+			"fields": {
+			  "key_1": "value_1",
+			  "key_2": 2,
+			  "key_3": true,
+			  "key_4": ["en", "es"]
+			}
 		}`
 		testJSONBody(t, r, expectedReqBody)
 

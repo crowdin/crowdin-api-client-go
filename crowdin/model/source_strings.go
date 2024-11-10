@@ -8,25 +8,25 @@ import (
 
 // SourceString represents the text units for translation.
 type SourceString struct {
-	ID             int            `json:"id"`
-	ProjectID      int            `json:"projectId"`
-	BranchID       *int           `json:"branchId,omitempty"`
-	Identifier     string         `json:"identifier"`
-	Text           string         `json:"text"`
-	Type           string         `json:"type"`
-	Context        string         `json:"context"`
-	MaxLength      int            `json:"maxLength"`
-	IsHidden       bool           `json:"isHidden"`
-	IsDuplicate    bool           `json:"isDuplicate"`
-	MasterStringID *int           `json:"masterStringId,omitempty"`
-	LabelIDs       []int          `json:"labelIds"`
-	WebURL         string         `json:"webUrl"`
-	CreatedAt      *string        `json:"createdAt,omitempty"`
-	UpdatedAt      *string        `json:"updatedAt,omitempty"`
-	Fields         map[string]any `json:"fields,omitempty"`
-	FileID         *int           `json:"fileId,omitempty"`
-	DirectoryID    *int           `json:"directoryId,omitempty"`
-	Revision       *int           `json:"revision,omitempty"`
+	ID             int     `json:"id"`
+	ProjectID      int     `json:"projectId"`
+	BranchID       *int    `json:"branchId,omitempty"`
+	Identifier     string  `json:"identifier"`
+	Text           string  `json:"text"`
+	Type           string  `json:"type"`
+	Context        string  `json:"context"`
+	MaxLength      int     `json:"maxLength"`
+	IsHidden       bool    `json:"isHidden"`
+	IsDuplicate    bool    `json:"isDuplicate"`
+	MasterStringID *int    `json:"masterStringId,omitempty"`
+	LabelIDs       []int   `json:"labelIds"`
+	WebURL         string  `json:"webUrl"`
+	CreatedAt      *string `json:"createdAt,omitempty"`
+	UpdatedAt      *string `json:"updatedAt,omitempty"`
+	Fields         any     `json:"fields,omitempty"`
+	FileID         *int    `json:"fileId,omitempty"`
+	DirectoryID    *int    `json:"directoryId,omitempty"`
+	Revision       *int    `json:"revision,omitempty"`
 }
 
 // SourceStringsGetResponse describes the response when getting
@@ -156,7 +156,7 @@ type SourceStringsAddRequest struct {
 	// Label Identifiers.
 	LabelIDs []int `json:"labelIds,omitempty"`
 	// Fields (enterprises only).
-	Fields map[string]string `json:"fields,omitempty"`
+	Fields map[string]any `json:"fields,omitempty"`
 }
 
 // Validate checks if the add request is valid.

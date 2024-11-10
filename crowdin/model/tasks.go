@@ -53,7 +53,7 @@ type (
 		Vendor           string              `json:"vendor,omitempty"`
 		BranchIDs        []int               `json:"branchIds,omitempty"`
 		IsArchived       *bool               `json:"isArchived,omitempty"`
-		Fields           map[string]any      `json:"fields,omitempty"`
+		Fields           any                 `json:"fields,omitempty"`
 	}
 
 	// TaskAssignee represents an assignee of a task.
