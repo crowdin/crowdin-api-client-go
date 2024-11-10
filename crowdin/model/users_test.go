@@ -204,9 +204,9 @@ func TestLanguagesAccessUnmarshalJSON(t *testing.T) {
 		err      string
 	}{
 		{
-			name:     "invalid data",
-			data:     []byte(`"invalid json"`),
-			err:      "json: cannot unmarshal string into Go value of type map[string]*model.LanguageAccess",
+			name: "invalid data",
+			data: []byte(`"invalid json"`),
+			err:  "json: cannot unmarshal string into Go value of type map[string]*model.LanguageAccess",
 		},
 		{
 			name: "valid data",
@@ -253,14 +253,14 @@ func TestUserIDUnmarshalJSON(t *testing.T) {
 		err      string
 	}{
 		{
-			name:     "invalid data",
-			data:     []byte(`"invalid json"`),
-			err:      "invalid userId value: invalid json",
+			name: "invalid data",
+			data: []byte(`"invalid json"`),
+			err:  "invalid userId value: invalid json",
 		},
 		{
-			name:     "invalid data",
-			data:     []byte(`[]`),
-			err:      "invalid userId value: []",
+			name: "invalid data",
+			data: []byte(`[]`),
+			err:  "invalid userId value: []",
 		},
 		{
 			name:     "valid data (int)",
