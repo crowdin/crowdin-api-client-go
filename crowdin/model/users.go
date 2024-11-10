@@ -1,9 +1,11 @@
 package model
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 )
 
 type (
@@ -47,7 +49,7 @@ type (
 		AllLanguages *bool `json:"allLanguages,omitempty"`
 		// Access to specific languages.
 		// Needed if `allLanguages` is set to false.
-		LanguagesAccess map[string]*LanguageAccess `json:"languagesAccess,omitempty"`
+		LanguagesAccess LanguagesAccess `json:"languagesAccess,omitempty"`
 	}
 
 	// LanguageAccess represents access to a language.
@@ -58,7 +60,30 @@ type (
 		// Workflow Step Identifiers.
 		WorkflowStepIDs []int `json:"workflowStepIds,omitempty"`
 	}
+
+	// LanguagesAccess store the access to specific languages.
+	// It is a custom type used to unmarshal the JSON response.
+	LanguagesAccess map[string]*LanguageAccess
 )
+
+// UnmarshalJSON handles the unmarshaling of LanguagesAccess from
+// both empty arrays and maps.
+func (l *LanguagesAccess) UnmarshalJSON(data []byte) error {
+	m := make(map[string]*LanguageAccess)
+
+	// Check if the data is an empty array.
+	if len(data) == 2 && data[0] == '[' && data[1] == ']' {
+		*l = m
+		return nil
+	}
+
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
+	}
+
+	*l = m
+	return nil
+}
 
 // ProjectMemberResponse defines the structure of the response
 // when getting a single project member.
@@ -304,4 +329,29 @@ func (r *InviteUserRequest) Validate() error {
 	}
 
 	return nil
+}
+
+// UserID represents a user identifier.
+type UserID int
+
+// UnmarshalJSON handles the unmarshaling of UserID from both
+// int and string numeric formats.
+func (u *UserID) UnmarshalJSON(data []byte) error {
+	var intVal int
+	if err := json.Unmarshal(data, &intVal); err == nil {
+		*u = UserID(intVal)
+		return nil
+	}
+
+	var strVal string
+	if err := json.Unmarshal(data, &strVal); err == nil {
+		intVal, err := strconv.Atoi(strVal)
+		if err != nil {
+			return fmt.Errorf("invalid userId value: %s", strVal)
+		}
+		*u = UserID(intVal)
+		return nil
+	}
+
+	return fmt.Errorf("invalid userId value: %s", data)
 }

@@ -937,9 +937,9 @@ type (
 	// TaskSettingsTemplateLanguage represents the language settings of a
 	// task settings template.
 	TaskSettingsTemplateLanguage struct {
-		LanguageID string `json:"languageId"`
-		UserIDs    []int  `json:"userIds"`
-		TeamIDs    []int  `json:"teamIds,omitempty"`
+		LanguageID string   `json:"languageId"`
+		UserIDs    []UserID `json:"userIds"`
+		TeamIDs    []int    `json:"teamIds,omitempty"`
 	}
 )
 

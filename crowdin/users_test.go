@@ -54,6 +54,13 @@ func TestUsersService_GetProjectMember(t *testing.T) {
 						}
 					},
 					{
+						"name": "proofreader",
+						"permissions": {
+							"allLanguages": true,
+							"languagesAccess": []
+						}
+					},
+					{
 						"name": "language_coordinator",
 						"permissions": {
 							"allLanguages": false,
@@ -102,6 +109,13 @@ func TestUsersService_GetProjectMember(t *testing.T) {
 							AllContent: ToPtr(true),
 						},
 					},
+				},
+			},
+			{
+				Name: "proofreader",
+				Permissions: &model.RolePermissions{
+					AllLanguages:    ToPtr(true),
+					LanguagesAccess: map[string]*model.LanguageAccess{},
 				},
 			},
 			{
@@ -179,6 +193,13 @@ func TestUsersService_GetProjectMember_EnterpriseAPI(t *testing.T) {
 						}
 					},
 					{
+						"name": "proofreader",
+						"permissions": {
+							"allLanguages": false,
+							"languagesAccess": []
+						}
+					},
+					{
 						"name": "language_coordinator",
 						"permissions": {
 							"allLanguages": false,
@@ -239,6 +260,13 @@ func TestUsersService_GetProjectMember_EnterpriseAPI(t *testing.T) {
 				Name: "proofreader",
 				Permissions: &model.RolePermissions{
 					AllLanguages:    ToPtr(true),
+					LanguagesAccess: map[string]*model.LanguageAccess{},
+				},
+			},
+			{
+				Name: "proofreader",
+				Permissions: &model.RolePermissions{
+					AllLanguages:    ToPtr(false),
 					LanguagesAccess: map[string]*model.LanguageAccess{},
 				},
 			},
@@ -459,7 +487,7 @@ func TestUsersService_AddProjectMember(t *testing.T) {
 								"name": "proofreader",
 								"permissions": {
 									"allLanguages": true,
-									"languagesAccess": {}
+									"languagesAccess": []
 								}
 							},
 							{
