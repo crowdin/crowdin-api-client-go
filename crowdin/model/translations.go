@@ -38,6 +38,12 @@ type PreTranslationsResponse struct {
 	Data *PreTranslation `json:"data"`
 }
 
+// PreTranslationsListResponse defines the structure of a response when
+// getting a list of pre-translations.
+type PreTranslationsListResponse struct {
+	Data []*PreTranslationsResponse `json:"data"`
+}
+
 // PreTranslationRequest defines the structure of a request to apply pre-translation.
 type PreTranslationRequest struct {
 	// Set of languages to which pre-translation should be applied.

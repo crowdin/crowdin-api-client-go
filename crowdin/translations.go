@@ -31,6 +31,40 @@ func (s *TranslationsService) PreTranslationStatus(ctx context.Context, projectI
 	return res.Data, resp, err
 }
 
+// List Pre-Translations returns a list of pre-translations for a specific project.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Translations/operation/api.projects.pre-translations.getMany
+func (s *TranslationsService) ListPreTranslations(ctx context.Context, projectID int, opts *model.ListOptions) (
+	[]*model.PreTranslation, *Response, error,
+) {
+	res := new(model.PreTranslationsListResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/pre-translations", projectID), opts, res)
+
+	list := make([]*model.PreTranslation, 0, len(res.Data))
+	for _, preTranslation := range res.Data {
+		list = append(list, preTranslation.Data)
+	}
+
+	return list, resp, err
+}
+
+// Edit Pre-Translation updates a specific pre-translation by its identifier.
+//
+// Request body:
+// - op (string): Operation to perform. Enum: replace, test.
+// - path (string): JSON Pointer to the field to update as defined in RFC 6901.
+// - value (string): Value to set.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Translations/operation/api.projects.pre-translations.patch
+func (s *TranslationsService) EditPreTranslation(
+	ctx context.Context, projectID int, preTranslationID string, req []*model.UpdateRequest,
+) (*model.PreTranslation, *Response, error) {
+	res := new(model.PreTranslationsResponse)
+	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/projects/%d/pre-translations/%s", projectID, preTranslationID), req, res)
+
+	return res.Data, resp, err
+}
+
 // ApplyPreTranslation applies pre-translation to the project.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.pre-translations.post
