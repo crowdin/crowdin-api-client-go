@@ -358,7 +358,10 @@ func TestSourceFilesService_ListFiles(t *testing.T) {
 						"path": "/directory1/directory2/filename.extension",
 						"status": "active",
 						"fields": {
-							"fieldSlug": "fieldValue"
+							"key_1": "value_1",
+							"key_2": 2,
+							"key_3": true,
+							"key_4": ["en", "uk"]
 						}
 					}
 				},
@@ -374,9 +377,22 @@ func TestSourceFilesService_ListFiles(t *testing.T) {
 						"type": "xliff",
 						"path": "/directory1/directory2/filename.extension",
 						"status": "active",
-						"fields": {
-							"fieldSlug": "fieldValue"
-						}
+						"fields": []
+					}
+				},
+				{
+					"data": {
+						"id": 46,
+						"projectId": 2,
+						"branchId": 34,
+						"directoryId": 4,
+						"name": "umbrella_app.xliff",
+						"title": "source_app_info",
+						"context": "Context for translators",
+						"type": "xliff",
+						"path": "/directory1/directory2/filename.extension",
+						"status": "active",
+						"fields": {}
 					}
 				}
 			],
@@ -402,7 +418,12 @@ func TestSourceFilesService_ListFiles(t *testing.T) {
 			Type:        "xliff",
 			Path:        "/directory1/directory2/filename.extension",
 			Status:      "active",
-			Fields:      map[string]any{"fieldSlug": "fieldValue"},
+			Fields: map[string]any{
+				"key_1": "value_1",
+				"key_2": float64(2),
+				"key_3": true,
+				"key_4": []interface{}{"en", "uk"},
+			},
 		},
 		{
 			ID:          45,
@@ -415,7 +436,20 @@ func TestSourceFilesService_ListFiles(t *testing.T) {
 			Type:        "xliff",
 			Path:        "/directory1/directory2/filename.extension",
 			Status:      "active",
-			Fields:      map[string]any{"fieldSlug": "fieldValue"},
+			Fields:      []any{},
+		},
+		{
+			ID:          46,
+			ProjectID:   2,
+			BranchID:    ToPtr(34),
+			DirectoryID: ToPtr(4),
+			Name:        "umbrella_app.xliff",
+			Title:       ToPtr("source_app_info"),
+			Context:     ToPtr("Context for translators"),
+			Type:        "xliff",
+			Path:        "/directory1/directory2/filename.extension",
+			Status:      "active",
+			Fields:      map[string]any{},
 		},
 	}
 	assert.Equal(t, expected, files)
@@ -577,7 +611,10 @@ func TestSourceFilesService_AddFile(t *testing.T) {
 			"excludedTargetLanguages": ["en", "es", "pl"],
 			"attachLabelIds": [1],
 			"fields": {
-				"fieldSlug": "fieldValue"
+				"key_1": "value_1",
+				"key_2": 2,
+				"key_3": true,
+				"key_4": ["en", "uk"]
 			}
 		}`
 		testJSONBody(t, r, expectedReqBody)
@@ -615,7 +652,12 @@ func TestSourceFilesService_AddFile(t *testing.T) {
 		},
 		ExcludedTargetLanguages: []string{"en", "es", "pl"},
 		AttachLabelIDs:          []int{1},
-		Fields:                  map[string]any{"fieldSlug": "fieldValue"},
+		Fields: map[string]any{
+			"key_1": "value_1",
+			"key_2": 2,
+			"key_3": true,
+			"key_4": []interface{}{"en", "uk"},
+		},
 	}
 	file, resp, err := client.SourceFiles.AddFile(context.Background(), 1, req)
 	require.NoError(t, err)

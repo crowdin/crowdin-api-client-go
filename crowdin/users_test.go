@@ -1031,17 +1031,43 @@ func TestUsersService_List(t *testing.T) {
 					"data": [
 						{
 							"data": {
-								"id": 12
+								"id": 10,
+								"fields": null
 							}
 						},
 						{
 							"data": {
-								"id": 14
+								"id": 12,
+								"fields": []
 							}
 						},
 						{
 							"data": {
-								"id": 16
+								"id": 14,
+								"fields": {}
+							}
+						},
+						{
+							"data": {
+								"id": 16,
+								"fields": {
+									"foo": "bar"
+								}
+							}
+						},
+						{
+							"data": {
+								"id": 18,
+								"fields": {
+									"key_1": "value",
+									"key_2": 2,
+									"key_3": true,
+									"key_4": ["en", "uk"],
+									"key_5": {
+										"foo": "bar"
+									},
+									"key_6": null
+								}
 							}
 						}
 					],
@@ -1055,9 +1081,25 @@ func TestUsersService_List(t *testing.T) {
 			users, resp, err := client.Users.List(context.Background(), tt.opts)
 			require.NoError(t, err)
 
-			expected := []*model.User{{ID: 12}, {ID: 14}, {ID: 16}}
+			expected := []*model.User{
+				{ID: 10, Fields: nil},
+				{ID: 12, Fields: []any{}},
+				{ID: 14, Fields: map[string]any{}},
+				{ID: 16, Fields: map[string]any{"foo": "bar"}},
+				{
+					ID: 18,
+					Fields: map[string]any{
+						"key_1": "value",
+						"key_2": float64(2),
+						"key_3": true,
+						"key_4": []any{"en", "uk"},
+						"key_5": map[string]any{"foo": "bar"},
+						"key_6": nil,
+					},
+				},
+			}
 			assert.Equal(t, expected, users)
-			assert.Len(t, users, 3)
+			assert.Len(t, users, 5)
 
 			assert.Equal(t, 10, resp.Pagination.Offset)
 			assert.Equal(t, 25, resp.Pagination.Limit)
@@ -1096,7 +1138,8 @@ func TestUsersService_GetAuthenticated(t *testing.T) {
 					"createdAt": "2023-07-11T07:40:22+00:00",
 					"lastSeen": "2023-10-23T11:44:02+00:00",
 					"twoFactor": "enabled",
-					"timezone": "Europe/Kyiv"
+					"timezone": "Europe/Kyiv",
+					"fields": []
 				}
 			}`,
 			expect: &model.User{
@@ -1109,6 +1152,7 @@ func TestUsersService_GetAuthenticated(t *testing.T) {
 				LastSeen:  "2023-10-23T11:44:02+00:00",
 				TwoFactor: "enabled",
 				Timezone:  "Europe/Kyiv",
+				Fields:    []any{},
 			},
 		},
 		{

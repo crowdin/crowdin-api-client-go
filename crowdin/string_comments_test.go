@@ -353,7 +353,6 @@ func TestStringCommentsService_Delete(t *testing.T) {
 		testURL(t, r, path)
 
 		w.WriteHeader(http.StatusNoContent)
-		w.WriteHeader(http.StatusNoContent)
 	})
 
 	resp, err := client.StringComments.Delete(context.Background(), 1, 2)

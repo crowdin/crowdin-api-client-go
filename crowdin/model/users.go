@@ -195,20 +195,20 @@ func (r *ProjectMemberReplaceRequest) Validate() error {
 
 // User represents a user in the system.
 type User struct {
-	ID        int            `json:"id"`
-	Username  string         `json:"username"`
-	Email     string         `json:"email"`
-	FirstName *string        `json:"firstName,omitempty"`
-	LastName  *string        `json:"lastName,omitempty"`
-	FullName  *string        `json:"fullName,omitempty"`
-	Status    *string        `json:"status,omitempty"` // Enum: active, pending, blocked
-	AvatarURL string         `json:"avatarUrl"`
-	CreatedAt string         `json:"createdAt"`
-	LastSeen  string         `json:"lastSeen,omitempty"`
-	TwoFactor string         `json:"twoFactor"` // Enum: enabled, disabled
-	IsAdmin   *bool          `json:"isAdmin,omitempty"`
-	Timezone  string         `json:"timezone,omitempty"`
-	Fields    map[string]any `json:"fields,omitempty"`
+	ID        int     `json:"id"`
+	Username  string  `json:"username"`
+	Email     string  `json:"email"`
+	FirstName *string `json:"firstName,omitempty"`
+	LastName  *string `json:"lastName,omitempty"`
+	FullName  *string `json:"fullName,omitempty"`
+	Status    *string `json:"status,omitempty"` // Enum: active, pending, blocked
+	AvatarURL string  `json:"avatarUrl"`
+	CreatedAt string  `json:"createdAt"`
+	LastSeen  string  `json:"lastSeen,omitempty"`
+	TwoFactor string  `json:"twoFactor"` // Enum: enabled, disabled
+	IsAdmin   *bool   `json:"isAdmin,omitempty"`
+	Timezone  string  `json:"timezone,omitempty"`
+	Fields    any     `json:"fields,omitempty"`
 }
 
 // ShortUser is a simplified version of the User model.

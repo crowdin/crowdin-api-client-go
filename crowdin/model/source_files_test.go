@@ -145,8 +145,20 @@ func TestFileAddRequestValidate(t *testing.T) {
 			err:  "branchId and directoryId cannot be used in the same request",
 		},
 		{
-			name:  "valid request",
-			req:   &FileAddRequest{StorageID: 1, Name: "main", BranchID: 1, Title: "Main", Type: "xml"},
+			name: "valid request",
+			req: &FileAddRequest{
+				StorageID: 1,
+				Name:      "main",
+				BranchID:  1,
+				Title:     "Main",
+				Type:      "xml",
+				Fields: map[string]any{
+					"key_1": "value",
+					"key_2": 2,
+					"key_3": false,
+					"key_4": []string{"en", "uk"},
+				},
+			},
 			valid: true,
 		},
 	}
