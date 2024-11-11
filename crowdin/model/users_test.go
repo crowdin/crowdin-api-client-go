@@ -195,3 +195,97 @@ func TestInviteUserRequestValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestLanguagesAccessUnmarshalJSON(t *testing.T) {
+	tests := []struct {
+		name     string
+		data     []byte
+		expected LanguagesAccess
+		err      string
+	}{
+		{
+			name: "invalid data",
+			data: []byte(`"invalid json"`),
+			err:  "json: cannot unmarshal string into Go value of type map[string]*model.LanguageAccess",
+		},
+		{
+			name: "valid data",
+			data: []byte(`{"en":{"allContent":true,"workflowStepIds":[882]}}`),
+			expected: map[string]*LanguageAccess{
+				"en": {
+					AllContent:      toPtr(true),
+					WorkflowStepIDs: []int{882},
+				},
+			},
+		},
+		{
+			name:     "valid data with empty array",
+			data:     []byte(`[]`),
+			expected: LanguagesAccess{},
+		},
+		{
+			name:     "valid data with empty object",
+			data:     []byte(`{}`),
+			expected: LanguagesAccess{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var actual LanguagesAccess
+			err := actual.UnmarshalJSON(tt.data)
+
+			if len(tt.err) > 0 {
+				assert.EqualError(t, err, tt.err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, actual)
+			}
+		})
+	}
+}
+
+func TestUserIDUnmarshalJSON(t *testing.T) {
+	tests := []struct {
+		name     string
+		data     []byte
+		expected UserID
+		err      string
+	}{
+		{
+			name: "invalid data",
+			data: []byte(`"invalid json"`),
+			err:  "invalid userId value: invalid json",
+		},
+		{
+			name: "invalid data",
+			data: []byte(`[]`),
+			err:  "invalid userId value: []",
+		},
+		{
+			name:     "valid data (int)",
+			data:     []byte(`1`),
+			expected: 1,
+		},
+		{
+			name:     "valid data (string num)",
+			data:     []byte(`"2"`),
+			expected: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var actual UserID
+			err := actual.UnmarshalJSON(tt.data)
+
+			if len(tt.err) > 0 {
+				assert.EqualError(t, err, tt.err)
+				assert.Equal(t, tt.expected, actual)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, actual)
+			}
+		})
+	}
+}

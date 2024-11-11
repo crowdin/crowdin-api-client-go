@@ -852,7 +852,7 @@ func TestTasksService_GetSettingsTepmlate(t *testing.T) {
 					"languages": [
 						{
 							"languageId": "uk",
-							"userIds": [1]
+							"userIds": [1, "2"]
 						}
 					]
 				},
@@ -873,7 +873,7 @@ func TestTasksService_GetSettingsTepmlate(t *testing.T) {
 			Languages: []model.TaskSettingsTemplateLanguage{
 				{
 					LanguageID: "uk",
-					UserIDs:    []int{1},
+					UserIDs:    []model.UserID{1, 2},
 				},
 			},
 		},
@@ -937,6 +937,23 @@ func TestTasksService_ListSettingsTepmlates(t *testing.T) {
 								"createdAt": "2023-09-23T11:26:54+00:00",
 								"updatedAt": "2023-09-23T11:26:54+00:00"
 							}
+						},
+						{
+							"data": {
+								"id": 2,
+								"name": "Test template",
+								"config": {
+									"languages": [
+										{
+											"languageId": "uk",
+											"userIds": ["1", "2", 3],
+											"teamIds": [2]
+										}
+									]
+								},
+								"createdAt": "2023-09-23T11:26:54+00:00",
+								"updatedAt": "2023-09-23T11:26:54+00:00"
+							}
 						}
 					],
 					"pagination": {
@@ -957,7 +974,22 @@ func TestTasksService_ListSettingsTepmlates(t *testing.T) {
 						Languages: []model.TaskSettingsTemplateLanguage{
 							{
 								LanguageID: "uk",
-								UserIDs:    []int{1},
+								UserIDs:    []model.UserID{1},
+								TeamIDs:    []int{2},
+							},
+						},
+					},
+					CreatedAt: "2023-09-23T11:26:54+00:00",
+					UpdatedAt: "2023-09-23T11:26:54+00:00",
+				},
+				{
+					ID:   2,
+					Name: "Test template",
+					Config: model.TaskSettingsTemplateConfig{
+						Languages: []model.TaskSettingsTemplateLanguage{
+							{
+								LanguageID: "uk",
+								UserIDs:    []model.UserID{1, 2, 3},
 								TeamIDs:    []int{2},
 							},
 						},
@@ -1022,7 +1054,7 @@ func TestTasksService_AddSettingsTepmlates(t *testing.T) {
 			Languages: []model.TaskSettingsTemplateLanguage{
 				{
 					LanguageID: "uk",
-					UserIDs:    []int{1},
+					UserIDs:    []model.UserID{1},
 				},
 			},
 		},
@@ -1038,7 +1070,7 @@ func TestTasksService_AddSettingsTepmlates(t *testing.T) {
 			Languages: []model.TaskSettingsTemplateLanguage{
 				{
 					LanguageID: "uk",
-					UserIDs:    []int{1},
+					UserIDs:    []model.UserID{1},
 				},
 			},
 		},
@@ -1066,7 +1098,7 @@ func TestTasksService_EditSettingsTepmlates(t *testing.T) {
 					"languages": [
 						{
 							"languageId": "uk",
-							"userIds": [1]
+							"userIds": ["1"]
 						}
 					]
 				},
@@ -1094,7 +1126,7 @@ func TestTasksService_EditSettingsTepmlates(t *testing.T) {
 			Languages: []model.TaskSettingsTemplateLanguage{
 				{
 					LanguageID: "uk",
-					UserIDs:    []int{1},
+					UserIDs:    []model.UserID{1},
 				},
 			},
 		},
