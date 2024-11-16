@@ -14,6 +14,7 @@ type Bundle struct {
 	IncludeProjectSourceLanguage bool     `json:"includeProjectSourceLanguage"`
 	LabelIDs                     []int    `json:"labelIds"`
 	ExcludeLabelIDs              []int    `json:"excludeLabelIds"`
+	WebURL                       string   `json:"webUrl"`
 	CreatedAt                    string   `json:"createdAt"`
 	UpdatedAt                    string   `json:"updatedAt"`
 }
