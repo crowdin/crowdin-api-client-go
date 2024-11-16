@@ -152,7 +152,7 @@ func TestParseErrorResponse(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run(tt.err, func(t *testing.T) {
-			err := handleErrorResponse(tt.resp, tt.body)
+			err := handleErrorResponse(tt.resp, tt.body, false)
 
 			var verr *ErrorResponse
 			ok := errors.As(err, &verr)
@@ -248,7 +248,7 @@ func TestParseValidationErrorResponse(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			err := handleErrorResponse(response, tt.body)
+			err := handleErrorResponse(response, tt.body, false)
 
 			var verr *ValidationErrorResponse
 			ok := errors.As(err, &verr)
@@ -262,11 +262,72 @@ func TestParseValidationErrorResponse(t *testing.T) {
 	}
 }
 
-func handleErrorResponse(r *http.Response, body []byte) error {
+func TestParseGraphGLErrorResponse(t *testing.T) {
+	response := &http.Response{
+		StatusCode: http.StatusBadRequest,
+	}
+
+	cases := []struct {
+		name string
+		body []byte
+		err  string
+	}{
+		{
+			name: "single error",
+			body: []byte(`{
+				"errors": [{
+					"message": "Cannot query field \"test\" on type \"Project\".",
+					"extensions": {"category": "graphql"},
+					"locations": [{"line": 7, "column": 8}]
+				}]
+			}`),
+			err: "Cannot query field \"test\" on type \"Project\"., Locations: [{Line:7 Column:8}]",
+		},
+		{
+			name: "multiple errors",
+			body: []byte(`{
+				"errors": [
+					{
+						"message": "Cannot query field \"qid\" on type \"Project\".",
+						"extensions": {"category":"graphql"},
+						"locations": [{"line":7,"column":8}]
+					},
+					{
+						"message": "Variable \"$withTranslations\" is never used in operation \"Demo\".",
+						"extensions": {"category":"graphql"},
+						"locations": [{"line":2,"column":36}]
+					}
+				]
+			}`),
+			err: "Cannot query field \"qid\" on type \"Project\"., Locations: [{Line:7 Column:8}]; Variable \"$withTranslations\" is never used in operation \"Demo\"., Locations: [{Line:2 Column:36}]",
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			err := handleErrorResponse(response, tt.body, true)
+
+			var graphqlErr *GraphQLErrorResponse
+			ok := errors.As(err, &graphqlErr)
+
+			assert.True(t, ok)
+			assert.NotNil(t, graphqlErr)
+			assert.Equal(t, tt.err, graphqlErr.Error())
+		})
+	}
+}
+
+func handleErrorResponse(r *http.Response, body []byte, graphql bool) error {
 	var errorResponse error
-	if r.StatusCode == http.StatusBadRequest {
-		errorResponse = &ValidationErrorResponse{Response: r, Status: r.StatusCode}
-	} else {
+
+	switch r.StatusCode {
+	case http.StatusBadRequest:
+		if graphql {
+			errorResponse = &GraphQLErrorResponse{}
+		} else {
+			errorResponse = &ValidationErrorResponse{Response: r, Status: r.StatusCode}
+		}
+	default:
 		errorResponse = &ErrorResponse{Response: r}
 	}
 
