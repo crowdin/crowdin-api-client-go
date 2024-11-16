@@ -58,6 +58,9 @@ type SourceStringsListOptions struct {
 	// Directory Identifier.
 	// Note: Can't be used with `fileId` or `branchId` in same request.
 	DirectoryID int `json:"directoryId,omitempty"`
+	// Task Identifier.
+	// Note: Can't be used with `fileId`, `directoryId` or `branchId` in same request.
+	TaskID int `json:"taskId,omitempty"`
 	// Filter strings by CroQL.
 	// Note: Can be used only with `denormalizePlaceholders`, `offset` and
 	// `limit` in same request.
@@ -94,6 +97,9 @@ func (o *SourceStringsListOptions) Values() (url.Values, bool) {
 	}
 	if o.DirectoryID > 0 {
 		v.Add("directoryId", fmt.Sprintf("%d", o.DirectoryID))
+	}
+	if o.TaskID > 0 {
+		v.Add("taskId", fmt.Sprintf("%d", o.TaskID))
 	}
 	if o.CroQL != "" {
 		v.Add("croql", o.CroQL)
