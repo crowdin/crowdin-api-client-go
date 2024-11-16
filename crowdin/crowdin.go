@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
 )
@@ -26,6 +27,8 @@ type Client struct {
 	organization string
 	userAgent    string
 	httpClient   *http.Client
+
+	GraphQL *GraphQL
 
 	AI                        *AIService
 	Applications              *ApplicationsService
@@ -126,6 +129,8 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.Vendors = &VendorsService{client: c}
 	c.Webhooks = &WebhooksService{client: c}
 	c.Workflows = &WorkflowsService{client: c}
+
+	c.GraphQL = &GraphQL{client: c}
 
 	return c, nil
 }
@@ -251,7 +256,7 @@ func (c *Client) do(r *http.Request, v any) (*Response, error) {
 	}
 
 	if code := resp.StatusCode; code >= http.StatusBadRequest && code <= 599 {
-		err = handleErrorResponse(resp, body)
+		err = handleErrorResponse(resp, body, strings.Contains(r.URL.Path, "graphql"))
 		return response, err
 	}
 
@@ -382,11 +387,17 @@ func (c *Client) Delete(ctx context.Context, path string, v any) (*Response, err
 
 // handleErrorResponse checks the API response for errors and returns
 // them if they are found.
-func handleErrorResponse(r *http.Response, body []byte) error {
+func handleErrorResponse(r *http.Response, body []byte, graphql bool) error {
 	var errorResponse error
-	if r.StatusCode == http.StatusBadRequest {
-		errorResponse = &model.ValidationErrorResponse{Response: r, Status: r.StatusCode}
-	} else {
+
+	switch r.StatusCode {
+	case http.StatusBadRequest:
+		if graphql {
+			errorResponse = &model.GraphQLErrorResponse{}
+		} else {
+			errorResponse = &model.ValidationErrorResponse{Response: r, Status: r.StatusCode}
+		}
+	default:
 		errorResponse = &model.ErrorResponse{Response: r}
 	}
 
