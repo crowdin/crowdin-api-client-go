@@ -35,6 +35,7 @@ func TestBundlesService_Get(t *testing.T) {
 				"isMultilingual": false,
 				"includeProjectSourceLanguage": false,
 				"labelIds": [13, 27],
+				"webUrl": "https://crowdin.com/project/test/translations#bundles:100",
 				"excludeLabelIds": [5, 8],
 				"createdAt": "2023-09-20T11:11:05+00:00",
 				"updatedAt": "2023-09-20T12:22:20+00:00"
@@ -57,6 +58,7 @@ func TestBundlesService_Get(t *testing.T) {
 		IncludeProjectSourceLanguage: false,
 		LabelIDs:                     []int{13, 27},
 		ExcludeLabelIDs:              []int{5, 8},
+		WebURL:                       "https://crowdin.com/project/test/translations#bundles:100",
 		CreatedAt:                    "2023-09-20T11:11:05+00:00",
 		UpdatedAt:                    "2023-09-20T12:22:20+00:00",
 	}
@@ -111,6 +113,7 @@ func TestBundlesService_List(t *testing.T) {
 						"includeProjectSourceLanguage": false,
 						"labelIds": [13, 27],
 						"excludeLabelIds": [5, 8],
+						"webUrl": "https://crowdin.com/project/test/translations#bundles:100",
 						"createdAt": "2023-09-20T11:11:05+00:00",
 						"updatedAt": "2023-09-20T12:22:20+00:00"
 					}
@@ -139,6 +142,7 @@ func TestBundlesService_List(t *testing.T) {
 			IncludeProjectSourceLanguage: false,
 			LabelIDs:                     []int{13, 27},
 			ExcludeLabelIDs:              []int{5, 8},
+			WebURL:                       "https://crowdin.com/project/test/translations#bundles:100",
 			CreatedAt:                    "2023-09-20T11:11:05+00:00",
 			UpdatedAt:                    "2023-09-20T12:22:20+00:00",
 		},
@@ -199,6 +203,7 @@ func TestBundlesService_Add(t *testing.T) {
 				"includeProjectSourceLanguage": false,
 				"labelIds": [13, 27],
 				"excludeLabelIds": [5, 8],
+				"webUrl": "https://crowdin.com/project/test/translations#bundles:100",
 				"createdAt": "2023-09-20T11:11:05+00:00",
 				"updatedAt": "2023-09-20T12:22:20+00:00"
 			}
@@ -231,6 +236,7 @@ func TestBundlesService_Add(t *testing.T) {
 		IncludeProjectSourceLanguage: false,
 		LabelIDs:                     []int{13, 27},
 		ExcludeLabelIDs:              []int{5, 8},
+		WebURL:                       "https://crowdin.com/project/test/translations#bundles:100",
 		CreatedAt:                    "2023-09-20T11:11:05+00:00",
 		UpdatedAt:                    "2023-09-20T12:22:20+00:00",
 	}
@@ -264,6 +270,7 @@ func TestBundlesService_Edit(t *testing.T) {
 				"includeProjectSourceLanguage": false,
 				"labelIds": [13, 27],
 				"excludeLabelIds": [5, 8],
+				"webUrl": "https://crowdin.com/project/test/translations#bundles:100",
 				"createdAt": "2023-09-20T11:11:05+00:00",
 				"updatedAt": "2023-09-20T12:22:20+00:00"
 			}
@@ -292,6 +299,7 @@ func TestBundlesService_Edit(t *testing.T) {
 		IncludeProjectSourceLanguage: false,
 		LabelIDs:                     []int{13, 27},
 		ExcludeLabelIDs:              []int{5, 8},
+		WebURL:                       "https://crowdin.com/project/test/translations#bundles:100",
 		CreatedAt:                    "2023-09-20T11:11:05+00:00",
 		UpdatedAt:                    "2023-09-20T12:22:20+00:00",
 	}
