@@ -148,6 +148,70 @@ client, err := crowdin.NewClient(
 )
 ```
 
+
+## GraphQL API
+
+This library also provides possibility to use [GraphQL API](https://support.crowdin.com/developer/graphql-api/).
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/crowdin/crowdin-api-client-go/crowdin"
+)
+
+func main() {
+	client, _ := crowdin.NewClient(token)
+
+	// Create a new GraphQL query request.
+	query := client.GraphQL.NewRequest(`
+		query Demo( $projectLimit: Int!, $withTranslations: Boolean! ) {
+			viewer {
+				projects( first: $projectLimit ) {
+					edges {
+						node {
+							id
+							name
+							description
+
+							translations(first: 20, languageId: "en") @include(if: $withTranslations) {
+								edges {
+									node {
+										... on PlainStringTranslation {
+											text
+										}
+									}
+								}
+							}
+						}
+					}
+					totalCount
+				}
+			}
+		}
+	`)
+
+	// Set the variables to be used in the query.
+	query.Var("projectLimit", 2)
+	query.Var("withTranslations", true)
+
+	// Capture the response in a map.
+	// Can also be a struct with the same fields as the response.
+	var resp map[string]any
+
+	// Send the query to the server.
+	if err := client.GraphQL.Query(context.Background(), query, &resp); err != nil {
+		log.Fatalf("graphql: %v", err)
+	}
+
+	fmt.Printf("%+v\n", resp)
+}
+```
+
 ## Seeking Assistance
 
 If you find any problems or would like to suggest a feature, please read the [How can I contribute](/CONTRIBUTING.md#how-can-i-contribute) section in our contributing guidelines.

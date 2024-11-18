@@ -106,3 +106,35 @@ func (r *ValidationErrorResponse) Error() string {
 	}
 	return sb.String()
 }
+
+// GraphQLError represents a single GraphQL error.
+type GraphQLError struct {
+	Message    string         `json:"message"`
+	Extensions map[string]any `json:"extensions"`
+	Locations  []struct {
+		Line   int `json:"line"`
+		Column int `json:"column"`
+	} `json:"locations"`
+}
+
+// Error implements error interface.
+func (e GraphQLError) Error() string {
+	return fmt.Sprintf("%s, Locations: %+v", e.Message, e.Locations)
+}
+
+// GraphQLErrorResponse represents a GraphQL error response.
+type GraphQLErrorResponse struct {
+	Errors []GraphQLError `json:"errors"`
+}
+
+// Error implements the Error interface.
+func (r *GraphQLErrorResponse) Error() string {
+	sb := strings.Builder{}
+	for i, err := range r.Errors {
+		if i != 0 {
+			sb.WriteString("; ")
+		}
+		sb.WriteString(err.Error())
+	}
+	return sb.String()
+}
