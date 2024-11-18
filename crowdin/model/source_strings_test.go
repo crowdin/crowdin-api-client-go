@@ -28,8 +28,8 @@ func TestSourceStringsListOptionsValues(t *testing.T) {
 		{
 			name: "with all options",
 			opts: &SourceStringsListOptions{DenormalizePlaceholders: toPtr(1), LabelIDs: []int{1, 2, 3},
-				FileID: 1, BranchID: 1, DirectoryID: 1, CroQL: "croql", Filter: "text", Scope: "identifier"},
-			out: "branchId=1&croql=croql&denormalizePlaceholders=1&directoryId=1&fileId=1&filter=text&labelIds=1%2C2%2C3&scope=identifier",
+				FileID: 1, BranchID: 1, DirectoryID: 1, TaskID: 2, CroQL: "croql", Filter: "text", Scope: "identifier"},
+			out: "branchId=1&croql=croql&denormalizePlaceholders=1&directoryId=1&fileId=1&filter=text&labelIds=1%2C2%2C3&scope=identifier&taskId=2",
 		},
 	}
 

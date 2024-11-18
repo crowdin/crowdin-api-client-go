@@ -162,6 +162,7 @@ func TestSourceStringsService_ListQueryParams(t *testing.T) {
 		{"FileID", &model.SourceStringsListOptions{FileID: 1}, "fileId=1"},
 		{"BranchID", &model.SourceStringsListOptions{BranchID: 2}, "branchId=2"},
 		{"DirectoryID", &model.SourceStringsListOptions{DirectoryID: 3}, "directoryId=3"},
+		{"TaskID", &model.SourceStringsListOptions{TaskID: 4}, "taskId=4"},
 		{"CroQL", &model.SourceStringsListOptions{CroQL: "croql"}, "croql=croql"},
 		{"Filter", &model.SourceStringsListOptions{Filter: "filter"}, "filter=filter"},
 		{"Scope", &model.SourceStringsListOptions{Scope: "text"}, "scope=text"},
@@ -174,12 +175,13 @@ func TestSourceStringsService_ListQueryParams(t *testing.T) {
 				FileID:                  1,
 				BranchID:                2,
 				DirectoryID:             3,
+				TaskID:                  4,
 				CroQL:                   "croql",
 				Filter:                  "filter",
 				Scope:                   "text",
 				ListOptions:             model.ListOptions{Limit: 25, Offset: 10},
 			},
-			"branchId=2&croql=croql&denormalizePlaceholders=1&directoryId=3&fileId=1&filter=filter&labelIds=1%2C2%2C3%2C4%2C5&limit=25&offset=10&scope=text",
+			"branchId=2&croql=croql&denormalizePlaceholders=1&directoryId=3&fileId=1&filter=filter&labelIds=1%2C2%2C3%2C4%2C5&limit=25&offset=10&scope=text&taskId=4",
 		},
 	}
 
