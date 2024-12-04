@@ -292,7 +292,8 @@ func TestUploadTranslationsRequestValidate(t *testing.T) {
 		{
 			name: "valid request",
 			req: &UploadTranslationsRequest{StorageID: 1, FileID: 2, BranchID: 0,
-				ImportEqSuggestions: toPtr(true), AutoApproveImported: toPtr(true), TranslateHidden: toPtr(true)},
+				ImportEqSuggestions: toPtr(true), AutoApproveImported: toPtr(true), TranslateHidden: toPtr(true),
+				AddToTM: toPtr(false)},
 			valid: true,
 		},
 	}

@@ -751,7 +751,14 @@ func TestTranslationsService_UploadTranslations(t *testing.T) {
 	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodPost)
 		testURL(t, r, path)
-		testBody(t, r, `{"storageId":34,"fileId":56,"importEqSuggestions":true,"autoApproveImported":false,"translateHidden":false}`+"\n")
+		testJSONBody(t, r, `{
+			"storageId": 34,
+			"fileId": 56,
+			"importEqSuggestions": true,
+			"autoApproveImported": false,
+			"translateHidden": false,
+			"addToTm": false
+		}`)
 
 		fmt.Fprint(w, `{
 			"data": {
@@ -769,6 +776,7 @@ func TestTranslationsService_UploadTranslations(t *testing.T) {
 		ImportEqSuggestions: ToPtr(true),
 		AutoApproveImported: ToPtr(false),
 		TranslateHidden:     ToPtr(false),
+		AddToTM:             ToPtr(false),
 	}
 	uploadTranslations, resp, err := client.Translations.UploadTranslations(context.Background(), 1, "uk", req)
 	require.NoError(t, err)
