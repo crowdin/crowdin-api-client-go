@@ -112,9 +112,10 @@ func TestTermsListOptionsValues(t *testing.T) {
 				UserID:      1,
 				LanguageID:  "en",
 				ConceptID:   2,
+				CroQL:       "croql",
 				ListOptions: ListOptions{Limit: 10, Offset: 5},
 			},
-			out: "conceptId=2&languageId=en&limit=10&offset=5&orderBy=name&userId=1",
+			out: "conceptId=2&croql=croql&languageId=en&limit=10&offset=5&orderBy=name&userId=1",
 		},
 	}
 

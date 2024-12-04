@@ -428,6 +428,9 @@ type TermsListOptions struct {
 	// Filter terms by `conceptId`.
 	// Note: Use for terms that have translations.
 	ConceptID int `json:"conceptId,omitempty"`
+	// Filter strings by CroQL
+	// Note: Can be used only with orderBy, offset and limit in same request.
+	CroQL string `json:"croql,omitempty"`
 
 	ListOptions
 }
@@ -452,6 +455,9 @@ func (o *TermsListOptions) Values() (url.Values, bool) {
 	}
 	if o.ConceptID != 0 {
 		v.Add("conceptId", fmt.Sprintf("%d", o.ConceptID))
+	}
+	if o.CroQL != "" {
+		v.Add("croql", o.CroQL)
 	}
 
 	return v, len(v) > 0
