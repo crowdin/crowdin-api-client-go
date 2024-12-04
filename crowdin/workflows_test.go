@@ -300,3 +300,136 @@ func TestWorkflowsService_ListSteps_invalidJSON(t *testing.T) {
 	require.Error(t, err)
 	assert.Nil(t, steps)
 }
+
+func TestWorkflowsService_ListStepStrings(t *testing.T) {
+	tests := []struct {
+		name          string
+		opts          *model.WorkflowStepStringsListOptions
+		expectedQuery string
+	}{
+		{
+			name: "nil options",
+			opts: nil,
+		},
+		{
+			name: "empty options",
+			opts: &model.WorkflowStepStringsListOptions{},
+		},
+		{
+			name:          "with language IDs",
+			opts:          &model.WorkflowStepStringsListOptions{LanguageIDs: []string{"de", "uk"}},
+			expectedQuery: "?languageIds=de%2Cuk",
+		},
+		{
+			name: "all options",
+			opts: &model.WorkflowStepStringsListOptions{
+				LanguageIDs: []string{"en", "uk"},
+				OrderBy:     "text,identifier",
+				Status:      "todo",
+				ListOptions: model.ListOptions{Offset: 10, Limit: 25},
+			},
+			expectedQuery: "?languageIds=en%2Cuk&limit=25&offset=10&orderBy=text%2Cidentifier&status=todo",
+		},
+	}
+
+	for id, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client, mux, teardown := setupClient()
+			defer teardown()
+
+			path := fmt.Sprintf("/api/v2/projects/%d/workflow-steps/%d/strings", id, id)
+			mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+				testMethod(t, r, http.MethodGet)
+				testURL(t, r, path+tt.expectedQuery)
+
+				fmt.Fprint(w, `{
+					"data": [
+						{
+							"data": {
+								"id": 2814,
+								"projectId": 2,
+								"branchId": 12,
+								"identifier": "name",
+								"text": "Not all videos are shown to users. See more",
+								"type": "text",
+								"context": "shown on main page",
+								"maxLength": 35,
+								"isHidden": false,
+								"isDuplicate": true,
+								"masterStringId": 1,
+								"hasPlurals": false,
+								"isIcu": false,
+								"labelIds": [ 3 ],
+								"webUrl": "https://example.crowdin.com/editor/1/all/en-pl?filter=basic&value=0&view=comfortable#2",
+								"createdAt": "2024-09-20T12:43:57+00:00",
+								"updatedAt": "2024-09-20T13:24:01+00:00",
+								"fields": {
+									"some-field-1": "some value 1",
+									"some-field-2": 12,
+									"some-field-3": true,
+									"some-field-4": [ "en", "ja" ]
+								},
+								"fileId": 48,
+								"directoryId": 13,
+								"revision": 1
+							}
+						}
+					],
+					"pagination": {
+						"offset": 10,
+						"limit": 25
+					}
+				}`)
+			})
+
+			strings, resp, err := client.Workflows.ListStepStrings(context.Background(), id, id, tt.opts)
+			require.NoError(t, err)
+
+			expected := []*model.WorkflowStepString{
+				{
+					ID:             2814,
+					ProjectID:      2,
+					BranchID:       12,
+					Identifier:     "name",
+					Text:           "Not all videos are shown to users. See more",
+					Type:           "text",
+					Context:        "shown on main page",
+					MaxLength:      35,
+					IsHidden:       false,
+					IsDuplicate:    true,
+					MasterStringID: 1,
+					LabelIDs:       []int{3},
+					WebURL:         "https://example.crowdin.com/editor/1/all/en-pl?filter=basic&value=0&view=comfortable#2",
+					CreatedAt:      "2024-09-20T12:43:57+00:00",
+					UpdatedAt:      "2024-09-20T13:24:01+00:00",
+					Revision:       1,
+					FileID:         48,
+					DirectoryID:    13,
+					Fields: map[string]any{
+						"some-field-1": "some value 1",
+						"some-field-2": float64(12),
+						"some-field-3": true,
+						"some-field-4": []any{"en", "ja"},
+					},
+				},
+			}
+			assert.Equal(t, expected, strings)
+
+			assert.Equal(t, 10, resp.Pagination.Offset)
+			assert.Equal(t, 25, resp.Pagination.Limit)
+		})
+	}
+}
+
+func TestWorkflowsService_ListStepStringss_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/workflow-steps/2/strings", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	steps, _, err := client.Workflows.ListSteps(context.Background(), "1")
+	require.Error(t, err)
+	assert.Nil(t, steps)
+}
