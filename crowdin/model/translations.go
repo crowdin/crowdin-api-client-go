@@ -388,6 +388,8 @@ type UploadTranslationsRequest struct {
 	AutoApproveImported *bool `json:"autoApproveImported,omitempty"`
 	// Allow translations upload to hidden source strings. Default: false.
 	TranslateHidden *bool `json:"translateHidden,omitempty"`
+	// Defines whether to add translation to TM. Default: true.
+	AddToTM *bool `json:"addToTm,omitempty"`
 }
 
 // Validate checks if the upload translations request is valid.
