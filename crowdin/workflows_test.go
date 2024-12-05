@@ -421,7 +421,7 @@ func TestWorkflowsService_ListStepStrings(t *testing.T) {
 	}
 }
 
-func TestWorkflowsService_ListStepStringss_invalidJSON(t *testing.T) {
+func TestWorkflowsService_ListStepStrings_invalidJSON(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
@@ -429,7 +429,7 @@ func TestWorkflowsService_ListStepStringss_invalidJSON(t *testing.T) {
 		fmt.Fprint(w, `invalid json`)
 	})
 
-	steps, _, err := client.Workflows.ListSteps(context.Background(), "1")
+	str, _, err := client.Workflows.ListStepStrings(context.Background(), 1, 2, nil)
 	require.Error(t, err)
-	assert.Nil(t, steps)
+	assert.Nil(t, str)
 }
