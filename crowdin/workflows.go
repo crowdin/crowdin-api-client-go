@@ -37,6 +37,26 @@ func (s *WorkflowsService) ListSteps(ctx context.Context, projectID string) ([]*
 	return list, resp, nil
 }
 
+// ListStepStrings returns a list of strings on	the workflow step.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Workflows/operation/api.projects.workflow-steps.strings.getMany
+func (s *WorkflowsService) ListStepStrings(ctx context.Context, projectID, stepID int, opts *model.WorkflowStepStringsListOptions) (
+	[]*model.SourceString, *Response, error,
+) {
+	res := new(model.SourceStringsListResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/workflow-steps/%d/strings", projectID, stepID), opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.SourceString, 0, len(res.Data))
+	for _, str := range res.Data {
+		list = append(list, str.Data)
+	}
+
+	return list, resp, nil
+}
+
 // GetStep returns a specific workflow step.
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.projects.workflow-steps.get

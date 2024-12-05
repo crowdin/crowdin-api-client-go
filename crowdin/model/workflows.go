@@ -75,6 +75,44 @@ type WorkflowTemplatesListResponse struct {
 	Data []*WorkflowTemplateResponse `json:"data"`
 }
 
+// WorkflowStepStringsListOptions specifies the optional parameters to the
+// WorkflowsService.ListStepStrings method.
+type WorkflowStepStringsListOptions struct {
+	// Filter progress by Language Identifiers.
+	LanguageIDs []string `json:"languageIds,omitempty"`
+	// Sort a list of strings.
+	// Enum: id, text, identifier, context, createdAt, updatedAt. Default: id.
+	// Example: orderBy=createdAt desc,text,identifier
+	OrderBy string `json:"orderBy,omitempty"`
+	// String status on the workflow step.
+	// Enum: todo, done, pending, incomplete, need_review.
+	Status string `json:"status,omitempty"`
+
+	ListOptions
+}
+
+// Values returns the url.Values representation of the options.
+// It implements the crowdin.ListOptionsProvider interface.
+func (o *WorkflowStepStringsListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
+	v, _ := o.ListOptions.Values()
+
+	if len(o.LanguageIDs) > 0 {
+		v.Add("languageIds", JoinSlice(o.LanguageIDs))
+	}
+	if o.OrderBy != "" {
+		v.Add("orderBy", o.OrderBy)
+	}
+	if o.Status != "" {
+		v.Add("status", o.Status)
+	}
+
+	return v, len(v) > 0
+}
+
 // WorkflowTemplatesListOptions specifies the optional parameters to the
 // WorkflowsService.ListTemplates method.
 type WorkflowTemplatesListOptions struct {
