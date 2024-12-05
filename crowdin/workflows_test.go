@@ -385,11 +385,11 @@ func TestWorkflowsService_ListStepStrings(t *testing.T) {
 			strings, resp, err := client.Workflows.ListStepStrings(context.Background(), id, id, tt.opts)
 			require.NoError(t, err)
 
-			expected := []*model.WorkflowStepString{
+			expected := []*model.SourceString{
 				{
 					ID:             2814,
 					ProjectID:      2,
-					BranchID:       12,
+					BranchID:       ToPtr(12),
 					Identifier:     "name",
 					Text:           "Not all videos are shown to users. See more",
 					Type:           "text",
@@ -397,14 +397,14 @@ func TestWorkflowsService_ListStepStrings(t *testing.T) {
 					MaxLength:      35,
 					IsHidden:       false,
 					IsDuplicate:    true,
-					MasterStringID: 1,
+					MasterStringID: ToPtr(1),
 					LabelIDs:       []int{3},
 					WebURL:         "https://example.crowdin.com/editor/1/all/en-pl?filter=basic&value=0&view=comfortable#2",
-					CreatedAt:      "2024-09-20T12:43:57+00:00",
-					UpdatedAt:      "2024-09-20T13:24:01+00:00",
-					Revision:       1,
-					FileID:         48,
-					DirectoryID:    13,
+					CreatedAt:      ToPtr("2024-09-20T12:43:57+00:00"),
+					UpdatedAt:      ToPtr("2024-09-20T13:24:01+00:00"),
+					Revision:       ToPtr(1),
+					FileID:         ToPtr(48),
+					DirectoryID:    ToPtr(13),
 					Fields: map[string]any{
 						"some-field-1": "some value 1",
 						"some-field-2": float64(12),

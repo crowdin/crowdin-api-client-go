@@ -75,37 +75,6 @@ type WorkflowTemplatesListResponse struct {
 	Data []*WorkflowTemplateResponse `json:"data"`
 }
 
-// WorkflowStepString represents a string on a workflow step.
-type WorkflowStepString struct {
-	ID             int    `json:"id"`
-	ProjectID      int    `json:"projectId"`
-	BranchID       int    `json:"branchId,omitempty"`
-	Identifier     string `json:"identifier"`
-	Text           string `json:"text"`
-	Type           string `json:"type"`
-	Context        string `json:"context"`
-	MaxLength      int    `json:"maxLength"`
-	IsHidden       bool   `json:"isHidden"`
-	IsDuplicate    bool   `json:"isDuplicate"`
-	MasterStringID int    `json:"masterStringId,omitempty"`
-	LabelIDs       []int  `json:"labelIds"`
-	WebURL         string `json:"webUrl"`
-	CreatedAt      string `json:"createdAt,omitempty"`
-	UpdatedAt      string `json:"updatedAt,omitempty"`
-	Revision       int    `json:"revision"`
-	FileID         int    `json:"fileId"`
-	DirectoryID    int    `json:"directoryId,omitempty"`
-	Fields         any    `json:"fields,omitempty"`
-}
-
-// WorkflowStepStringsResponse defines the structure of the response when
-// getting a list of strings on the workflow step.
-type WorkflowStepStringsResponse struct {
-	Data []struct {
-		Data *WorkflowStepString `json:"data"`
-	} `json:"data"`
-}
-
 // WorkflowStepStringsListOptions specifies the optional parameters to the
 // WorkflowsService.ListStepStrings method.
 type WorkflowStepStringsListOptions struct {
