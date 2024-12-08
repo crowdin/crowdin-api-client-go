@@ -6,6 +6,236 @@ import (
 	"net/url"
 )
 
+// FineTuningDataset represents a fine-tuning dataset.
+type FineTuningDataset struct {
+	Identifier string                       `json:"identifier"`
+	Status     string                       `json:"status"`
+	Progress   int                          `json:"progress"`
+	Attributes *FineTuningDatasetAttributes `json:"attributes"`
+	CreatedAt  string                       `json:"createdAt"`
+	UpdatedAt  string                       `json:"updatedAt"`
+	StartedAt  string                       `json:"startedAt"`
+	FinishedAt string                       `json:"finishedAt"`
+}
+
+// FineTuningDatasetAttributes represents the attributes of a fine-tuning dataset.
+// It is used to generate a fine-tuning dataset.
+type FineTuningDatasetAttributes struct {
+	// Project identifiers from which the dataset will be generated.
+	// Note: Required if `tmIds` is not provided.
+	ProjectIDs []int `json:"projectIds,omitempty"`
+	// TM identifiers from which the dataset will be generated.
+	// Note: This parameter is not supported for the prompt with the
+	// external configuraion.
+	TMIDs []int `json:"tmIds,omitempty"`
+	// Purpose of the dataset. Enum: training, validation. Default: training.
+	Purpose string `json:"purpose,omitempty"`
+	// Start date for dataset generation.
+	DateFrom string `json:"dateFrom,omitempty"`
+	// End date for dataset generation.
+	DateTo string `json:"dateTo,omitempty"`
+	// Maximum dataset file size in bytes.
+	// Note: If not provided, default limits based on the model will be applied.
+	MaxFileSize int `json:"maxFileSize,omitempty"`
+	// Minimum number of examples in the dataset.
+	// Note: If not provided, default limits based on the model will be applied.
+	MinExamplesCount int `json:"minExamplesCount,omitempty"`
+	// Maximum number of examples in the dataset.
+	// Note: If not provided, default limits based on the model will be applied.
+	MaxExamplesCount int `json:"maxExamplesCount,omitempty"`
+}
+
+// Validate checks if the request is valid.
+// It implements the crowdin.RequestValidator interface.
+func (r *FineTuningDatasetAttributes) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
+	if len(r.ProjectIDs) == 0 && len(r.TMIDs) == 0 {
+		return errors.New("projectIds or tmIds are required")
+	}
+
+	return nil
+}
+
+// FineTuningDatasetResponse defines the structure of a response when
+// getting a single fine-tuning dataset.
+type FineTuningDatasetResponse struct {
+	Data *FineTuningDataset `json:"data"`
+}
+
+type (
+	// FineTuningEvent represents a fine-tuning event.
+	FineTuningEvent struct {
+		ID        string               `json:"id"`
+		Type      string               `json:"type"` // enum: message, metrics
+		Message   string               `json:"message"`
+		Data      *FineTuningEventData `json:"data,omitempty"`
+		CreatedAt string               `json:"createdAt"`
+	}
+
+	// FineTuningEventData represents the data of a fine-tuning event.
+	FineTuningEventData struct {
+		Step               int     `json:"step"`
+		TotalSteps         int     `json:"totalSteps"`
+		TrainingLoss       float64 `json:"trainingLoss"`
+		ValidationLoss     float64 `json:"validationLoss"`
+		FullValidationLoss float64 `json:"fullValidationLoss"`
+	}
+)
+
+// FineTuningEventsListResponse defines the structure of a response when
+// getting a list of fine-tuning events.
+type FineTuningEventsListResponse struct {
+	Data []struct {
+		Data *FineTuningEvent `json:"data"`
+	} `json:"data"`
+}
+
+type (
+	// FineTuningJob represents a fine-tuning job.
+	FineTuningJob struct {
+		Identifier string                   `json:"identifier"`
+		Status     string                   `json:"status"`
+		Progress   int                      `json:"progress"`
+		Attributes *FineTuningJobAttributes `json:"attributes"`
+		CreatedAt  string                   `json:"createdAt"`
+		UpdatedAt  string                   `json:"updatedAt"`
+		StartedAt  string                   `json:"startedAt"`
+		FinishedAt string                   `json:"finishedAt"`
+	}
+
+	// FineTuningJobAttributes represents the attributes of a fine-tuning job.
+	FineTuningJobAttributes struct {
+		DryRun               bool                          `json:"dryRun"`
+		AIPromptID           int                           `json:"aiPromptId"`
+		Hyperparameters      *FineTuningJobHyperparameters `json:"hyperparameters"`
+		TrainingOptions      *FineTuningJobOptions         `json:"trainingOptions"`
+		ValidationOptions    *FineTuningJobOptions         `json:"validationOptions"`
+		BaseModel            string                        `json:"baseModel"`
+		FineTunedModel       string                        `json:"fineTunedModel"`
+		TrainedTokensCount   int                           `json:"trainedTokensCount"`
+		TrainingDatasetURL   string                        `json:"trainingDatasetUrl"`
+		ValidationDatasetURL string                        `json:"validationDatasetUrl"`
+		Metadata             *FineTuningJobMetadata        `json:"metadata"`
+	}
+
+	// FineTuningJobHyperparameters represents the hyperparameters of a fine-tuning job.
+	FineTuningJobHyperparameters struct {
+		// Number of examples in each batch. A larger batch size means that model
+		// parameters are updated less frequently, but with lower variance.
+		// Note: This parameter is not supported by Mistral AI.
+		BatchSize int `json:"batchSize,omitempty"`
+		// Scaling factor for the learning rate. A smaller learning rate may be useful
+		// to avoid overfitting. Note: This parameter is not supported by Mistral AI.
+		LearningRateMultiplier float64 `json:"learningRateMultiplier,omitempty"`
+		// The number of epochs to train the model for. An epoch refers to one full
+		// cycle through the training dataset.
+		NEpochs int `json:"nEpochs,omitempty"`
+	}
+
+	// FineTuningJobOptions represents the options of a fine-tuning job.
+	FineTuningJobOptions struct {
+		// Project identifiers from which the dataset will be generated.
+		// Note: Required if `tmIds` is not provided.
+		ProjectIDs []int `json:"projectIds,omitempty"`
+		// TM identifiers from which the dataset will be generated.
+		// Note: This parameteris not supported for the prompt with
+		// external configuraion.
+		TMIDs []int `json:"tmIds,omitempty"`
+		// Start date for the dataset generation.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// End date for the dataset generation.
+		DateTo string `json:"dateTo,omitempty"`
+		// Maximum dataset file size in bytes.
+		// Note: If not provided, default limits based on the model will be applied.
+		MaxFileSize int `json:"maxFileSize,omitempty"`
+		// Minimum number of examples in the dataset.
+		// Note: If not provided, default limits based on the model will be applied.
+		MinExamplesCount int `json:"minExamplesCount,omitempty"`
+		// Maximum number of examples in the dataset.
+		// Note: If not provided, default limits based on the model will be applied.
+		MaxExamplesCount int `json:"maxExamplesCount,omitempty"`
+	}
+
+	// FineTuningJobMetadata represents the metadata of a fine-tuning job.
+	FineTuningJobMetadata struct {
+		Cost         float64 `json:"cost"`
+		CostCurrency string  `json:"costCurrency"`
+	}
+)
+
+// FineTuningJobResponse defines the structure of a response when
+// getting a fine-tuning job.
+type FineTuningJobResponse struct {
+	Data *FineTuningJob `json:"data"`
+}
+
+// FineTuningJobsListResponse defines the structure of a response when
+// getting a list of fine-tuning jobs.
+type FineTuningJobsListResponse struct {
+	Data []*FineTuningJobResponse `json:"data"`
+}
+
+// FineTuningJobsListOptions specifies the optional parameters to the
+// AIService.ListFineTuningJobs method.
+type FineTuningJobsListOptions struct {
+	// Filter the collection by the specified status. It can be one status or
+	// a list of comma-separated ones.
+	// Enum: created, in_progress, canceled, failed, finished.
+	Statuses []string `json:"statuses,omitempty"`
+	// Sort the collection by the specified field. Example: orderBy=createdAt desc.
+	// Enum: createdAt, updatedAt, startedAt, finishedAt.
+	OrderBy string `json:"orderBy,omitempty"`
+
+	ListOptions
+}
+
+// Values returns the url.Values encoding of FineTuningJobsListOptions.
+// It implements the crowdin.ListOptionsProvider interface.
+func (o *FineTuningJobsListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
+	v, _ := o.ListOptions.Values()
+
+	if len(o.Statuses) > 0 {
+		v.Add("statuses", JoinSlice(o.Statuses))
+	}
+	if o.OrderBy != "" {
+		v.Add("orderBy", o.OrderBy)
+	}
+
+	return v, len(v) > 0
+}
+
+// FineTuningJobCreateRequest defines the structure of a request to create a fine-tuning job.
+type FineTuningJobCreateRequest struct {
+	// Options for generating the fine-tuning dataset.
+	TrainingOptions *FineTuningJobOptions `json:"trainingOptions"`
+	// Options for generating the fine-tuning dataset.
+	ValidationOptions *FineTuningJobOptions `json:"validationOptions,omitempty"`
+	// The hyperparameters used for the fine-tuning job.
+	Hyperparameters *FineTuningJobHyperparameters `json:"hyperparameters,omitempty"`
+	// Simulate the fine-tuning of job creation without actually
+	// creating them. Default: false.
+	DryRun *bool `json:"dryRun,omitempty"`
+}
+
+// Validate checks if the request is valid.
+// It implements the crowdin.RequestValidator interface.
+func (r *FineTuningJobCreateRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
+	if r.TrainingOptions == nil {
+		return errors.New("trainingOptions is required")
+	}
+
+	return nil
+}
+
 type PromptAction string
 
 const (
