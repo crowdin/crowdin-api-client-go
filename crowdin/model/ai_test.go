@@ -6,6 +6,138 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestFineTuningDatasetAttributesValidate(t *testing.T) {
+	tests := []struct {
+		name  string
+		req   *FineTuningDatasetAttributes
+		err   string
+		valid bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty projectIds and tmIds",
+			req:  &FineTuningDatasetAttributes{},
+			err:  "projectIds or tmIds are required",
+		},
+		{
+			name: "valid request",
+			req: &FineTuningDatasetAttributes{
+				ProjectIDs:       []int{1, 2},
+				TMIDs:            []int{3, 4},
+				Purpose:          "training",
+				DateFrom:         "2024-09-23T11:26:54+00:00",
+				DateTo:           "2024-09-23T11:26:54+00:00",
+				MaxFileSize:      100,
+				MinExamplesCount: 10,
+				MaxExamplesCount: 100,
+			},
+			valid: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.req.Validate(); tt.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.err)
+			}
+		})
+	}
+}
+
+func TestFineTuningJobsListOptionsValues(t *testing.T) {
+	tests := []struct {
+		name string
+		opt  *FineTuningJobsListOptions
+		out  string
+	}{
+		{
+			name: "nil options",
+			opt:  nil,
+		},
+		{
+			name: "empty options",
+			opt:  &FineTuningJobsListOptions{},
+		},
+		{
+			name: "with one status",
+			opt:  &FineTuningJobsListOptions{Statuses: []string{"created"}},
+			out:  "statuses=created",
+		},
+		{
+			name: "with multiple statuses",
+			opt:  &FineTuningJobsListOptions{Statuses: []string{"created", "finished"}},
+			out:  "statuses=created%2Cfinished",
+		},
+		{
+			name: "with orderBy",
+			opt:  &FineTuningJobsListOptions{OrderBy: "createdAt"},
+			out:  "orderBy=createdAt",
+		},
+		{
+			name: "with all options",
+			opt: &FineTuningJobsListOptions{Statuses: []string{"in_progress"}, OrderBy: "createdAt",
+				ListOptions: ListOptions{Limit: 10, Offset: 20}},
+			out: "limit=10&offset=20&orderBy=createdAt&statuses=in_progress",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v, ok := tt.opt.Values()
+			if len(tt.out) > 0 {
+				assert.True(t, ok)
+				assert.Equal(t, tt.out, v.Encode())
+			} else {
+				assert.False(t, ok)
+				assert.Empty(t, v)
+			}
+		})
+	}
+}
+
+func TestFineTuningJobCreateRequestValidate(t *testing.T) {
+	tests := []struct {
+		name  string
+		req   *FineTuningJobCreateRequest
+		err   string
+		valid bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty trainingOptions",
+			req:  &FineTuningJobCreateRequest{},
+			err:  "trainingOptions is required",
+		},
+		{
+			name: "valid request",
+			req: &FineTuningJobCreateRequest{
+				TrainingOptions: &FineTuningJobOptions{},
+			},
+			valid: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.req.Validate(); tt.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.err)
+			}
+		})
+	}
+}
+
 func TestAIPromtsListOptionsValues(t *testing.T) {
 	tests := []struct {
 		name string
