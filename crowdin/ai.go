@@ -14,6 +14,106 @@ type AIService struct {
 	client *Client
 }
 
+// GenerateFineTuningDataset generates a new AI Prompt Fine-Tuning Dataset.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/AI/operation/api.ai.prompts.fine-tuning.datasets.post
+func (s *AIService) GenerateFineTuningDataset(ctx context.Context, aiPromptID, userID int, req *model.FineTuningDatasetAttributes) (
+	*model.FineTuningDataset, *Response, error,
+) {
+	res := new(model.FineTuningDatasetResponse)
+	resp, err := s.client.Post(ctx, s.getPath(fmt.Sprintf("prompts/%d/fine-tuning/datasets", aiPromptID), userID), req, res)
+
+	return res.Data, resp, err
+}
+
+// GetFineTuningDatasetGenerationStatus returns the status of the AI Prompt Fine-Tuning Dataset generation.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/AI/operation/api.users.ai.prompts.fine-tuning.datasets.get
+func (s *AIService) GetFineTuningDatasetGenerationStatus(ctx context.Context, aiPromptID int, jobIdentifier string, userID int) (
+	*model.FineTuningDataset, *Response, error,
+) {
+	res := new(model.FineTuningDatasetResponse)
+	resp, err := s.client.Get(ctx, s.getPath(fmt.Sprintf("prompts/%d/fine-tuning/datasets/%s", aiPromptID, jobIdentifier), userID), nil, res)
+
+	return res.Data, resp, err
+}
+
+// DownloadFineTuningDataset returns a download link for the AI Prompt Fine-Tuning Dataset.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/AI/operation/api.users.ai.prompts.fine-tuning.datasets.download.get
+func (s *AIService) DownloadFineTuningDataset(ctx context.Context, aiPromptID int, jobIdentifier string, userID int) (
+	*model.DownloadLink, *Response, error,
+) {
+	res := new(model.DownloadLinkResponse)
+	resp, err := s.client.Get(ctx, s.getPath(fmt.Sprintf("prompts/%d/fine-tuning/datasets/%s/download", aiPromptID, jobIdentifier), userID), nil, res)
+
+	return res.Data, resp, err
+}
+
+// ListFineTuningJobs returns a list of AI Prompt Fine-Tuning Jobs.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/AI/operation/api.ai.prompts.fine-tuning.jobs.getMany
+func (s *AIService) ListFineTuningJobs(ctx context.Context, userID int, opts *model.FineTuningJobsListOptions) (
+	[]*model.FineTuningJob, *Response, error,
+) {
+	res := new(model.FineTuningJobsListResponse)
+	resp, err := s.client.Get(ctx, s.getPath("prompts/fine-tuning/jobs", userID), opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.FineTuningJob, 0, len(res.Data))
+	for _, job := range res.Data {
+		list = append(list, job.Data)
+	}
+
+	return list, resp, err
+}
+
+// ListFineTuningEvents returns a list of AI Prompt Fine-Tuning Events.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/AI/operation/api.ai.prompts.fine-tuning.jobs.events.getMany
+func (s *AIService) ListFineTuningEvents(ctx context.Context, aiPromptID int, jobIdentifier string, userID int) (
+	[]*model.FineTuningEvent, *Response, error,
+) {
+	res := new(model.FineTuningEventsListResponse)
+	resp, err := s.client.Get(ctx, s.getPath(fmt.Sprintf("prompts/%d/fine-tuning/jobs/%s/events", aiPromptID, jobIdentifier), userID), nil, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.FineTuningEvent, 0, len(res.Data))
+	for _, event := range res.Data {
+		list = append(list, event.Data)
+	}
+
+	return list, resp, err
+}
+
+// CreateFineTuningJob creates a new AI Prompt Fine-Tuning Job.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/AI/operation/api.ai.prompts.fine-tuning.jobs.post
+func (s *AIService) CreateFineTuningJob(ctx context.Context, aiPromptID, userID int, req *model.FineTuningJobCreateRequest) (
+	*model.FineTuningJob, *Response, error,
+) {
+	res := new(model.FineTuningJobResponse)
+	resp, err := s.client.Post(ctx, s.getPath(fmt.Sprintf("prompts/%d/fine-tuning/jobs", aiPromptID), userID), req, res)
+
+	return res.Data, resp, err
+}
+
+// GetFineTuningJobStatus returns the status of the AI Prompt Fine-Tuning Job.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/AI/operation/api.users.ai.prompts.fine-tuning.jobs.get
+func (s *AIService) GetFineTuningJobStatus(ctx context.Context, aiPromptID int, jobIdentifier string, userID int) (
+	*model.FineTuningJob, *Response, error,
+) {
+	res := new(model.FineTuningJobResponse)
+	resp, err := s.client.Get(ctx, s.getPath(fmt.Sprintf("prompts/%d/fine-tuning/jobs/%s", aiPromptID, jobIdentifier), userID), nil, res)
+
+	return res.Data, resp, err
+}
+
 // ListPrompts returns a list of AI prompts.
 // For the Enterprise client, set the userID to 0.
 //
