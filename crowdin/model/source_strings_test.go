@@ -127,7 +127,7 @@ func TestSourceStringsAddRequestValidate(t *testing.T) {
 		{
 			name: "empty fileID",
 			req:  &SourceStringsAddRequest{Text: "Not all videos are shown to users.", Identifier: "name"},
-			err:  "fileId is required",
+			err:  "fileId or branchId is required",
 		},
 		{
 			name:  "valid request",
