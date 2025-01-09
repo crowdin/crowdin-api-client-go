@@ -412,27 +412,48 @@ func TestSourceStringsService_AddWithRequiredFields(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
-	projectID := 2
-	req := &model.SourceStringsAddRequest{
-		Text: map[string]string{
-			"one":   "string",
-			"other": "string",
+	tests := []struct {
+		name         string
+		req          *model.SourceStringsAddRequest
+		expectedBody string
+	}{
+		{
+			name: "with branchId and text string",
+			req: &model.SourceStringsAddRequest{
+				Text:       "Not all videos are shown to users.",
+				BranchID:   48,
+				Identifier: "name",
+			},
+			expectedBody: `{"text":"Not all videos are shown to users.","branchId":48,"identifier":"name"}` + "\n",
 		},
-		FileID:     48,
-		Identifier: "name",
+		{
+			name: "with fileId and plural text string",
+			req: &model.SourceStringsAddRequest{
+				Text: map[string]string{
+					"one":   "string",
+					"other": "string",
+				},
+				FileID:     48,
+				Identifier: "name",
+			},
+			expectedBody: `{"text":{"one":"string","other":"string"},"fileId":48,"identifier":"name"}` + "\n",
+		},
 	}
 
-	mux.HandleFunc(fmt.Sprintf("/api/v2/projects/%d/strings", projectID), func(w http.ResponseWriter, r *http.Request) {
-		testURL(t, r, fmt.Sprintf("/api/v2/projects/%d/strings", projectID))
-		testMethod(t, r, http.MethodPost)
-		testBody(t, r, `{"text":{"one":"string","other":"string"},"fileId":48,"identifier":"name"}`+"\n")
+	for projectID, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			projectID++
+			mux.HandleFunc(fmt.Sprintf("/api/v2/projects/%d/strings", projectID), func(w http.ResponseWriter, r *http.Request) {
+				testURL(t, r, fmt.Sprintf("/api/v2/projects/%d/strings", projectID))
+				testMethod(t, r, http.MethodPost)
+				testBody(t, r, tt.expectedBody)
 
-		fmt.Fprint(w, `{}`)
-	})
+				fmt.Fprint(w, `{}`)
+			})
 
-	_, _, err := client.SourceStrings.Add(context.Background(), projectID, req)
-	if err != nil {
-		t.Errorf("SourceStrings.Add returned error: %v", err)
+			_, _, err := client.SourceStrings.Add(context.Background(), projectID, tt.req)
+			assert.Nil(t, err)
+		})
 	}
 }
 
@@ -478,12 +499,12 @@ func TestSourceStringsService_AddWithValidationErrors(t *testing.T) {
 			"text cannot be empty",
 		},
 		{
-			"empty fileID",
+			"empty fileID and branchID",
 			&model.SourceStringsAddRequest{
 				Text:       "Not all videos are shown to users.",
 				Identifier: "name",
 			},
-			"fileId is required",
+			"fileId or branchId is required",
 		},
 	}
 

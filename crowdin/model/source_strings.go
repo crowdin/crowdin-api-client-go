@@ -150,9 +150,9 @@ type SourceStringsAddRequest struct {
 	//  }
 	Text any `json:"text"`
 	// File identifier.
-	FileID int `json:"fileId"`
+	FileID int `json:"fileId,omitempty"`
 	// Branch identifier.
-	BranchID int `json:"branchId"`
+	BranchID int `json:"branchId,omitempty"`
 	// Defines unique string identifier.
 	Identifier string `json:"identifier,omitempty"`
 	// Use to provide additional information for better source text understanding.
@@ -188,9 +188,10 @@ func (r *SourceStringsAddRequest) Validate() error {
 		return errors.New("text must be a string or map of strings")
 	}
 
-	if r.FileID == 0 || r.BranchID == 0 {
+	if r.FileID == 0 && r.BranchID == 0 {
 		return errors.New("fileId or branchId is required")
 	}
+
 	return nil
 }
 
