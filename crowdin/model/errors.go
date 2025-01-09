@@ -69,12 +69,24 @@ type ValidationError struct {
 	} `json:"error"`
 }
 
+type ValidationBatchError struct {
+	Errors []ValidationError `json:"errors"`
+	Index  *int64        `json:"index"`
+}
+
 // ValidationErrorResponse is the validation error response
 // structure from the API.
 type ValidationErrorResponse struct {
 	Response *http.Response `json:"-"`
 
 	Errors []ValidationError `json:"errors"`
+	Status int
+}
+
+type ValidationErrorBatchResponse struct {
+	Response *http.Response `json:"-"`
+
+	Errors []ValidationBatchError `json:"errors"`
 	Status int
 }
 
@@ -102,6 +114,37 @@ func (r *ValidationErrorResponse) Error() string {
 			}
 
 			sb.WriteString(fmt.Sprintf("%s (%s)", e.Message, code))
+		}
+	}
+	return sb.String()
+}
+
+func (r *ValidationErrorBatchResponse) Error() string {
+	var sb strings.Builder
+	for index, errB := range r.Errors {
+		sb.WriteString(fmt.Sprintf("\n Index: %d \n", index))
+		for i, err := range errB.Errors {
+			if i != 0 {
+				sb.WriteString("; ")
+			}
+			sb.WriteString(fmt.Sprintf("%s: ", err.Error.Key))
+			for j, e := range err.Error.Errors {
+				if j != 0 {
+					sb.WriteString(", ")
+				}
+	
+				var code string
+				switch v := e.Code.(type) {
+				case int:
+					code = fmt.Sprintf("%d", v)
+				case string:
+					code = v
+				default:
+					code = "n/a"
+				}
+	
+				sb.WriteString(fmt.Sprintf("%s (%s)", e.Message, code))
+			}
 		}
 	}
 	return sb.String()

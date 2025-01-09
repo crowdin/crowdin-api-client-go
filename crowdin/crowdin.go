@@ -256,7 +256,13 @@ func (c *Client) do(r *http.Request, v any) (*Response, error) {
 	}
 
 	if code := resp.StatusCode; code >= http.StatusBadRequest && code <= 599 {
-		err = handleErrorResponse(resp, body, strings.Contains(r.URL.Path, "graphql"))
+		batch := false
+		if r.Method == http.MethodPatch{
+			if !strings.Contains(r.URL.Path, "/strings/"){
+				batch = true
+			}
+		}
+		err = handleErrorResponse(resp, body, strings.Contains(r.URL.Path, "graphql"), batch)
 		return response, err
 	}
 
@@ -387,7 +393,7 @@ func (c *Client) Delete(ctx context.Context, path string, v any) (*Response, err
 
 // handleErrorResponse checks the API response for errors and returns
 // them if they are found.
-func handleErrorResponse(r *http.Response, body []byte, graphql bool) error {
+func handleErrorResponse(r *http.Response, body []byte, graphql, batch bool) error {
 	var errorResponse error
 
 	switch r.StatusCode {
@@ -395,7 +401,11 @@ func handleErrorResponse(r *http.Response, body []byte, graphql bool) error {
 		if graphql {
 			errorResponse = &model.GraphQLErrorResponse{}
 		} else {
-			errorResponse = &model.ValidationErrorResponse{Response: r, Status: r.StatusCode}
+			if batch {
+				errorResponse = &model.ValidationErrorBatchResponse{Response: r, Status: r.StatusCode}
+			}else {
+				errorResponse = &model.ValidationErrorResponse{Response: r, Status: r.StatusCode}
+			}
 		}
 	default:
 		errorResponse = &model.ErrorResponse{Response: r}
