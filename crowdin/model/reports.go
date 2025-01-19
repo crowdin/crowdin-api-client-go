@@ -52,7 +52,11 @@ const (
 	ReportTransactionCostsPostEditing ReportName = "translation-costs-pe"
 	ReportContributionRawData         ReportName = "contribution-raw-data"
 	ReportTopMembers                  ReportName = "top-members"
-	ReportPreTranslateEfficiency      ReportName = "pre-translate-efficiency"
+	ReportTranslatorAccuracy          ReportName = "translator-accuracy"
+	ReportPreTranslateAccuracy        ReportName = "pre-translate-accuracy"
+
+	// Deprecated: Use ReportPreTranslateAccuracy instead.
+	ReportPreTranslateEfficiency ReportName = "pre-translate-efficiency"
 
 	// Organization reports.
 	ReportGroupTranslationCostsPostEditing ReportName = "group-translation-costs-pe"
@@ -201,7 +205,9 @@ type ReportGenerateRequest struct {
 	//  - TransactionCostsPostEditingSchema
 	//  - TopMembersSchema
 	//  - ContributionRawDataSchema
-	//  - PreTranslateEfficiencySchema
+	//  - TranslatorAccuracySchema
+	//  - PreTranslateAccuracySchema
+	//  - PreTranslateEfficiencySchema (Deprecated)
 	Schema ReportSchema `json:"schema"`
 }
 
@@ -364,8 +370,51 @@ type (
 		DateTo string `json:"dateTo,omitempty"`
 	}
 
+	// TranslatorAccuracySchema defines the schema for the translator
+	// accuracy report.
+	TranslatorAccuracySchema struct {
+		// Report unit. Enum: strings, words, chars, chars_with_spaces.
+		// Default: words.
+		Unit ReportUnit `json:"unit,omitempty"`
+		// Export file format.
+		// Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Split into categories by edit distance.
+		PostEditingCategories []string `json:"postEditingCategories,omitempty"`
+		// Language Identifier for which the report should be generated.
+		LanguageID string `json:"languageId,omitempty"`
+		// List of user identifiers.
+		UserIDs []int `json:"userIds,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+	}
+
+	// PreTranslateAccuracySchema defines the schema for pre translate
+	// accuracy report.
+	PreTranslateAccuracySchema struct {
+		// Report unit. Enum: strings, words, chars, chars_with_spaces.
+		// Default: words.
+		Unit ReportUnit `json:"unit,omitempty"`
+		// Export file format.
+		// Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Split into categories by edit distance.
+		PostEditingCategories []string `json:"postEditingCategories,omitempty"`
+		// Language Identifier for which the report should be generated.
+		LanguageID string `json:"languageId,omitempty"`
+		// Task Identifier for which the report should be generated.
+		TaskID int `json:"taskId,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+	}
+
 	// PreTranslateEfficiencySchema defines the schema for pre translate
 	// efficiency report.
+	// Deprecated: Use PreTranslateAccuracySchema instead.
 	PreTranslateEfficiencySchema struct {
 		// Report unit. Enum: strings, words, chars, chars_with_spaces.
 		// Default: words.
@@ -425,6 +474,18 @@ func (r *ContributionRawDataSchema) ValidateSchema() error {
 		return errors.New("mode is required")
 	}
 
+	return nil
+}
+
+// ValidateSchema implements the ReportSchema interface and checks if the
+// TranslatorAccuracySchema schema is valid.
+func (r *TranslatorAccuracySchema) ValidateSchema() error {
+	return nil
+}
+
+// ValidateSchema implements the ReportSchema interface and checks if the
+// PreTranslateAccuracy schema is valid.
+func (r *PreTranslateAccuracySchema) ValidateSchema() error {
 	return nil
 }
 
