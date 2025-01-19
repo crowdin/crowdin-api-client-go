@@ -100,7 +100,22 @@ func TestReportGenerateRequestValidate(t *testing.T) {
 			valid: true,
 		},
 		{
-			name: "valid schema (ReportPreTranslateEfficiencySchema)",
+			name: "valid schema (TranslatorAccuracySchema)",
+			req: &ReportGenerateRequest{
+				Name:   ReportTranslatorAccuracy,
+				Schema: &TranslatorAccuracySchema{Unit: ReportUnitStrings, Format: ReportFormatXLSX, PostEditingCategories: []string{"0-10"}}},
+			valid: true,
+		},
+		{
+			name: "valid schema (ReportPreTranslateAccuracySchema)",
+			req: &ReportGenerateRequest{
+				Name:   ReportPreTranslateAccuracy,
+				Schema: &PreTranslateAccuracySchema{Unit: ReportUnitStrings, PostEditingCategories: []string{"0-10"}},
+			},
+			valid: true,
+		},
+		{
+			name: "valid schema (ReportPreTranslateEfficiencySchema). Deprecated",
 			req: &ReportGenerateRequest{
 				Name:   ReportPreTranslateEfficiency,
 				Schema: &PreTranslateEfficiencySchema{Unit: ReportUnitStrings, PostEditingCategories: []string{"0-10"}},
