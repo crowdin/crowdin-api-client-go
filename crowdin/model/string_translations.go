@@ -356,6 +356,8 @@ type TranslationAddRequest struct {
 	// Note: Will be saved only if the source string has plurals and `pluralCategoryName`
 	// is equal to the one available for the language you add translations to.
 	PluralCategoryName string `json:"pluralCategoryName,omitempty"`
+	// Defines whether to add translation to TM. Default: true.
+	AddToTM *bool `json:"addToTm,omitempty"`
 }
 
 // Validate checks if the TranslationAddRequest is valid.
