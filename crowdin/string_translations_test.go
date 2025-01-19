@@ -630,7 +630,7 @@ func TestStringTranslationsService_AddTranslation(t *testing.T) {
 	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodPost)
 		testURL(t, r, path)
-		testBody(t, r, `{"stringId":35434,"languageId":"uk","text":"Цю стрічку перекладено"}`+"\n")
+		testBody(t, r, `{"stringId":35434,"languageId":"uk","text":"Цю стрічку перекладено","addToTm":false}`+"\n")
 
 		w.WriteHeader(http.StatusCreated)
 		fmt.Fprint(w, `{
@@ -656,6 +656,7 @@ func TestStringTranslationsService_AddTranslation(t *testing.T) {
 		StringID:   35434,
 		LanguageID: "uk",
 		Text:       "Цю стрічку перекладено",
+		AddToTM:    ToPtr(false),
 	}
 	translation, resp, err := client.StringTranslations.AddTranslation(context.Background(), 1, req)
 	require.NoError(t, err)
