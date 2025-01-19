@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func setupClient() (client *Client, mux *http.ServeMux, teardown func()) {
@@ -266,13 +268,128 @@ func TestPatch(t *testing.T) {
 	}
 }
 
+func TestRequestWithVariousErrorHandling(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+		body []byte
+		code int
+		err  string
+	}{
+		{
+			name: "not found error",
+			path: "/path",
+			body: []byte(`{
+				"error": {
+					"message": "Resource Not Found",
+					"code": 404
+				}
+			}`),
+			code: http.StatusNotFound,
+			err:  "404 Resource Not Found",
+		},
+		{
+			name: "wrong error schema",
+			path: "/path",
+			body: []byte(`{
+				"errors": ""
+			}`),
+			code: http.StatusBadRequest,
+			err:  "client: error while determining error type",
+		},
+		{
+			name: "invalid json",
+			path: "/path",
+			body: []byte(`{
+				"errors":
+			}`),
+			code: http.StatusBadRequest,
+			err:  "client: server returned 400 status code",
+		},
+		{
+			name: "graphql error",
+			path: "/graphql",
+			body: []byte(`{
+				"errors": [{
+					"message": "Cannot query field \"test\" on type \"Project\".",
+					"extensions": {"category": "graphql"},
+					"locations": [{"line": 7, "column": 8}]
+				}]
+			}`),
+			code: http.StatusBadRequest,
+			err:  "Cannot query field \"test\" on type \"Project\"., Locations: [{Line:7 Column:8}]",
+		},
+		{
+			name: "validation error",
+			path: "/path",
+			body: []byte(`{
+				"errors": [
+					{
+						"error": {
+							"key": "credentials",
+							"errors": [
+								{
+									"code": 0,
+									"message": "The server returned the following message: Translator API Authorization Failed."
+								}
+							]
+						}
+					}
+				]
+			}`),
+			code: http.StatusBadRequest,
+			err:  "credentials: The server returned the following message: Translator API Authorization Failed. (0)",
+		},
+		{
+			name: "batch validation error",
+			path: "/bath",
+			body: []byte(`{
+				"errors": [
+					{
+						"index": 0,
+						"errors": [
+							{
+								"error": {
+									"key": "name",
+									"errors": [
+										{
+											"code": "StringTypeInvalid",
+											"message": "Invalid type given. String expected"
+										}
+									]
+								}
+							}
+						]
+					}
+				]
+			}`),
+			code: http.StatusBadRequest,
+			err:  "Index: 0, name: Invalid type given. String expected (StringTypeInvalid)",
+		},
+	}
+
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	for i, tt := range tests {
+		path := fmt.Sprintf("%s/%d", tt.path, i)
+		mux.HandleFunc(path, func(w http.ResponseWriter, _ *http.Request) {
+			http.Error(w, string(tt.body), tt.code)
+		})
+
+		_, err := client.Patch(context.Background(), path, nil, nil)
+		assert.Error(t, err)
+		assert.Equal(t, tt.err, err.Error())
+	}
+}
+
 func TestDelete(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
 	mux.HandleFunc("/delete", func(_ http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
-			t.Errorf("Request method is %v, want %v", r.Method, http.MethodGet)
+			t.Errorf("Request method is %v, want %v", r.Method, http.MethodDelete)
 		}
 	})
 
