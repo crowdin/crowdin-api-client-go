@@ -27,7 +27,7 @@ func TestValidationErrorResponse_Error(t *testing.T) {
 		Response: &http.Response{},
 		Errors: []ValidationError{
 			{
-				Error: struct {
+				ErrorDetail: struct {
 					Key    string  `json:"key"`
 					Errors []Error `json:"errors"`
 				}{
@@ -41,7 +41,7 @@ func TestValidationErrorResponse_Error(t *testing.T) {
 				},
 			},
 			{
-				Error: struct {
+				ErrorDetail: struct {
 					Key    string  `json:"key"`
 					Errors []Error `json:"errors"`
 				}{
@@ -75,7 +75,7 @@ func TestValidationErrorResponse_Error_SingleError(t *testing.T) {
 		Response: &http.Response{},
 		Errors: []ValidationError{
 			{
-				Error: struct {
+				ErrorDetail: struct {
 					Key    string  `json:"key"`
 					Errors []Error `json:"errors"`
 				}{
@@ -262,6 +262,98 @@ func TestParseValidationErrorResponse(t *testing.T) {
 	}
 }
 
+func TestParseBatchValidationErrorResponse(t *testing.T) {
+	response := &http.Response{
+		StatusCode: http.StatusBadRequest,
+	}
+
+	cases := []struct {
+		name string
+		body []byte
+		err  string
+	}{
+		{
+			name: "batch errors",
+			body: []byte(`{
+				"errors": [
+					{
+						"index": 0,
+						"errors": [
+							{
+								"error": {
+									"key": "name",
+									"errors": [
+										{
+											"code": "StringTypeInvalid",
+											"message": "Invalid type given. String expected"
+										}
+									]
+								}
+							}
+						]
+					}
+				]
+			}`),
+			err: "Index: 0, name: Invalid type given. String expected (StringTypeInvalid)",
+		},
+		{
+			name: "multiple batch errors",
+			body: []byte(`{
+				"errors": [
+					{
+						"index": 0,
+						"errors": [
+							{
+								"error": {
+									"key": "name",
+									"errors": [
+										{
+											"code": "StringTypeInvalid",
+											"message": "Invalid type given. String expected"
+										}
+									]
+								}
+							}
+						]
+					},
+					{
+						"index": 1,
+						"errors": [
+							{
+								"error": {
+									"key": "name2",
+									"errors": [
+										{
+											"code": "IntegerTypeInvalid",
+											"message": "Invalid type given. Integer expected"
+										}
+									]
+								}
+							}
+						]
+					}
+				]
+			}`),
+			err: "Index: 0, name: Invalid type given. String expected (StringTypeInvalid); Index: 1, name2: Invalid type given. Integer expected (IntegerTypeInvalid)",
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			err := handleErrorResponse(response, tt.body, false)
+
+			var verr *BatchValidationErrorResponse
+			ok := errors.As(err, &verr)
+
+			assert.True(t, ok)
+			assert.NotNil(t, verr)
+			assert.Equal(t, http.StatusBadRequest, verr.Status)
+			assert.NotNil(t, verr.Response)
+			assert.Equal(t, tt.err, verr.Error())
+		})
+	}
+}
+
 func TestParseGraphGLErrorResponse(t *testing.T) {
 	response := &http.Response{
 		StatusCode: http.StatusBadRequest,
@@ -317,23 +409,36 @@ func TestParseGraphGLErrorResponse(t *testing.T) {
 	}
 }
 
-func handleErrorResponse(r *http.Response, body []byte, graphql bool) error {
-	var errorResponse error
-
-	switch r.StatusCode {
-	case http.StatusBadRequest:
-		if graphql {
-			errorResponse = &GraphQLErrorResponse{}
-		} else {
-			errorResponse = &ValidationErrorResponse{Response: r, Status: r.StatusCode}
-		}
-	default:
-		errorResponse = &ErrorResponse{Response: r}
-	}
-
-	if err := json.Unmarshal(body, errorResponse); err != nil {
+func handleErrorResponse(resp *http.Response, body []byte, graphql bool) error {
+	errorResp := determineErrorType(resp, body, graphql)
+	if err := json.Unmarshal(body, errorResp); err != nil {
 		return err
 	}
+	return errorResp
+}
 
-	return errorResponse
+func determineErrorType(resp *http.Response, body []byte, graph bool) error {
+	switch resp.StatusCode {
+	case http.StatusBadRequest:
+		if graph {
+			return &GraphQLErrorResponse{}
+		}
+
+		var b map[string]any
+		if err := json.Unmarshal(body, &b); err != nil {
+			return err
+		}
+
+		if errors, ok := b["errors"].([]any); ok && len(errors) > 0 {
+			if firstErr, ok := errors[0].(map[string]any); ok {
+				if _, ok := firstErr["index"]; ok {
+					return &BatchValidationErrorResponse{Response: resp, Status: resp.StatusCode}
+				}
+			}
+			return &ValidationErrorResponse{Response: resp, Status: resp.StatusCode}
+		}
+		return nil
+	default:
+		return &ErrorResponse{Response: resp}
+	}
 }

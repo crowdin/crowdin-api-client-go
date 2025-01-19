@@ -256,8 +256,7 @@ func (c *Client) do(r *http.Request, v any) (*Response, error) {
 	}
 
 	if code := resp.StatusCode; code >= http.StatusBadRequest && code <= 599 {
-		err = handleErrorResponse(resp, body, strings.Contains(r.URL.Path, "graphql"))
-		return response, err
+		return response, handleErrorResponse(r, resp, body)
 	}
 
 	if r.Method == http.MethodGet || r.Method == http.MethodPost {
@@ -387,24 +386,38 @@ func (c *Client) Delete(ctx context.Context, path string, v any) (*Response, err
 
 // handleErrorResponse checks the API response for errors and returns
 // them if they are found.
-func handleErrorResponse(r *http.Response, body []byte, graphql bool) error {
-	var errorResponse error
+func handleErrorResponse(res *http.Request, resp *http.Response, body []byte) error {
+	errorResp := determineErrorType(res, resp, body)
+	if err := json.Unmarshal(body, errorResp); err != nil {
+		return fmt.Errorf("client: server returned %d status code", resp.StatusCode)
+	}
+	return errorResp
+}
 
-	switch r.StatusCode {
+func determineErrorType(res *http.Request, resp *http.Response, body []byte) error {
+	switch resp.StatusCode {
 	case http.StatusBadRequest:
-		if graphql {
-			errorResponse = &model.GraphQLErrorResponse{}
-		} else {
-			errorResponse = &model.ValidationErrorResponse{Response: r, Status: r.StatusCode}
+		if strings.Contains(res.URL.Path, "graphql") {
+			return &model.GraphQLErrorResponse{}
 		}
-	default:
-		errorResponse = &model.ErrorResponse{Response: r}
-	}
 
-	if err := json.Unmarshal(body, errorResponse); err != nil {
-		return fmt.Errorf("client: server returned %d status code", r.StatusCode)
+		var b map[string]any
+		if err := json.Unmarshal(body, &b); err != nil {
+			return err
+		}
+
+		if errors, ok := b["errors"].([]any); ok && len(errors) > 0 {
+			if firstErr, ok := errors[0].(map[string]any); ok {
+				if _, ok := firstErr["index"]; ok {
+					return &model.BatchValidationErrorResponse{Response: resp, Status: resp.StatusCode}
+				}
+			}
+			return &model.ValidationErrorResponse{Response: resp, Status: resp.StatusCode}
+		}
+		return fmt.Errorf("client: error while determining error type")
+	default:
+		return &model.ErrorResponse{Response: resp}
 	}
-	return errorResponse
 }
 
 // Response is a Crowdin response that wraps http.Response.
