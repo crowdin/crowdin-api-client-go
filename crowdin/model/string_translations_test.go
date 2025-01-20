@@ -241,7 +241,7 @@ func TestTranslationAddRequestValidate(t *testing.T) {
 		{
 			name: "valid request",
 			req: &TranslationAddRequest{StringID: 123, LanguageID: "uk", Text: "Hello, World!",
-				PluralCategoryName: "one"},
+				PluralCategoryName: "one", AddToTM: toPtr(true)},
 			valid: true,
 		},
 	}
