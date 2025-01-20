@@ -63,10 +63,34 @@ func (r *ErrorResponse) Error() string {
 // ValidationError represents the schema for the invalid
 // request error response.
 type ValidationError struct {
-	Error struct {
+	ErrorDetail struct {
 		Key    string  `json:"key"`
 		Errors []Error `json:"errors"`
 	} `json:"error"`
+}
+
+// Error implements the Error interface.
+func (e *ValidationError) Error() string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("%s: ", e.ErrorDetail.Key))
+	for i, err := range e.ErrorDetail.Errors {
+		if i != 0 {
+			sb.WriteString(", ")
+		}
+
+		var code string
+		switch v := err.Code.(type) {
+		case int:
+			code = fmt.Sprintf("%d", v)
+		case string:
+			code = v
+		default:
+			code = "n/a"
+		}
+
+		sb.WriteString(fmt.Sprintf("%s (%s)", err.Message, code))
+	}
+	return sb.String()
 }
 
 // ValidationErrorResponse is the validation error response
@@ -85,24 +109,48 @@ func (r *ValidationErrorResponse) Error() string {
 		if i != 0 {
 			sb.WriteString("; ")
 		}
-		sb.WriteString(fmt.Sprintf("%s: ", err.Error.Key))
-		for j, e := range err.Error.Errors {
-			if j != 0 {
-				sb.WriteString(", ")
-			}
+		sb.WriteString(err.Error())
+	}
+	return sb.String()
+}
 
-			var code string
-			switch v := e.Code.(type) {
-			case int:
-				code = fmt.Sprintf("%d", v)
-			case string:
-				code = v
-			default:
-				code = "n/a"
-			}
+// BatchValidationError represents the invalid batch request
+// error response schema (string-based API).
+type BatchValidationError struct {
+	Index  int               `json:"index"`
+	Errors []ValidationError `json:"errors"`
+}
 
-			sb.WriteString(fmt.Sprintf("%s (%s)", e.Message, code))
+// Error implements the Error interface.
+func (e *BatchValidationError) Error() string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Index: %d, ", e.Index))
+	for i, err := range e.Errors {
+		if i != 0 {
+			sb.WriteString("; ")
 		}
+		sb.WriteString(err.Error())
+	}
+	return sb.String()
+}
+
+// BatchValidationErrorResponse is the batch validation error
+// response structure from the API.
+type BatchValidationErrorResponse struct {
+	Response *http.Response `json:"-"`
+
+	Errors []BatchValidationError `json:"errors"`
+	Status int
+}
+
+// Error implements the Error interface.
+func (r *BatchValidationErrorResponse) Error() string {
+	var sb strings.Builder
+	for i, err := range r.Errors {
+		if i != 0 {
+			sb.WriteString("; ")
+		}
+		sb.WriteString(err.Error())
 	}
 	return sb.String()
 }
