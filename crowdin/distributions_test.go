@@ -53,7 +53,8 @@ func TestDistributionsService_List(t *testing.T) {
 							"createdAt": "2023-09-16T13:48:04+00:00",
 							"updatedAt": "2023-09-19T13:25:27+00:00",
 							"exportMode": "bundle",
-							"fileIds": [24, 25, 38]
+							"fileIds": [24, 25, 38],
+							"manifestUrl": "https://distributions.crowdin.net/50fb350641274ba88296f97dc7e3e0c3/manifest.json"
 						}						
 					},
 					{
@@ -64,7 +65,8 @@ func TestDistributionsService_List(t *testing.T) {
 							"createdAt": "2023-09-16T13:48:04+00:00",
 							"updatedAt": "2023-09-19T13:25:27+00:00",
 							"exportMode": "bundle",
-							"fileIds": [25]
+							"fileIds": [25],
+							"manifestUrl": "https://distributions.crowdin.net/50fb350641274ba88296f97dc7e3e0c3/manifest.json"
 						}
 					}
 				],
@@ -81,22 +83,24 @@ func TestDistributionsService_List(t *testing.T) {
 
 		expected := []*model.Distribution{
 			{
-				Hash:       "50fb350641274ba88296f97dc7e3e0c3",
-				Name:       "Export Bundle",
-				BundleIDs:  []int{45, 62},
-				CreatedAt:  "2023-09-16T13:48:04+00:00",
-				UpdatedAt:  "2023-09-19T13:25:27+00:00",
-				ExportMode: "bundle",
-				FileIDs:    []int{24, 25, 38},
+				Hash:        "50fb350641274ba88296f97dc7e3e0c3",
+				Name:        "Export Bundle",
+				BundleIDs:   []int{45, 62},
+				CreatedAt:   "2023-09-16T13:48:04+00:00",
+				UpdatedAt:   "2023-09-19T13:25:27+00:00",
+				ExportMode:  "bundle",
+				FileIDs:     []int{24, 25, 38},
+				ManifestURL: "https://distributions.crowdin.net/50fb350641274ba88296f97dc7e3e0c3/manifest.json",
 			},
 			{
-				Hash:       "50fb350641274ba88296f97dc7e3e0c4",
-				Name:       "Export Bundle",
-				BundleIDs:  []int{47},
-				CreatedAt:  "2023-09-16T13:48:04+00:00",
-				UpdatedAt:  "2023-09-19T13:25:27+00:00",
-				ExportMode: "bundle",
-				FileIDs:    []int{25},
+				Hash:        "50fb350641274ba88296f97dc7e3e0c4",
+				Name:        "Export Bundle",
+				BundleIDs:   []int{47},
+				CreatedAt:   "2023-09-16T13:48:04+00:00",
+				UpdatedAt:   "2023-09-19T13:25:27+00:00",
+				ExportMode:  "bundle",
+				FileIDs:     []int{25},
+				ManifestURL: "https://distributions.crowdin.net/50fb350641274ba88296f97dc7e3e0c3/manifest.json",
 			},
 		}
 		require.Equal(t, expected, distributions)
@@ -133,7 +137,8 @@ func TestDistributionsService_Get(t *testing.T) {
 				"createdAt": "2023-09-16T13:48:04+00:00",
 				"updatedAt": "2023-09-19T13:25:27+00:00",
 				"exportMode": "bundle",
-				"fileIds": [24, 25, 38]
+				"fileIds": [24, 25, 38],
+				"manifestUrl": "https://distributions.crowdin.net/50fb350641274ba88296f97dc7e3e0c3/manifest.json"
 			}
 		}`)
 	})
@@ -143,13 +148,14 @@ func TestDistributionsService_Get(t *testing.T) {
 	assert.NotNil(t, resp)
 
 	expected := &model.Distribution{
-		Hash:       "50fb350641274ba88296f97dc7e3e0c3",
-		Name:       "Export Bundle",
-		BundleIDs:  []int{45, 62},
-		CreatedAt:  "2023-09-16T13:48:04+00:00",
-		UpdatedAt:  "2023-09-19T13:25:27+00:00",
-		ExportMode: "bundle",
-		FileIDs:    []int{24, 25, 38},
+		Hash:        "50fb350641274ba88296f97dc7e3e0c3",
+		Name:        "Export Bundle",
+		BundleIDs:   []int{45, 62},
+		CreatedAt:   "2023-09-16T13:48:04+00:00",
+		UpdatedAt:   "2023-09-19T13:25:27+00:00",
+		ExportMode:  "bundle",
+		FileIDs:     []int{24, 25, 38},
+		ManifestURL: "https://distributions.crowdin.net/50fb350641274ba88296f97dc7e3e0c3/manifest.json",
 	}
 	require.Equal(t, expected, distribution)
 }
@@ -173,7 +179,8 @@ func TestDistributionsService_Add(t *testing.T) {
 				"createdAt": "2023-09-16T13:48:04+00:00",
 				"updatedAt": "2023-09-19T13:25:27+00:00",
 				"exportMode": "bundle",
-				"fileIds": [24, 25, 38]
+				"fileIds": [24, 25, 38],
+				"manifestUrl": "https://distributions.crowdin.net/50fb350641274ba88296f97dc7e3e0c3/manifest.json"
 			}
 		}`)
 	})
@@ -188,13 +195,14 @@ func TestDistributionsService_Add(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 
 	expected := &model.Distribution{
-		Hash:       "50fb350641274ba88296f97dc7e3e0c3",
-		Name:       "Export Bundle",
-		BundleIDs:  []int{45, 62},
-		CreatedAt:  "2023-09-16T13:48:04+00:00",
-		UpdatedAt:  "2023-09-19T13:25:27+00:00",
-		ExportMode: "bundle",
-		FileIDs:    []int{24, 25, 38},
+		Hash:        "50fb350641274ba88296f97dc7e3e0c3",
+		Name:        "Export Bundle",
+		BundleIDs:   []int{45, 62},
+		CreatedAt:   "2023-09-16T13:48:04+00:00",
+		UpdatedAt:   "2023-09-19T13:25:27+00:00",
+		ExportMode:  "bundle",
+		FileIDs:     []int{24, 25, 38},
+		ManifestURL: "https://distributions.crowdin.net/50fb350641274ba88296f97dc7e3e0c3/manifest.json",
 	}
 	assert.Equal(t, expected, distribution)
 }
@@ -217,7 +225,8 @@ func TestDistributionsService_Edit(t *testing.T) {
 				"createdAt": "2023-09-16T13:48:04+00:00",
 				"updatedAt": "2023-09-19T13:25:27+00:00",
 				"exportMode": "bundle",
-				"fileIds": [24, 25, 38]
+				"fileIds": [24, 25, 38],
+				"manifestUrl": "https://distributions.crowdin.net/50fb350641274ba88296f97dc7e3e0c3/manifest.json"
 			}
 		}`)
 	})
@@ -234,13 +243,14 @@ func TestDistributionsService_Edit(t *testing.T) {
 	assert.NotNil(t, resp)
 
 	expected := &model.Distribution{
-		Hash:       "50fb350641274ba88296f97dc7e3e0c3",
-		Name:       "Export Bundle",
-		BundleIDs:  []int{45, 62},
-		CreatedAt:  "2023-09-16T13:48:04+00:00",
-		UpdatedAt:  "2023-09-19T13:25:27+00:00",
-		ExportMode: "bundle",
-		FileIDs:    []int{24, 25, 38},
+		Hash:        "50fb350641274ba88296f97dc7e3e0c3",
+		Name:        "Export Bundle",
+		BundleIDs:   []int{45, 62},
+		CreatedAt:   "2023-09-16T13:48:04+00:00",
+		UpdatedAt:   "2023-09-19T13:25:27+00:00",
+		ExportMode:  "bundle",
+		FileIDs:     []int{24, 25, 38},
+		ManifestURL: "https://distributions.crowdin.net/50fb350641274ba88296f97dc7e3e0c3/manifest.json",
 	}
 	assert.Equal(t, expected, distribution)
 }
