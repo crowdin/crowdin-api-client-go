@@ -69,7 +69,7 @@ type MTAddRequest struct {
 	Name string `json:"name"`
 	// MT engine type.
 	// Enum: google, google_automl, microsoft, deepl,
-	//       amazon, watson, modernmt, custom_mt.
+	//       amazon, modernmt, custom_mt.
 	Type string `json:"type"`
 	// MT engine credentials.
 	Credentials *MTECredentials `json:"credentials"`
@@ -110,11 +110,6 @@ type MTAddRequest struct {
 //	APIKey (string): Your DeepL Pro API key.
 //	IsSystemCredentials (bool): This option will enable the paid service
 //	                            DeepL via Crowdin. Default: false.
-//
-// Watson (IBM) Translate:
-//
-//	APIKey (string): Your Watson Translate API key.
-//	Endpoint (string): Your Watson Translate endpoint URL.
 //
 // Amazon Translate:
 //
