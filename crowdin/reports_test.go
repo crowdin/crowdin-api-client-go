@@ -1256,3 +1256,320 @@ func jsonReportStatus() string {
 		}
 	}`
 }
+
+func TestReportsService_GetUserSettingsTemplate(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/users/1/reports/settings-templates/1"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 1,
+				"name": "Default template",
+				"currency": "USD",
+				"unit": "words",
+				"config": {
+					"baseRates": {
+						"fullTranslation": 0.1,
+						"proofread": 0.12
+					},
+					"individualRates": [
+						{
+							"languageIds": [
+								"uk"
+							],
+							"userIds": [],
+							"fullTranslation": 0.1,
+							"proofread": 0.12
+						}
+					],
+					"netRateSchemes": {
+						"tmMatch": [
+								{
+									"matchType": "perfect",
+									"price": 0.1
+								}
+							],
+						"mtMatch": [
+							{
+								"matchType": "100",
+								"price": 0.1
+							}
+						],
+						"aiMatch": [
+							{
+								"matchType": "100",
+								"price": 0.1
+							}
+						],
+						"suggestionMatch": [
+							{
+								"matchType": "100",
+								"price": 0.1
+							}
+						]
+					}
+				},
+				"createdAt": "2024-09-23T11:26:54+00:00",
+				"updatedAt": "2024-09-23T11:26:54+00:00"
+			}
+		}`)
+	})
+
+	template, resp, err := client.Reports.GetUserSettingsTemplate(context.Background(), 1, 1)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := &model.ReportSettingsTemplate{
+		ID:       1,
+		Name:     "Default template",
+		Currency: "USD",
+		Unit:     "words",
+		Config: model.ReportSettingsTemplateConfig{
+			BaseRates: &model.ReportBaseRates{FullTranslation: 0.1, Proofread: 0.12},
+			IndividualRates: []*model.ReportIndividualRates{
+				{
+					LanguageIDs:     []string{"uk"},
+					UserIDs:         []int{},
+					FullTranslation: 0.1,
+					Proofread:       0.12,
+				},
+			},
+			NetRateSchemes: &model.ReportNetRateSchemes{
+				TMMatch:         []model.ReportNetRateSchemeMatch{{MatchType: "perfect", Price: 0.1}},
+				MTMatch:         []model.ReportNetRateSchemeMatch{{MatchType: "100", Price: 0.1}},
+				SuggestionMatch: []model.ReportNetRateSchemeMatch{{MatchType: "100", Price: 0.1}},
+			},
+		},
+		CreatedAt: "2024-09-23T11:26:54+00:00",
+		UpdatedAt: "2024-09-23T11:26:54+00:00",
+	}
+	assert.Equal(t, expected, template)
+}
+
+func TestReportsService_ListUserSettingsTemplates(t *testing.T) {
+	tests := []struct {
+		name          string
+		opts          *model.ListOptions
+		expectedQuery string
+	}{
+		{
+			name:          "nil options",
+			opts:          nil,
+			expectedQuery: "",
+		},
+		{
+			name:          "empty options",
+			opts:          &model.ListOptions{},
+			expectedQuery: "",
+		},
+		{
+			name:          "with options",
+			opts:          &model.ListOptions{Offset: 10, Limit: 10},
+			expectedQuery: "?limit=10&offset=10",
+		},
+	}
+
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	for userID, tt := range tests {
+		userID++
+		t.Run(tt.name, func(t *testing.T) {
+			path := fmt.Sprintf("/api/v2/users/%d/reports/settings-templates", userID)
+			mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+				testMethod(t, r, "GET")
+				testURL(t, r, path+tt.expectedQuery)
+
+				fmt.Fprint(w, `{
+					"data": [
+						{
+							"data": {
+								"id": 1,
+								"name": "Default template"
+							}
+						},
+						{
+							"data": {
+								"id": 2,
+								"name": "Custom template"
+							}
+						}
+					],
+					"pagination": {
+						"offset": 10,
+						"limit": 20
+					}
+				}`)
+			})
+
+			templates, resp, err := client.Reports.ListUserSettingsTemplates(context.Background(), userID, tt.opts)
+
+			require.NoError(t, err)
+			assert.Equal(t, 10, resp.Pagination.Offset)
+			assert.Equal(t, 20, resp.Pagination.Limit)
+			assert.Equal(t, []*model.ReportSettingsTemplate{{ID: 1, Name: "Default template"}, {ID: 2, Name: "Custom template"}}, templates)
+		})
+	}
+}
+
+func TestReportsService_ListUserSettingsTemplates_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/users/1/reports/settings-templates", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Reports.ListUserSettingsTemplates(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestReportsService_AddUserSettingsTemplate(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/users/1/reports/settings-templates"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"name":"Default template",
+			"currency":"USD",
+			"unit":"words",
+			"config":{
+				"baseRates":{
+					"fullTranslation":0.1,
+					"proofread":0.12
+				},
+				"individualRates":[
+					{
+						"languageIds":["uk"],
+						"userIds":[1],
+						"fullTranslation":0.1,
+						"proofread":0.12
+					}
+				],
+				"netRateSchemes":{
+					"tmMatch":[
+						{
+							"matchType":"perfect",
+							"price":0.1
+						}
+					],
+					"mtMatch":[
+						{
+							"matchType":"100",
+							"price":0.1
+						}
+					],
+					"suggestionMatch":[
+						{
+							"matchType":"100",
+							"price":0.1
+						}
+					]
+				}
+			}
+		}`)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 1,
+				"name": "Default template"
+			}
+		}`)
+	})
+
+	req := &model.ReportSettingsTemplateAddRequest{
+		Name:     "Default template",
+		Currency: "USD",
+		Unit:     model.ReportUnitWords,
+		Config: &model.ReportSettingsTemplateConfig{
+			BaseRates: &model.ReportBaseRates{
+				FullTranslation: 0.1,
+				Proofread:       0.12,
+			},
+			IndividualRates: []*model.ReportIndividualRates{
+				{
+					LanguageIDs:     []string{"uk"},
+					UserIDs:         []int{1},
+					FullTranslation: 0.1,
+					Proofread:       0.12,
+				},
+			},
+			NetRateSchemes: &model.ReportNetRateSchemes{
+				TMMatch:         []model.ReportNetRateSchemeMatch{{MatchType: "perfect", Price: 0.1}},
+				MTMatch:         []model.ReportNetRateSchemeMatch{{MatchType: "100", Price: 0.1}},
+				SuggestionMatch: []model.ReportNetRateSchemeMatch{{MatchType: "100", Price: 0.1}},
+			},
+		},
+	}
+	template, resp, err := client.Reports.AddUserSettingsTemplate(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := &model.ReportSettingsTemplate{ID: 1, Name: "Default template"}
+	assert.Equal(t, expected, template)
+}
+
+func TestReportsService_EditUserSettingsTemplate(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/users/1/reports/settings-templates/2"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "PATCH")
+		testURL(t, r, path)
+		testBody(t, r, `[{"op":"replace","path":"/name","value":"New name"},{"op":"replace","path":"/currency","value":"USD"}]`+"\n")
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2,
+				"name": "New name",
+				"currency": "USD"
+			}
+		}`)
+	})
+
+	req := []*model.UpdateRequest{
+		{
+			Op:    model.OpReplace,
+			Path:  "/name",
+			Value: "New name",
+		},
+		{
+			Op:    model.OpReplace,
+			Path:  "/currency",
+			Value: "USD",
+		},
+	}
+	template, resp, err := client.Reports.EditUserSettingsTemplate(context.Background(), 1, 2, req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := &model.ReportSettingsTemplate{ID: 2, Name: "New name", Currency: "USD"}
+	assert.Equal(t, expected, template)
+}
+
+func TestReportsService_DeleteUserSettingsTemplate(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/users/1/reports/settings-templates/2"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "DELETE")
+		testURL(t, r, path)
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	resp, err := client.Reports.DeleteUserSettingsTemplate(context.Background(), 1, 2)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}
