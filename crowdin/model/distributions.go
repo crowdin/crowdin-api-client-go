@@ -4,13 +4,14 @@ import "errors"
 
 // Distribution represents a distribution in the project.
 type Distribution struct {
-	Hash       string `json:"hash"`
-	Name       string `json:"name"`
-	BundleIDs  []int  `json:"bundleIds"`
-	CreatedAt  string `json:"createdAt"`
-	UpdatedAt  string `json:"updatedAt"`
-	ExportMode string `json:"exportMode"`
-	FileIDs    []int  `json:"fileIds"`
+	Hash        string `json:"hash"`
+	Name        string `json:"name"`
+	BundleIDs   []int  `json:"bundleIds"`
+	CreatedAt   string `json:"createdAt"`
+	UpdatedAt   string `json:"updatedAt"`
+	ExportMode  string `json:"exportMode"`
+	FileIDs     []int  `json:"fileIds"`
+	ManifestURL string `json:"manifestUrl"`
 }
 
 // DistributionResponse defines the structure of the response when
