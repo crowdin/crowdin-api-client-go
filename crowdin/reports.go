@@ -40,7 +40,7 @@ func (s *ReportsService) ListArchives(ctx context.Context, userID int, opts *mod
 	return list, resp, err
 }
 
-// GetArchive returns a report archive bu its identifier.
+// GetArchive returns a report archive by its identifier.
 //
 //	For the Enterprise client, set the userID to 0.
 //
@@ -293,6 +293,73 @@ func (s *ReportsService) DownloadOrganizationReport(ctx context.Context, reportI
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/reports/%s/download", reportID), nil, res)
 
 	return res.Data, resp, err
+}
+
+// ListUserSettingsTemplates returns a list of user report settings templates.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Reports/operation/api.users.reports.settings-templates.getMany
+func (s *ReportsService) ListUserSettingsTemplates(ctx context.Context, userID int, opts *model.ListOptions) (
+	[]*model.ReportSettingsTemplate, *Response, error,
+) {
+	res := new(model.ReportSettingsTemplateListResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/users/%d/reports/settings-templates", userID), opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.ReportSettingsTemplate, 0, len(res.Data))
+	for _, st := range res.Data {
+		list = append(list, st.Data)
+	}
+
+	return list, resp, err
+}
+
+// GetUserSettingsTemplate returns a user report settings template by its identifier.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Reports/operation/api.users.reports.settings-templates.get
+func (s *ReportsService) GetUserSettingsTemplate(ctx context.Context, userID, settingsTemplateID int) (
+	*model.ReportSettingsTemplate, *Response, error,
+) {
+	res := new(model.ReportSettingsTemplateResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/users/%d/reports/settings-templates/%d", userID, settingsTemplateID), nil, res)
+
+	return res.Data, resp, err
+}
+
+// AddUserSettingsTemplate creates a new user report settings template.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Reports/operation/api.users.reports.settings-templates.post
+func (s *ReportsService) AddUserSettingsTemplate(ctx context.Context, userID int, req *model.ReportSettingsTemplateAddRequest) (
+	*model.ReportSettingsTemplate, *Response, error,
+) {
+	res := new(model.ReportSettingsTemplateResponse)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/users/%d/reports/settings-templates", userID), req, res)
+
+	return res.Data, resp, err
+}
+
+// EditUserSettingsTemplate updates a user report settings template.
+//
+// Request body:
+//   - Op (string): operation to perform. Enum: replace, test.
+//   - Path (string <json-pointer>): path to the field to update. Enum: "/name", "/currency", "/unit", "/config".
+//   - Value (string|int): new value to set.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Reports/operation/api.users.reports.settings-templates.patch
+func (s *ReportsService) EditUserSettingsTemplate(ctx context.Context, userID, settingsTemplateID int, req []*model.UpdateRequest) (
+	*model.ReportSettingsTemplate, *Response, error,
+) {
+	res := new(model.ReportSettingsTemplateResponse)
+	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/users/%d/reports/settings-templates/%d", userID, settingsTemplateID), req, res)
+
+	return res.Data, resp, err
+}
+
+// DeleteUserSettingsTemplate removes a user report settings template.
+// https://support.crowdin.com/developer/api/v2/#tag/Reports/operation/api.users.reports.settings-templates.delete
+func (s *ReportsService) DeleteUserSettingsTemplate(ctx context.Context, userID, settingsTemplateID int) (*Response, error) {
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/users/%d/reports/settings-templates/%d", userID, settingsTemplateID), nil)
 }
 
 // getArchivePath returns the path for the report archive.
