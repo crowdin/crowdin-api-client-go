@@ -351,18 +351,6 @@ func TestMachineTranslationEnginesService_AddMT_WithRequiredParams(t *testing.T)
 			expectedBody: `{"name":"DeepL Pro","type":"deepl","credentials":{"apiKey":"api_key","isSystemCredentials":false}}` + "\n",
 		},
 		{
-			name: "Watson (IBM) Translate",
-			req: &model.MTAddRequest{
-				Name: "Watson (IBM) Translate",
-				Type: "watson",
-				Credentials: &model.MTECredentials{
-					APIKey:   "api_key",
-					Endpoint: "https://example.com/endpoint",
-				},
-			},
-			expectedBody: `{"name":"Watson (IBM) Translate","type":"watson","credentials":{"apiKey":"api_key","endpoint":"https://example.com/endpoint"}}` + "\n",
-		},
-		{
 			name: "Amazon Translate",
 			req: &model.MTAddRequest{
 				Name: "Amazon Translate",
