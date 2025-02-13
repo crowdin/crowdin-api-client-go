@@ -97,6 +97,7 @@ func testClientServices(t *testing.T, c *Client) {
 		"Translations",
 		"TranslationStatus",
 		"MachineTranslationEngines",
+		"Managers",
 		"Screenshots",
 	}
 

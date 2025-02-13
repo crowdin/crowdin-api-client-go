@@ -42,6 +42,7 @@ type Client struct {
 	Labels                    *LabelsService
 	Languages                 *LanguagesService
 	MachineTranslationEngines *MachineTranslationEnginesService
+	Managers                  *ManagersService
 	Notifications             *NotificationsService
 	OrganizationWebhooks      *OrganizationWebhooksService
 	Projects                  *ProjectsService
@@ -109,6 +110,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.Labels = &LabelsService{client: c}
 	c.Languages = &LanguagesService{client: c}
 	c.MachineTranslationEngines = &MachineTranslationEnginesService{client: c}
+	c.Managers = &ManagersService{client: c}
 	c.Notifications = &NotificationsService{client: c}
 	c.OrganizationWebhooks = &OrganizationWebhooksService{client: c}
 	c.Projects = &ProjectsService{client: c}
