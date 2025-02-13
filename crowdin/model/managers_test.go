@@ -21,9 +21,14 @@ func TestManagerListOptionsValues(t *testing.T) {
 			opts: &ManagerListOptions{},
 		},
 		{
-			name: "with parent ID",
-			opts: &ManagerListOptions{TeamIds: 123},
-			out:  "parentId=123",
+			name: "with teams ID",
+			opts: &ManagerListOptions{TeamIDs: 123},
+			out:  "teamIds=123",
+		},
+		{
+			name: "with ordeby ID",
+			opts: &ManagerListOptions{TeamIDs: 123, OrderBy: "asc"},
+			out:  "orderBy=asc&teamIds=123",
 		},
 		{
 			name: "with list options",

@@ -27,7 +27,7 @@ type ManagerEditResponse struct {
 type ManagerListOptions struct {
 	ListOptions
 
-	TeamIds int `json:"teamIds,omitempty"`
+	TeamIDs int `json:"teamIds,omitempty"`
 
 	OrderBy string `json:"orderBy,omitempty"`
 }
@@ -40,8 +40,8 @@ func (o *ManagerListOptions) Values() (url.Values, bool) {
 	}
 
 	v, _ := o.ListOptions.Values()
-	if o.TeamIds > 0 {
-		v.Add("parentId", fmt.Sprintf("%d", o.TeamIds))
+	if o.TeamIDs > 0 {
+		v.Add("teamIds", fmt.Sprintf("%d", o.TeamIDs))
 	}
 
 	if o.OrderBy != "" {

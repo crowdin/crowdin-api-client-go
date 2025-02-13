@@ -538,6 +538,19 @@ func TestManagersService_Edit(t *testing.T) {
 	}
 }
 
+func TestManagersService_Edit_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/groups/1/managers", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Groups.EditManagers(context.Background(), "1", nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestManagersService_Get(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -693,6 +706,19 @@ func TestGroupsTeamsService_List(t *testing.T) {
 	}
 }
 
+func TestGroupsTeamsService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/groups/2/teams", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Groups.ListTeams(context.Background(), "1", nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
 func TestGroupTeamsService_Get(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -785,4 +811,17 @@ func TestGroupTeamsService_Edit(t *testing.T) {
 	if teams[0].User.ID != want {
 		t.Errorf("Managers.Edit returned %+v, want %+v", teams[0].User.ID, want)
 	}
+}
+
+func TestGroupsTeamsService_Edit_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/groups/1/teams", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Groups.EditTeams(context.Background(), "1", nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
