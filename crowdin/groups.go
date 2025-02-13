@@ -76,3 +76,101 @@ func (s *GroupsService) Edit(ctx context.Context, id int, req []*model.UpdateReq
 func (s *GroupsService) Delete(ctx context.Context, id int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/groups/%d", id), nil)
 }
+
+// List returns a list of managers.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Users/operation/api.groups.managers.getMany
+func (s *GroupsService) ListManagers(ctx context.Context, groupID string, opts *model.ManagerListOptions) ([]*model.Manager, *Response, error) {
+	res := new(model.ManagerListResponse)
+	url := fmt.Sprintf("/api/v2/groups/%s/managers", groupID)
+
+	resp, err := s.client.Get(ctx, url, opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.Manager, 0, len(res.Data))
+	for _, item := range res.Data {
+		list = append(list, item.Data)
+	}
+
+	return list, resp, nil
+}
+
+// Get returns a manager by its identifier.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Users/operation/api.groups.managers.get
+func (s *GroupsService) GetManagers(ctx context.Context, fieldID string) (*model.Manager, *Response, error) {
+	res := new(model.ManagerGetResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/fields/%s", fieldID), nil, res)
+
+	return res.Data, resp, err
+}
+
+//	Update a manager.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Users/operation/api.groups.managers.patch
+func (s *GroupsService) EditManagers(ctx context.Context, groupID string, req []*model.UpdateRequest) ([]*model.Manager, *Response, error) {
+	res := new(model.ManagerEditResponse)
+	url := fmt.Sprintf("/api/v2/groups/%s/managers", groupID)
+	resp, err := s.client.Patch(ctx, url, req, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.Manager, 0, len(res.Data))
+	for _, item := range res.Data {
+		list = append(list, item.Data)
+	}
+
+	return list, resp, nil
+}
+
+// List returns a list of teams.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Teams/operation/api.groups.teams.getMany
+func (s *GroupsService) ListTeams(ctx context.Context, groupID string, opts *model.TeamsListOptions) ([]*model.GroupsTeams, *Response, error) {
+	res := new(model.GroupsTeamsData)
+	url := fmt.Sprintf("/api/v2/groups/%s/teams", groupID)
+
+	resp, err := s.client.Get(ctx, url, opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.GroupsTeams, 0, len(res.Data))
+	for _, item := range res.Data {
+		list = append(list, item.Data)
+	}
+
+	return list, resp, nil
+}
+
+// Get returns a teams by its identifier.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Teams/operation/api.groups.teams.get
+func (s *GroupsService) GetTeams(ctx context.Context, groupID, teamID string) (*model.GroupsTeams, *Response, error) {
+	res := new(model.TeamsGetResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/groups/%s/teams/%s", groupID, teamID), nil, res)
+
+	return res.Data, resp, err
+}
+
+//	Update a teams.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Teams/operation/api.groups.teams.patch
+func (s *GroupsService) EditTeams(ctx context.Context, groupID string, req []*model.UpdateRequest) ([]*model.GroupsTeams, *Response, error) {
+	res := new(model.GroupsTeamsDataEdit)
+	url := fmt.Sprintf("/api/v2/groups/%s/teams", groupID)
+	resp, err := s.client.Patch(ctx, url, req, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.GroupsTeams, 0, len(res.Data))
+	for _, item := range res.Data {
+		list = append(list, item.Data)
+	}
+
+	return list, resp, nil
+}
