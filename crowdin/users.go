@@ -168,3 +168,52 @@ func (s *UsersService) Edit(ctx context.Context, userID int, req []*model.Update
 func (s *UsersService) Delete(ctx context.Context, userID int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/users/%d", userID), nil)
 }
+
+// List returns a list of managers.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Users/operation/api.groups.managers.getMany
+func (s *UsersService) ListManagers(ctx context.Context, groupID string, opts *model.ManagerListOptions) ([]*model.Manager, *Response, error) {
+	res := new(model.ManagerListResponse)
+	url := fmt.Sprintf("/api/v2/groups/%s/managers", groupID)
+
+	resp, err := s.client.Get(ctx, url, opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.Manager, 0, len(res.Data))
+	for _, item := range res.Data {
+		list = append(list, item.Data)
+	}
+
+	return list, resp, nil
+}
+
+// Get returns a manager by its identifier.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Users/operation/api.groups.managers.get
+func (s *UsersService) GetManagers(ctx context.Context, fieldID string) (*model.Manager, *Response, error) {
+	res := new(model.ManagerGetResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/fields/%s", fieldID), nil, res)
+
+	return res.Data, resp, err
+}
+
+//	Update a manager.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Users/operation/api.groups.managers.patch
+func (s *UsersService) EditManagers(ctx context.Context, groupID string, req []*model.UpdateRequest) ([]*model.Manager, *Response, error) {
+	res := new(model.ManagerEditResponse)
+	url := fmt.Sprintf("/api/v2/groups/%s/managers", groupID)
+	resp, err := s.client.Patch(ctx, url, req, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.Manager, 0, len(res.Data))
+	for _, item := range res.Data {
+		list = append(list, item.Data)
+	}
+
+	return list, resp, nil
+}

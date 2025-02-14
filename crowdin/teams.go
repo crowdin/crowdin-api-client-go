@@ -148,3 +148,52 @@ func (s *TeamsService) AddToProject(ctx context.Context, projectID int, req *mod
 		"added":   res.Added,
 	}, resp, nil
 }
+
+// List returns a list of teams.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Teams/operation/api.groups.teams.getMany
+func (s *TeamsService) ListTeams(ctx context.Context, groupID string, opts *model.TeamsListOptions) ([]*model.GroupsTeams, *Response, error) {
+	res := new(model.GroupsTeamsData)
+	url := fmt.Sprintf("/api/v2/groups/%s/teams", groupID)
+
+	resp, err := s.client.Get(ctx, url, opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.GroupsTeams, 0, len(res.Data))
+	for _, item := range res.Data {
+		list = append(list, item.Data)
+	}
+
+	return list, resp, nil
+}
+
+// Get returns a teams by its identifier.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Teams/operation/api.groups.teams.get
+func (s *TeamsService) GetTeams(ctx context.Context, groupID, teamID string) (*model.GroupsTeams, *Response, error) {
+	res := new(model.TeamsGetResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/groups/%s/teams/%s", groupID, teamID), nil, res)
+
+	return res.Data, resp, err
+}
+
+//	Update a teams.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Teams/operation/api.groups.teams.patch
+func (s *TeamsService) EditTeams(ctx context.Context, groupID string, req []*model.UpdateRequest) ([]*model.GroupsTeams, *Response, error) {
+	res := new(model.GroupsTeamsDataEdit)
+	url := fmt.Sprintf("/api/v2/groups/%s/teams", groupID)
+	resp, err := s.client.Patch(ctx, url, req, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.GroupsTeams, 0, len(res.Data))
+	for _, item := range res.Data {
+		list = append(list, item.Data)
+	}
+
+	return list, resp, nil
+}

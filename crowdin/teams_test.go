@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"reflect"
 	"testing"
 
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
@@ -677,4 +678,186 @@ func TestTeamsService_AddToProject_error(t *testing.T) {
 	assert.ErrorIs(t, err, model.ErrNilRequest)
 	assert.Nil(t, teams)
 	assert.Nil(t, resp)
+}
+
+func TestGroupsTeamsService_List(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/groups/2/teams", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, "/api/v2/groups/2/teams")
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+							"id": 27,
+							"user": {
+							"id": 2,
+							"name": "Translators Team",
+							"totalMembers": 8,
+							"webUrl": "https://example.crowdin.com/u/teams/1",
+							"createdAt": "2019-09-23T09:04:29+00:00",
+							"updatedAt": "2019-09-23T09:04:29+00:00"
+						}
+					}
+				}
+			],
+			"pagination": {
+				"offset": 0,
+				"limit": 25
+			}
+		  }
+		`)
+	})
+
+	teams, resp, err := client.Teams.ListTeams(context.Background(), "2", nil)
+	if err != nil {
+		t.Errorf("Group.Teams.List returned error: %v", err.Error())
+	}
+
+	want := []*model.TeamsGetResponse{
+		{
+			Data: &model.GroupsTeams{
+				ID: 27,
+				User: &model.Team{
+					ID:           2,
+					Name:         "Translators Team",
+					TotalMembers: 8,
+					WebURL:       "https://example.crowdin.com/u/teams/1",
+					CreatedAt:    "2019-09-23T09:04:29+00:00",
+					UpdatedAt:    "2019-09-23T09:04:29+00:00",
+				},
+			},
+		},
+	}
+
+	if teams[0].User.Name != want[0].Data.User.Name {
+		t.Errorf("Managers.List returned ID %v, want %v", teams[0].ID, want[0].Data.ID)
+	}
+
+	expectedPagination := model.Pagination{Offset: 0, Limit: 25}
+	if !reflect.DeepEqual(resp.Pagination, expectedPagination) {
+		t.Errorf("Group.Teams.List returned %+v, want %+v", resp.Pagination, expectedPagination)
+	}
+}
+
+func TestGroupsTeamsService_List_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/groups/2/teams", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Teams.ListTeams(context.Background(), "1", nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestGroupTeamsService_Get(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/groups/1/teams/1", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, "/api/v2/groups/1/teams/1")
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 27,
+				"user": {
+				"id": 2,
+				"name": "Translators Team",
+				"totalMembers": 8,
+				"webUrl": "https://example.crowdin.com/u/teams/1",
+				"createdAt": "2019-09-23T09:04:29+00:00",
+				"updatedAt": "2019-09-23T09:04:29+00:00"
+				}
+			}
+		}`)
+	})
+
+	teams, _, err := client.Teams.GetTeams(context.Background(), "1", "1")
+	if err != nil {
+		t.Errorf("Managers.Get returned error: %v", err)
+	}
+
+	want := &model.TeamsGetResponse{
+		Data: &model.GroupsTeams{
+			ID: 18,
+			User: &model.Team{
+				ID:           2,
+				Name:         "Translators Team",
+				TotalMembers: 8,
+				WebURL:       "https://example.crowdin.com/u/teams/1",
+				CreatedAt:    "2019-09-23T09:04:29+00:00",
+				UpdatedAt:    "2019-09-23T09:04:29+00:00",
+			},
+		},
+	}
+
+	if teams.User.ID != want.Data.User.ID {
+		t.Errorf("Managers.Get returned %+v, want %+v", teams, want)
+	}
+}
+
+func TestGroupTeamsService_Edit(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/groups/1/teams", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "PATCH")
+		testURL(t, r, "/api/v2/groups/1/teams")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+				"data": {
+					"id": 2,
+					"user": {
+					"id": 18,
+					"name": "Translators Team",
+					"totalMembers": 8,
+					"webUrl": "https://example.crowdin.com/u/teams/1",
+					"createdAt": "2019-09-23T09:04:29+00:00",
+					"updatedAt": "2019-09-23T09:04:29+00:00"
+					}
+				}
+				}
+			]
+		}`)
+	})
+
+	req := []*model.UpdateRequest{
+		{
+			Op:   "add",
+			Path: "/id",
+			Value: `{
+				"id": 18,
+			}`,
+		},
+	}
+	teams, _, err := client.Teams.EditTeams(context.Background(), "1", req)
+	if err != nil {
+		t.Errorf("Groups.Teams.Edit returned error: %v", err)
+	}
+
+	want := 18
+
+	if teams[0].User.ID != want {
+		t.Errorf("Managers.Edit returned %+v, want %+v", teams[0].User.ID, want)
+	}
+}
+
+func TestGroupsTeamsService_Edit_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/groups/1/teams", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Teams.EditTeams(context.Background(), "1", nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }
