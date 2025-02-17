@@ -23,12 +23,12 @@ func TestManagerListOptionsValues(t *testing.T) {
 		{
 			name: "with teams ID",
 			opts: &ManagerListOptions{TeamIDs: []int{1, 2, 3}},
-			out:  "teamIds=1,2,3",
+			out:  "teamIds=1%2C2%2C3",
 		},
 		{
 			name: "with ordeby ID",
 			opts: &ManagerListOptions{TeamIDs: []int{1, 2, 3}, OrderBy: "asc"},
-			out:  "orderBy=asc&teamIds=1,2,3",
+			out:  "orderBy=asc&teamIds=1%2C2%2C3",
 		},
 	}
 
