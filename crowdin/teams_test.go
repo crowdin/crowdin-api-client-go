@@ -711,14 +711,14 @@ func TestGroupsTeamsService_List(t *testing.T) {
 		`)
 	})
 
-	teams, resp, err := client.Teams.ListTeams(context.Background(), "2", nil)
+	teams, resp, err := client.Teams.ListGroupTeams(context.Background(), 2, nil)
 	if err != nil {
 		t.Errorf("Group.Teams.List returned error: %v", err.Error())
 	}
 
 	want := []*model.TeamsGetResponse{
 		{
-			Data: &model.GroupsTeams{
+			Data: &model.GroupsTeam{
 				ID: 27,
 				User: &model.Team{
 					ID:           2,
@@ -750,7 +750,7 @@ func TestGroupsTeamsService_List_invalidJSON(t *testing.T) {
 		fmt.Fprint(w, `invalid json`)
 	})
 
-	res, _, err := client.Teams.ListTeams(context.Background(), "1", nil)
+	res, _, err := client.Teams.ListGroupTeams(context.Background(), 1, nil)
 	require.Error(t, err)
 	assert.Nil(t, res)
 }
@@ -777,13 +777,13 @@ func TestGroupTeamsService_Get(t *testing.T) {
 		}`)
 	})
 
-	teams, _, err := client.Teams.GetTeams(context.Background(), "1", "1")
+	teams, _, err := client.Teams.GetGroupTeam(context.Background(), 1, 1)
 	if err != nil {
 		t.Errorf("Managers.Get returned error: %v", err)
 	}
 
 	want := &model.TeamsGetResponse{
-		Data: &model.GroupsTeams{
+		Data: &model.GroupsTeam{
 			ID: 18,
 			User: &model.Team{
 				ID:           2,
@@ -837,7 +837,7 @@ func TestGroupTeamsService_Edit(t *testing.T) {
 			}`,
 		},
 	}
-	teams, _, err := client.Teams.EditTeams(context.Background(), "1", req)
+	teams, _, err := client.Teams.EditGroupTeams(context.Background(), 1, req)
 	if err != nil {
 		t.Errorf("Groups.Teams.Edit returned error: %v", err)
 	}
@@ -857,7 +857,7 @@ func TestGroupsTeamsService_Edit_invalidJSON(t *testing.T) {
 		fmt.Fprint(w, `invalid json`)
 	})
 
-	res, _, err := client.Teams.EditTeams(context.Background(), "1", nil)
+	res, _, err := client.Teams.EditGroupTeams(context.Background(), 1, nil)
 	require.Error(t, err)
 	assert.Nil(t, res)
 }

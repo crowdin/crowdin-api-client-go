@@ -149,19 +149,19 @@ func (s *TeamsService) AddToProject(ctx context.Context, projectID int, req *mod
 	}, resp, nil
 }
 
-// List returns a list of teams.
+// ListGroupTeams returns a list of groups teams.
 //
 // https://support.crowdin.com/developer/enterprise/api/v2/#tag/Teams/operation/api.groups.teams.getMany
-func (s *TeamsService) ListTeams(ctx context.Context, groupID string, opts *model.TeamsListOptions) ([]*model.GroupsTeams, *Response, error) {
+func (s *TeamsService) ListGroupTeams(ctx context.Context, groupID int, opts *model.TeamsListOptions) ([]*model.GroupsTeam, *Response, error) {
 	res := new(model.GroupsTeamsData)
-	url := fmt.Sprintf("/api/v2/groups/%s/teams", groupID)
+	url := fmt.Sprintf("/api/v2/groups/%d/teams", groupID)
 
 	resp, err := s.client.Get(ctx, url, opts, res)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	list := make([]*model.GroupsTeams, 0, len(res.Data))
+	list := make([]*model.GroupsTeam, 0, len(res.Data))
 	for _, item := range res.Data {
 		list = append(list, item.Data)
 	}
@@ -169,28 +169,28 @@ func (s *TeamsService) ListTeams(ctx context.Context, groupID string, opts *mode
 	return list, resp, nil
 }
 
-// Get returns a teams by its identifier.
+// GetGroupTeam returns a group of team by its identifier.
 //
 // https://support.crowdin.com/developer/enterprise/api/v2/#tag/Teams/operation/api.groups.teams.get
-func (s *TeamsService) GetTeams(ctx context.Context, groupID, teamID string) (*model.GroupsTeams, *Response, error) {
+func (s *TeamsService) GetGroupTeam(ctx context.Context, groupID, teamID int) (*model.GroupsTeam, *Response, error) {
 	res := new(model.TeamsGetResponse)
-	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/groups/%s/teams/%s", groupID, teamID), nil, res)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/groups/%d/teams/%d", groupID, teamID), nil, res)
 
 	return res.Data, resp, err
 }
 
-//	Update a teams.
+//	EditGroupTeams edit groups of teams.
 //
 // https://support.crowdin.com/developer/enterprise/api/v2/#tag/Teams/operation/api.groups.teams.patch
-func (s *TeamsService) EditTeams(ctx context.Context, groupID string, req []*model.UpdateRequest) ([]*model.GroupsTeams, *Response, error) {
+func (s *TeamsService) EditGroupTeams(ctx context.Context, groupID int, req []*model.UpdateRequest) ([]*model.GroupsTeam, *Response, error) {
 	res := new(model.GroupsTeamsDataEdit)
-	url := fmt.Sprintf("/api/v2/groups/%s/teams", groupID)
+	url := fmt.Sprintf("/api/v2/groups/%d/teams", groupID)
 	resp, err := s.client.Patch(ctx, url, req, res)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	list := make([]*model.GroupsTeams, 0, len(res.Data))
+	list := make([]*model.GroupsTeam, 0, len(res.Data))
 	for _, item := range res.Data {
 		list = append(list, item.Data)
 	}

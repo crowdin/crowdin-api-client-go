@@ -1441,7 +1441,7 @@ func TestManagerService_List(t *testing.T) {
 		  }`)
 	})
 
-	managers, resp, err := client.Users.ListManagers(context.Background(), "2", nil)
+	managers, resp, err := client.Users.ListManagers(context.Background(), 2, nil)
 	if err != nil {
 		t.Errorf("Managers.List returned error: %v", err)
 	}
@@ -1509,7 +1509,7 @@ func TestManagersService_List_invalidJSON(t *testing.T) {
 		fmt.Fprint(w, `invalid json`)
 	})
 
-	res, _, err := client.Users.ListManagers(context.Background(), "1", nil)
+	res, _, err := client.Users.ListManagers(context.Background(), 1, nil)
 	require.Error(t, err)
 	assert.Nil(t, res)
 }
@@ -1572,7 +1572,7 @@ func TestManagersService_Edit(t *testing.T) {
 			}`,
 		},
 	}
-	managers, _, err := client.Users.EditManagers(context.Background(), "1", req)
+	managers, _, err := client.Users.EditManagers(context.Background(), 1, req)
 	if err != nil {
 		t.Errorf("Managers.Edit returned error: %v", err)
 	}
@@ -1592,7 +1592,7 @@ func TestManagersService_Edit_invalidJSON(t *testing.T) {
 		fmt.Fprint(w, `invalid json`)
 	})
 
-	res, _, err := client.Users.EditManagers(context.Background(), "1", nil)
+	res, _, err := client.Users.EditManagers(context.Background(), 1, nil)
 	require.Error(t, err)
 	assert.Nil(t, res)
 }
@@ -1601,9 +1601,9 @@ func TestManagersService_Get(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
-	mux.HandleFunc("/api/v2/fields/1", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v2/groups/1/managers", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodGet)
-		testURL(t, r, "/api/v2/fields/1")
+		testURL(t, r, "/api/v2/groups/1/managers")
 		fmt.Fprint(w, `{
 				"data": {
 				  "id": 27,
@@ -1641,7 +1641,7 @@ func TestManagersService_Get(t *testing.T) {
 		  }`)
 	})
 
-	managers, _, err := client.Users.GetManagers(context.Background(), "1")
+	managers, _, err := client.Users.GetManagers(context.Background(), 1)
 	if err != nil {
 		t.Errorf("Managers.Get returned error: %v", err)
 	}

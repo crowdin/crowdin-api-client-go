@@ -22,18 +22,13 @@ func TestManagerListOptionsValues(t *testing.T) {
 		},
 		{
 			name: "with teams ID",
-			opts: &ManagerListOptions{TeamIDs: 123},
-			out:  "teamIds=123",
+			opts: &ManagerListOptions{TeamIDs: []int{1, 2, 3}},
+			out:  "teamIds=1,2,3",
 		},
 		{
 			name: "with ordeby ID",
-			opts: &ManagerListOptions{TeamIDs: 123, OrderBy: "asc"},
-			out:  "orderBy=asc&teamIds=123",
-		},
-		{
-			name: "with list options",
-			opts: &ManagerListOptions{ListOptions: ListOptions{Limit: 10, Offset: 5}},
-			out:  "limit=10&offset=5",
+			opts: &ManagerListOptions{TeamIDs: []int{1, 2, 3}, OrderBy: "asc"},
+			out:  "orderBy=asc&teamIds=1,2,3",
 		},
 	}
 
