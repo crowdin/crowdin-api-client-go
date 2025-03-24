@@ -166,3 +166,28 @@ type ProjectTeamAddResponse struct {
 	Skipped *ProjectTeam `json:"skipped,omitempty"`
 	Added   *ProjectTeam `json:"added,omitempty"`
 }
+
+// GroupsTeamsData defines the structure of the response when
+// list groups of teams.
+type GroupsTeamsData struct {
+	Data       []*TeamsGetResponse `json:"data"`
+	Pagination *Pagination         `json:"pagination"`
+}
+
+// GroupsTeamsDataEdit defines the structure of the response when
+// edinting groups of teams.
+type GroupsTeamsDataEdit struct {
+	Data []*TeamsGetResponse `json:"data"`
+}
+
+// TeamsGetResponse defines the structure of the response when
+// list a group of teams.
+type TeamsGetResponse struct {
+	Data *GroupsTeam `json:"data"`
+}
+
+// GroupsTeam  represents a group team.
+type GroupsTeam struct {
+	ID   int   `json:"id"`
+	User *Team `json:"user"`
+}

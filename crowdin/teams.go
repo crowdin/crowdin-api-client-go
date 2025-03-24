@@ -148,3 +148,52 @@ func (s *TeamsService) AddToProject(ctx context.Context, projectID int, req *mod
 		"added":   res.Added,
 	}, resp, nil
 }
+
+// ListGroupTeams returns a list of groups teams.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Teams/operation/api.groups.teams.getMany
+func (s *TeamsService) ListGroupTeams(ctx context.Context, groupID int, opts *model.TeamsListOptions) ([]*model.GroupsTeam, *Response, error) {
+	res := new(model.GroupsTeamsData)
+	url := fmt.Sprintf("/api/v2/groups/%d/teams", groupID)
+
+	resp, err := s.client.Get(ctx, url, opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.GroupsTeam, 0, len(res.Data))
+	for _, item := range res.Data {
+		list = append(list, item.Data)
+	}
+
+	return list, resp, nil
+}
+
+// GetGroupTeam returns a group of team by its identifier.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Teams/operation/api.groups.teams.get
+func (s *TeamsService) GetGroupTeam(ctx context.Context, groupID, teamID int) (*model.GroupsTeam, *Response, error) {
+	res := new(model.TeamsGetResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/groups/%d/teams/%d", groupID, teamID), nil, res)
+
+	return res.Data, resp, err
+}
+
+//	EditGroupTeams edit groups of teams.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Teams/operation/api.groups.teams.patch
+func (s *TeamsService) EditGroupTeams(ctx context.Context, groupID int, req []*model.UpdateRequest) ([]*model.GroupsTeam, *Response, error) {
+	res := new(model.GroupsTeamsDataEdit)
+	url := fmt.Sprintf("/api/v2/groups/%d/teams", groupID)
+	resp, err := s.client.Patch(ctx, url, req, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.GroupsTeam, 0, len(res.Data))
+	for _, item := range res.Data {
+		list = append(list, item.Data)
+	}
+
+	return list, resp, nil
+}
