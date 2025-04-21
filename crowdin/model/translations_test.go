@@ -34,6 +34,30 @@ func TestPreTranslationRequestValidate(t *testing.T) {
 				Method: "tm", EngineID: 1, AutoApproveOption: "all", DuplicateTranslations: toPtr(false)},
 			valid: true,
 		},
+		{
+			name: "missing aiPromptId",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, FileIDs: []int{1, 2},
+				Method: "ai", AutoApproveOption: "all", DuplicateTranslations: toPtr(false)},
+			err: "aiPromptId is required",
+		},
+		{
+			name: "valid request with ai method",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, FileIDs: []int{1, 2},
+				Method: "ai", AIPromptID: 1, AutoApproveOption: "all", DuplicateTranslations: toPtr(false)},
+			valid: true,
+		},
+		{
+			name: "missing engineId with mt method",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, FileIDs: []int{1, 2},
+				Method: "mt", AutoApproveOption: "all", DuplicateTranslations: toPtr(false)},
+			err: "engineId is required",
+		},
+		{
+			name: "valid request with mt method",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, FileIDs: []int{1, 2},
+				Method: "mt", EngineID: 1, AutoApproveOption: "all", DuplicateTranslations: toPtr(false)},
+			valid: true,
+		},
 	}
 
 	for _, tt := range tests {
