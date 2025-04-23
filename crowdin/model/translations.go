@@ -50,12 +50,15 @@ type PreTranslationRequest struct {
 	LanguageIDs []string `json:"languageIds"`
 	// Files array that should be translated.
 	FileIDs []int `json:"fileIds"`
-	// Defines pre-translation method. Enum: "tm", "mt". Default: "tm".
+	// Defines pre-translation method. Enum: "tm", "mt", "ai". Default: "tm".
 	//  - tm – pre-translation via Translation Memory.
 	//  - mt – pre-translation via Machine Translation. "mt" should be used with `engineId` parameter.
+	//  - ai – pre-translation via AI. "ai" should be used with `aiPromptId` parameter.
 	Method string `json:"method,omitempty"`
 	// Machine Translation engine Identifier. Required if `method` is set to "mt".
 	EngineID int `json:"engineId,omitempty"`
+	// AI Prompt Identifier. Required if `method` is set to "ai".
+	AIPromptID int `json:"aiPromptId,omitempty"`
 	// Defines which translations added by TM pre-translation should be auto-approved. Default: "none".
 	// Enum: "all", "exceptAutoSubstituted", "perfectMatchApprovedOnly", "perfectMatchOnly", "none"
 	//  - all – all
@@ -100,6 +103,12 @@ func (r *PreTranslationRequest) Validate() error {
 	}
 	if len(r.FileIDs) == 0 {
 		return errors.New("fileIds is required")
+	}
+	if r.Method == "ai" && r.AIPromptID == 0 {
+		return errors.New("aiPromptId is required")
+	}
+	if r.Method == "mt" && r.EngineID == 0 {
+		return errors.New("engineId is required")
 	}
 	return nil
 }
