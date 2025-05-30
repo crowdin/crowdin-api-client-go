@@ -278,20 +278,20 @@ type UsersListOptions struct {
 	// Example: organizationRoles=manager,vendor,client
 	OrganizationRoles string `json:"organizationRoles,omitempty"`
 	// Filter by team identifier
-	TeamId int `json:"teamId,omitempty"`
+	TeamID int `json:"teamId,omitempty"`
 	// Filter by project identifier
 	// It can be one project or a list of comma-separated ones
-	ProjectIds string `json:"projectIds,omitempty"`
+	ProjectIDs string `json:"projectIds,omitempty"`
 	// Filter by role in project
 	// Enum: manager, developer, translator, proofreader, language_coordinator, member
 	// Example: projectRoles=manager,developer,language_coordinator
 	ProjectRoles string `json:"projectRoles,omitempty"`
 	// Filter project languages
 	// It can be one language or a list of comma-separated ones
-	LanguageIds string `json:"languageIds,omitempty"`
+	LanguageIDs string `json:"languageIds,omitempty"`
 	// Filter by group identifier
 	// It can be one group or a list of comma-separated ones
-	GroupIds string `json:"groupIds,omitempty"`
+	GroupIDs string `json:"groupIds,omitempty"`
 	// Date in UTC, ISO 8601
 	// Example: lastSeenFrom=2024-01-10T10:41:33+00:00
 	// Note: Must be used together with lastSeenTo
@@ -330,24 +330,24 @@ func (o *UsersListOptions) Values() (url.Values, bool) {
 		v.Add("organizationRoles", o.OrganizationRoles)
 	}
 
-	if o.TeamId != 0 {
-		v.Add("teamId", fmt.Sprintf("%d", o.TeamId))
+	if o.TeamID != 0 {
+		v.Add("teamId", fmt.Sprintf("%d", o.TeamID))
 	}
 
-	if o.ProjectIds != "" {
-		v.Add("projectIds", o.ProjectIds)
+	if o.ProjectIDs != "" {
+		v.Add("projectIds", o.ProjectIDs)
 	}
 
 	if o.ProjectRoles != "" {
 		v.Add("projectRoles", o.ProjectRoles)
 	}
 
-	if o.LanguageIds != "" {
-		v.Add("languageIds", o.LanguageIds)
+	if o.LanguageIDs != "" {
+		v.Add("languageIds", o.LanguageIDs)
 	}
 
-	if o.GroupIds != "" {
-		v.Add("groupIds", o.GroupIds)
+	if o.GroupIDs != "" {
+		v.Add("groupIds", o.GroupIDs)
 	}
 
 	if o.LastSeenFrom != "" {

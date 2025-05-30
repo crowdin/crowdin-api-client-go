@@ -66,10 +66,10 @@ func TestTeamsService_List(t *testing.T) {
 			name: "with options",
 			opts: &model.TeamsListOptions{
 				Search:       "name",
-				ProjectIds:   "11,22",
+				ProjectIDs:   "11,22",
 				ProjectRoles: "manager,developer",
-				LanguageIds:  "en,uk",
-				GroupIds:     "2,4",
+				LanguageIDs:  "en,uk",
+				GroupIDs:     "2,4",
 				OrderBy:      "name",
 				ListOptions: model.ListOptions{
 					Limit:  10,

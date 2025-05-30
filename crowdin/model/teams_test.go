@@ -24,10 +24,10 @@ func TestTeamsListOptionsValues(t *testing.T) {
 			name: "all options",
 			opts: &TeamsListOptions{
 				Search:       "name",
-				ProjectIds:   "11,22",
+				ProjectIDs:   "11,22",
 				ProjectRoles: "manager,developer",
-				LanguageIds:  "en,uk",
-				GroupIds:     "2,4",
+				LanguageIDs:  "en,uk",
+				GroupIDs:     "2,4",
 				OrderBy:      "createdAt desc,name",
 				ListOptions:  ListOptions{Limit: 10, Offset: 5},
 			},
