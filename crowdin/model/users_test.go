@@ -136,8 +136,11 @@ func TestUsersListOptionsValues(t *testing.T) {
 		{
 			name: "with all options",
 			opts: &UsersListOptions{OrderBy: "createdAt desc,name,priority", Status: "active", Search: "test",
-				TwoFactor: "enabled", ListOptions: ListOptions{Offset: 1, Limit: 10}},
-			out: "limit=10&offset=1&orderBy=createdAt+desc%2Cname%2Cpriority&search=test&status=active&twoFactor=enabled",
+				TwoFactor: "enabled", OrganizationRoles: "manager,client", TeamID: 4, ProjectIDs: "4, 5",
+				ProjectRoles: "manager,developer", LanguageIDs: "en,uk", GroupIDs: "2,3",
+				LastSeenFrom: "2024-01-10T10:41:33+00:00", LastSeenTo: "2024-01-10T10:41:33+00:00",
+				ListOptions: ListOptions{Offset: 1, Limit: 10}},
+			out: "groupIds=2%2C3&languageIds=en%2Cuk&lastSeenFrom=2024-01-10T10%3A41%3A33%2B00%3A00&lastSeenTo=2024-01-10T10%3A41%3A33%2B00%3A00&limit=10&offset=1&orderBy=createdAt+desc%2Cname%2Cpriority&organizationRoles=manager%2Cclient&projectIds=4%2C+5&projectRoles=manager%2Cdeveloper&search=test&status=active&teamId=4&twoFactor=enabled",
 		},
 	}
 

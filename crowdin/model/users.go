@@ -273,6 +273,33 @@ type UsersListOptions struct {
 	// Filter users by two-factor authentication status.
 	// Enum: enabled, disabled.
 	TwoFactor string `json:"twoFactor,omitempty"`
+	// Filter by role in organization.
+	// Enum: admin, manager, vendor, client
+	// Example: organizationRoles=manager,vendor,client
+	OrganizationRoles string `json:"organizationRoles,omitempty"`
+	// Filter by team identifier
+	TeamID int `json:"teamId,omitempty"`
+	// Filter by project identifier
+	// It can be one project or a list of comma-separated ones
+	ProjectIDs string `json:"projectIds,omitempty"`
+	// Filter by role in project
+	// Enum: manager, developer, translator, proofreader, language_coordinator, member
+	// Example: projectRoles=manager,developer,language_coordinator
+	ProjectRoles string `json:"projectRoles,omitempty"`
+	// Filter project languages
+	// It can be one language or a list of comma-separated ones
+	LanguageIDs string `json:"languageIds,omitempty"`
+	// Filter by group identifier
+	// It can be one group or a list of comma-separated ones
+	GroupIDs string `json:"groupIds,omitempty"`
+	// Date in UTC, ISO 8601
+	// Example: lastSeenFrom=2024-01-10T10:41:33+00:00
+	// Note: Must be used together with lastSeenTo
+	LastSeenFrom string `json:"lastSeenFrom,omitempty"`
+	// Date in UTC, ISO 8601
+	// Example: lastSeenTo=2024-01-10T10:41:33+00:00
+	// Note: Must be used together with lastSeenFrom
+	LastSeenTo string `json:"lastSeenTo,omitempty"`
 
 	ListOptions
 }
@@ -297,6 +324,38 @@ func (o *UsersListOptions) Values() (url.Values, bool) {
 	}
 	if o.TwoFactor != "" {
 		v.Add("twoFactor", o.TwoFactor)
+	}
+
+	if o.OrganizationRoles != "" {
+		v.Add("organizationRoles", o.OrganizationRoles)
+	}
+
+	if o.TeamID != 0 {
+		v.Add("teamId", fmt.Sprintf("%d", o.TeamID))
+	}
+
+	if o.ProjectIDs != "" {
+		v.Add("projectIds", o.ProjectIDs)
+	}
+
+	if o.ProjectRoles != "" {
+		v.Add("projectRoles", o.ProjectRoles)
+	}
+
+	if o.LanguageIDs != "" {
+		v.Add("languageIds", o.LanguageIDs)
+	}
+
+	if o.GroupIDs != "" {
+		v.Add("groupIds", o.GroupIDs)
+	}
+
+	if o.LastSeenFrom != "" {
+		v.Add("lastSeenFrom", o.LastSeenFrom)
+	}
+
+	if o.LastSeenTo != "" {
+		v.Add("lastSeenTo", o.LastSeenTo)
 	}
 
 	return v, len(v) > 0
