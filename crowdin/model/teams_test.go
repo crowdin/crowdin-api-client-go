@@ -22,8 +22,16 @@ func TestTeamsListOptionsValues(t *testing.T) {
 		},
 		{
 			name: "all options",
-			opts: &TeamsListOptions{OrderBy: "createdAt desc,name", ListOptions: ListOptions{Limit: 10, Offset: 5}},
-			out:  "limit=10&offset=5&orderBy=createdAt+desc%2Cname",
+			opts: &TeamsListOptions{
+				Search:       "name",
+				ProjectIds:   "11,22",
+				ProjectRoles: "manager,developer",
+				LanguageIds:  "en,uk",
+				GroupIds:     "2,4",
+				OrderBy:      "createdAt desc,name",
+				ListOptions:  ListOptions{Limit: 10, Offset: 5},
+			},
+			out: "groupIds=2%2C4&languageIds=en%2Cuk&limit=10&offset=5&orderBy=createdAt+desc%2Cname&projectIds=11%2C22&projectRoles=manager%2Cdeveloper&search=name",
 		},
 	}
 

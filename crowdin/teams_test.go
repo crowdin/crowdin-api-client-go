@@ -65,13 +65,18 @@ func TestTeamsService_List(t *testing.T) {
 		{
 			name: "with options",
 			opts: &model.TeamsListOptions{
-				OrderBy: "name",
+				Search:       "name",
+				ProjectIds:   "11,22",
+				ProjectRoles: "manager,developer",
+				LanguageIds:  "en,uk",
+				GroupIds:     "2,4",
+				OrderBy:      "name",
 				ListOptions: model.ListOptions{
 					Limit:  10,
 					Offset: 5,
 				},
 			},
-			expectedQuery: "?limit=10&offset=5&orderBy=name",
+			expectedQuery: "?groupIds=2%2C4&languageIds=en%2Cuk&limit=10&offset=5&orderBy=name&projectIds=11%2C22&projectRoles=manager%2Cdeveloper&search=name",
 		},
 	}
 

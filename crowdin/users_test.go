@@ -1036,13 +1036,21 @@ func TestUsersService_List(t *testing.T) {
 		{
 			name: "with options",
 			opts: &model.UsersListOptions{
-				OrderBy:     "createdAt desc,username",
-				Status:      "active",
-				Search:      "john",
-				TwoFactor:   "enabled",
-				ListOptions: model.ListOptions{Offset: 10, Limit: 25},
+				OrderBy:           "createdAt desc,username",
+				Status:            "active",
+				Search:            "john",
+				TwoFactor:         "enabled",
+				OrganizationRoles: "manager,client",
+				TeamId:            4,
+				ProjectIds:        "4, 5",
+				ProjectRoles:      "manager,developer",
+				LanguageIds:       "en,uk",
+				GroupIds:          "2,3",
+				LastSeenFrom:      "2024-01-10T10:41:33+00:00",
+				LastSeenTo:        "2024-01-10T10:41:33+00:00",
+				ListOptions:       model.ListOptions{Offset: 10, Limit: 25},
 			},
-			expectedQuery: "?limit=25&offset=10&orderBy=createdAt+desc%2Cusername&search=john&status=active&twoFactor=enabled",
+			expectedQuery: "?groupIds=2%2C3&languageIds=en%2Cuk&lastSeenFrom=2024-01-10T10%3A41%3A33%2B00%3A00&lastSeenTo=2024-01-10T10%3A41%3A33%2B00%3A00&limit=25&offset=10&orderBy=createdAt+desc%2Cusername&organizationRoles=manager%2Cclient&projectIds=4%2C+5&projectRoles=manager%2Cdeveloper&search=john&status=active&teamId=4&twoFactor=enabled",
 		},
 	}
 
