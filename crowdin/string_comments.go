@@ -34,6 +34,32 @@ func (s *StringCommentsService) List(ctx context.Context, projectID int, opts *m
 	return list, resp, nil
 }
 
+// String Comment Batch Operations.
+//
+// Request body:
+//   - op: The operation to perform. Enum: replace, remove, add.
+//   - path: A JSON Pointer as defined by RFC 6901. Enum: "/{commentId}/text", "/{commentId}/issueStatus".
+//   - value: The value to be used within the operations.
+//     The value must be string.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/String-Comments/operation/api.projects.comments.batchPatch
+func (s *StringCommentsService) BatchOperations(ctx context.Context, projectID int, req []*model.UpdateRequest) (
+	[]*model.StringComment, *Response, error,
+) {
+	res := new(model.StringCommentsListResponse)
+	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/projects/%d/comments", projectID), req, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.StringComment, 0, len(res.Data))
+	for _, comment := range res.Data {
+		list = append(list, comment.Data)
+	}
+
+	return list, resp, nil
+}
+
 // Get returns a string comment by its ID.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.comments.post

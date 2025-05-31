@@ -212,6 +212,130 @@ func TestStringTranslationsService_AddApproval(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 }
 
+func TestStringTransactionsService_ApprovalBatchOperations(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/approvals"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPatch)
+		testURL(t, r, path)
+		testBody(t, r, `[{"op":"remove","path":"/190695"}]`+"\n")
+
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 190696,
+						"user": {
+							"id": 19,
+							"username": "john_doe",
+							"fullName": "John Smith",
+							"avatarUrl": ""
+						},
+						"translationId": 190696,
+						"stringId": 2345,
+						"languageId": "uk",
+						"createdAt": "2023-09-19T12:42:12+00:00"
+					}
+				}
+			]
+		}`)
+	})
+
+	req := []*model.UpdateRequest{
+		{
+			Op:   "remove",
+			Path: "/190695",
+		},
+	}
+
+	approval, resp, err := client.StringTranslations.ApprovalBatchOperations(context.Background(), 1, req)
+	require.NoError(t, err)
+
+	expected := []*model.Approval{
+		{
+			ID: 190696,
+			User: &model.ShortUser{
+				ID:        19,
+				Username:  "john_doe",
+				FullName:  "John Smith",
+				AvatarURL: "",
+			},
+			TranslationID: 190696,
+			StringID:      2345,
+			LanguageID:    "uk",
+			CreatedAt:     "2023-09-19T12:42:12+00:00",
+		},
+	}
+	assert.Equal(t, expected, approval)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestStringTransactionsService_TranslationBatchOperations(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/translations"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPatch)
+		testURL(t, r, path)
+		testBody(t, r, `[{"op":"remove","path":"/190695"}]`+"\n")
+
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 190695,
+						"text": "Цю стрічку перекладено",
+						"pluralCategoryName": "few",
+						"user": {
+							"id": 19,
+							"username": "john_doe",
+							"fullName": "John Smith",
+							"avatarUrl": ""
+						},
+						"rating": 10,
+						"isPreTranslated": true,
+						"createdAt": "2019-09-23T11:26:54+00:00"
+					}
+				}
+			]
+		}`)
+	})
+
+	req := []*model.UpdateRequest{
+		{
+			Op:   "remove",
+			Path: "/190695",
+		},
+	}
+
+	translation, resp, err := client.StringTranslations.TranslationBatchOperations(context.Background(), 1, req)
+	require.NoError(t, err)
+
+	expected := []*model.Translation{
+		{
+			ID:                 190695,
+			Text:               "Цю стрічку перекладено",
+			PluralCategoryName: "few",
+			User: &model.ShortUser{
+				ID:        19,
+				Username:  "john_doe",
+				FullName:  "John Smith",
+				AvatarURL: "",
+			},
+			Rating:          10,
+			IsPreTranslated: true,
+			CreatedAt:       "2019-09-23T11:26:54+00:00",
+		},
+	}
+	assert.Equal(t, expected, translation)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
 func TestStringTranslationsService_RemoveStringApprovals(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
