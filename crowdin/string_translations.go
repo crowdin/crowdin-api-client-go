@@ -60,6 +60,54 @@ func (s *StringTranslationsService) AddApproval(ctx context.Context, projectID, 
 	return res.Data, resp, err
 }
 
+// Approval Batch Operations
+//
+// Request body:
+//   - op: The operation to perform. Enum: remove, add.
+//   - path: A JSON Pointer as defined by RFC 6901. Example: "/{approvalId}".
+//
+// https://support.crowdin.com/developer/api/v2/#tag/String-Translations/operation/api.projects.approvals.patch
+func (s *StringTranslationsService) ApprovalBatchOperations(ctx context.Context, projectID int, req []*model.UpdateRequest) (
+	[]*model.Approval, *Response, error,
+) {
+	res := new(model.ApprovalsListResponse)
+	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/projects/%d/approvals", projectID), req, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.Approval, 0, len(res.Data))
+	for _, approval := range res.Data {
+		list = append(list, approval.Data)
+	}
+
+	return list, resp, nil
+}
+
+// Translation Batch Operations
+//
+// Request body:
+//   - op: The operation to perform. Enum: remove, add.
+//   - path: A JSON Pointer as defined by RFC 6901. Example: "/{translationId}".
+//
+// https://support.crowdin.com/developer/api/v2/#tag/String-Translations/operation/api.projects.translations.patch
+func (s *StringTranslationsService) TranslationBatchOperations(ctx context.Context, projectID int, req []*model.UpdateRequest) (
+	[]*model.Translation, *Response, error,
+) {
+	res := new(model.TranslationsListResponse)
+	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/projects/%d/translations", projectID), req, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.Translation, 0, len(res.Data))
+	for _, translation := range res.Data {
+		list = append(list, translation.Data)
+	}
+
+	return list, resp, nil
+}
+
 // RemoveStringApprovals removes translation approvals by its string identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.approvals.deleteMany

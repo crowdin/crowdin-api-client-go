@@ -27,48 +27,7 @@ func TestStringCommentsService_Get(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 
-	expected := &model.StringComment{
-		ID:       2,
-		Text:     "@BeMyEyes  Please provide more details on where the text will be used",
-		UserID:   6,
-		StringID: 742,
-		User: &model.ShortUser{
-			ID:        12,
-			Username:  "john_smith",
-			FullName:  "John Smith",
-			AvatarURL: "",
-		},
-		String: &model.String{
-			ID:      742,
-			Text:    "HTML page example",
-			Type:    "text",
-			Context: "Document Title\\r\\nXPath: /html/head/title",
-			FileID:  22,
-		},
-		ProjectID:   1,
-		LanguageID:  "bg",
-		Type:        "issue",
-		IssueType:   "source_mistake",
-		IssueStatus: "unresolved",
-		ResolverID:  12,
-		Resolver: &model.ShortUser{
-			ID:        12,
-			Username:  "john_smith",
-			FullName:  "John Smith",
-			AvatarURL: "",
-		},
-		ResolvedAt: "2023-09-20T11:05:24+00:00",
-		CreatedAt:  "2023-09-20T11:05:24+00:00",
-		IsShared:   ToPtr(false),
-		SenderOrganization: &model.Organization{
-			ID:     200000101,
-			Domain: "umbrella",
-		},
-		ResolverOrganization: &model.Organization{
-			ID:     200000112,
-			Domain: "acme",
-		},
-	}
+	expected := getStringComment()
 	assert.Equal(t, expected, comment)
 }
 
@@ -215,6 +174,41 @@ func TestStringCommentsService_List_invalidJSON(t *testing.T) {
 	assert.Nil(t, res)
 }
 
+func TestStringCommentsService_BatchOperations(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/comments"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "PATCH")
+		testURL(t, r, path)
+		testBody(t, r, `[{"op":"replace","path":"/2/text","value":"new text"}]`+"\n")
+
+		fmt.Fprint(w, `{
+			"data": [
+				`+getJSONResponse()+`
+			]
+		}`)
+	})
+
+	req := []*model.UpdateRequest{
+		{
+			Op:    "replace",
+			Path:  "/2/text",
+			Value: "new text",
+		},
+	}
+
+	comment, resp, err := client.StringComments.BatchOperations(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := []*model.StringComment{
+		getStringComment(),
+	}
+	assert.Equal(t, expected, comment)
+}
+
 func TestStringCommentsService_Add(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
@@ -240,48 +234,7 @@ func TestStringCommentsService_Add(t *testing.T) {
 	comment, resp, err := client.StringComments.Add(context.Background(), 1, req)
 	require.NoError(t, err)
 
-	expected := &model.StringComment{
-		ID:       2,
-		Text:     "@BeMyEyes  Please provide more details on where the text will be used",
-		UserID:   6,
-		StringID: 742,
-		User: &model.ShortUser{
-			ID:        12,
-			Username:  "john_smith",
-			FullName:  "John Smith",
-			AvatarURL: "",
-		},
-		String: &model.String{
-			ID:      742,
-			Text:    "HTML page example",
-			Type:    "text",
-			Context: "Document Title\\r\\nXPath: /html/head/title",
-			FileID:  22,
-		},
-		ProjectID:   1,
-		LanguageID:  "bg",
-		Type:        "issue",
-		IssueType:   "source_mistake",
-		IssueStatus: "unresolved",
-		ResolverID:  12,
-		Resolver: &model.ShortUser{
-			ID:        12,
-			Username:  "john_smith",
-			FullName:  "John Smith",
-			AvatarURL: "",
-		},
-		ResolvedAt: "2023-09-20T11:05:24+00:00",
-		CreatedAt:  "2023-09-20T11:05:24+00:00",
-		IsShared:   ToPtr(false),
-		SenderOrganization: &model.Organization{
-			ID:     200000101,
-			Domain: "umbrella",
-		},
-		ResolverOrganization: &model.Organization{
-			ID:     200000112,
-			Domain: "acme",
-		},
-	}
+	expected := getStringComment()
 	assert.Equal(t, expected, comment)
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 }
@@ -407,4 +360,49 @@ func getJSONResponse() string {
 			"createdAt": "2023-09-20T11:05:24+00:00"
 		}
 	}`
+}
+
+func getStringComment() *model.StringComment {
+	return &model.StringComment{
+		ID:       2,
+		Text:     "@BeMyEyes  Please provide more details on where the text will be used",
+		UserID:   6,
+		StringID: 742,
+		User: &model.ShortUser{
+			ID:        12,
+			Username:  "john_smith",
+			FullName:  "John Smith",
+			AvatarURL: "",
+		},
+		String: &model.String{
+			ID:      742,
+			Text:    "HTML page example",
+			Type:    "text",
+			Context: "Document Title\\r\\nXPath: /html/head/title",
+			FileID:  22,
+		},
+		ProjectID:   1,
+		LanguageID:  "bg",
+		Type:        "issue",
+		IssueType:   "source_mistake",
+		IssueStatus: "unresolved",
+		ResolverID:  12,
+		Resolver: &model.ShortUser{
+			ID:        12,
+			Username:  "john_smith",
+			FullName:  "John Smith",
+			AvatarURL: "",
+		},
+		ResolvedAt: "2023-09-20T11:05:24+00:00",
+		CreatedAt:  "2023-09-20T11:05:24+00:00",
+		IsShared:   ToPtr(false),
+		SenderOrganization: &model.Organization{
+			ID:     200000101,
+			Domain: "umbrella",
+		},
+		ResolverOrganization: &model.Organization{
+			ID:     200000112,
+			Domain: "acme",
+		},
+	}
 }
