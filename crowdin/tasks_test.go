@@ -1152,3 +1152,258 @@ func TestTasksService_DeleteSettingsTepmlates(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
+
+func TestTasksService_GetComment(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks/2/comments/3"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 3,
+				"userId": 5,
+				"taskId": 2,
+				"text": "translate task",
+				"timeSpent": 3600,
+				"createdAt": "2025-09-23T09:04:29+00:00",
+				"updatedAt": "2025-09-23T09:04:29+00:00"
+			}
+		}`)
+	})
+
+	comment, resp, err := client.Tasks.GetComment(context.Background(), 1, 2, 3)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := &model.TaskComment{
+		ID:        3,
+		UserID:    5,
+		TaskID:    2,
+		Text:      "translate task",
+		TimeSpent: 3600,
+		CreatedAt: "2025-09-23T09:04:29+00:00",
+		UpdatedAt: "2025-09-23T09:04:29+00:00",
+	}
+	assert.Equal(t, expected, comment)
+}
+
+func TestTasksService_ListComments(t *testing.T) {
+	tests := []struct {
+		name string
+		opts *model.ListOptions
+		want string
+	}{
+		{
+			name: "nil options",
+			opts: nil,
+			want: "",
+		},
+		{
+			name: "empty options",
+			opts: &model.ListOptions{},
+			want: "",
+		},
+		{
+			name: "with options",
+			opts: &model.ListOptions{
+				Offset: 10,
+				Limit:  25,
+			},
+			want: "?limit=25&offset=10",
+		},
+	}
+
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	for projectID, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path := fmt.Sprintf("/api/v2/projects/%d/tasks/2/comments", projectID)
+			mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+				testMethod(t, r, http.MethodGet)
+				testURL(t, r, path+tt.want)
+
+				fmt.Fprint(w, `{
+					"data": [
+						{
+							"data": {
+								"id": 3,
+								"userId": 5,
+								"taskId": 2,
+								"text": "translate task",
+								"timeSpent": 3600,
+								"createdAt": "2025-09-23T09:04:29+00:00",
+								"updatedAt": "2025-09-23T09:04:29+00:00"
+							}
+						},
+						{
+							"data": {
+								"id": 4,
+								"userId": 5,
+								"taskId": 2,
+								"text": "translate task 2",
+								"timeSpent": 0,
+								"createdAt": "2025-09-23T09:04:29+00:00",
+								"updatedAt": "2025-09-23T09:04:29+00:00"
+							}
+						}
+					],
+					"pagination": {
+						"offset": 0,
+						"limit": 25
+					}
+				}`)
+			})
+
+			comments, resp, err := client.Tasks.ListComments(context.Background(), projectID, 2, tt.opts)
+			require.NoError(t, err)
+
+			expected := []*model.TaskComment{
+				{
+					ID:        3,
+					UserID:    5,
+					TaskID:    2,
+					Text:      "translate task",
+					TimeSpent: 3600,
+					CreatedAt: "2025-09-23T09:04:29+00:00",
+					UpdatedAt: "2025-09-23T09:04:29+00:00",
+				},
+				{
+					ID:        4,
+					UserID:    5,
+					TaskID:    2,
+					Text:      "translate task 2",
+					TimeSpent: 0,
+					CreatedAt: "2025-09-23T09:04:29+00:00",
+					UpdatedAt: "2025-09-23T09:04:29+00:00",
+				},
+			}
+			assert.Equal(t, expected, comments)
+
+			assert.Equal(t, 0, resp.Pagination.Offset)
+			assert.Equal(t, 25, resp.Pagination.Limit)
+		})
+	}
+}
+
+func TestTasksService_ListComments_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/tasks/2/comments", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Tasks.ListComments(context.Background(), 1, 2, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestTasksService_AddComment(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks/2/comments"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testBody(t, r, `{"text":"work in task","timeSpent":3600}`+"\n")
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 1,
+				"userId": 5,
+				"taskId": 2,
+				"text": "work in task",
+				"timeSpent": 3600,
+				"createdAt": "2025-09-23T09:04:29+00:00",
+				"updatedAt": "2025-09-23T09:04:29+00:00"
+			}
+		}`)
+	})
+
+	req := &model.TaskCommentAddRequest{
+		Text:      "work in task",
+		TimeSpent: 3600,
+	}
+	comment, resp, err := client.Tasks.AddComment(context.Background(), 1, 2, req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	expected := &model.TaskComment{
+		ID:        1,
+		UserID:    5,
+		TaskID:    2,
+		Text:      "work in task",
+		TimeSpent: 3600,
+		CreatedAt: "2025-09-23T09:04:29+00:00",
+		UpdatedAt: "2025-09-23T09:04:29+00:00",
+	}
+	assert.Equal(t, expected, comment)
+}
+
+func TestTasksService_EditComment(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks/2/comments/3"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPatch)
+		testURL(t, r, path)
+		testBody(t, r, `[{"op":"replace","path":"/text","value":"work in task"}]`+"\n")
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 1,
+				"userId": 5,
+				"taskId": 2,
+				"text": "work in task",
+				"timeSpent": 3600,
+				"createdAt": "2025-09-23T09:04:29+00:00",
+				"updatedAt": "2025-09-23T09:04:29+00:00"
+			}
+		}`)
+	})
+	req := []*model.UpdateRequest{
+		{
+			Op:    "replace",
+			Path:  "/text",
+			Value: "work in task",
+		},
+	}
+	comment, resp, err := client.Tasks.EditComment(context.Background(), 1, 2, 3, req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+	expected := &model.TaskComment{
+		ID:        1,
+		UserID:    5,
+		TaskID:    2,
+		Text:      "work in task",
+		TimeSpent: 3600,
+		CreatedAt: "2025-09-23T09:04:29+00:00",
+		UpdatedAt: "2025-09-23T09:04:29+00:00",
+	}
+	assert.Equal(t, expected, comment)
+}
+
+func TestTasksService_DeleteComment(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks/2/comments/3"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodDelete)
+		testURL(t, r, path)
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	resp, err := client.Tasks.DeleteComment(context.Background(), 1, 2, 3)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}

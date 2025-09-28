@@ -214,3 +214,67 @@ func (s *TasksService) EditSettingsTemplate(ctx context.Context, projectID, task
 func (s *TasksService) DeleteSettingsTemplate(ctx context.Context, projectID, taskSettingTemplateID int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/tasks/settings-templates/%d", projectID, taskSettingTemplateID), nil)
 }
+
+// ListComments returns a list of task comments in a project.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Tasks/operation/api.projects.tasks.comments.getMany
+func (s *TasksService) ListComments(ctx context.Context, projectID, taskID int, opts *model.ListOptions) (
+	[]*model.TaskComment, *Response, error,
+) {
+	res := new(model.TaskCommentsListResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/tasks/%d/comments", projectID, taskID), opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.TaskComment, 0, len(res.Data))
+	for _, task := range res.Data {
+		list = append(list, task.Data)
+	}
+
+	return list, resp, err
+}
+
+// GetComment returns a single task comment in a project by its identifier.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Tasks/operation/api.projects.tasks.comments.get
+func (s *TasksService) GetComment(ctx context.Context, projectID, taskID, commentID int) (
+	*model.TaskComment, *Response, error,
+) {
+	path := fmt.Sprintf("/api/v2/projects/%d/tasks/%d/comments/%d", projectID, taskID, commentID)
+	res := new(model.TaskCommentResponse)
+	resp, err := s.client.Get(ctx, path, nil, res)
+
+	return res.Data, resp, err
+}
+
+// AddComment creates a new comment for a specific task in a project.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Tasks/operation/api.projects.tasks.comments.post
+func (s *TasksService) AddComment(ctx context.Context, projectID, taskID int, req *model.TaskCommentAddRequest) (
+	*model.TaskComment, *Response, error,
+) {
+	res := new(model.TaskCommentResponse)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/tasks/%d/comments", projectID, taskID), req, res)
+
+	return res.Data, resp, err
+}
+
+// EditComment updates a comment for a specific task in a project by its identifier.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Tasks/operation/api.projects.tasks.comments.patch
+func (s *TasksService) EditComment(ctx context.Context, projectID, taskID, commentID int, req []*model.UpdateRequest) (
+	*model.TaskComment, *Response, error,
+) {
+	res := new(model.TaskCommentResponse)
+	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/projects/%d/tasks/%d/comments/%d", projectID, taskID, commentID), req, res)
+
+	return res.Data, resp, err
+}
+
+// DeleteComment removes a comment from a specific task in a project by its identifier.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Tasks/operation/api.projects.tasks.comments.delete
+func (s *TasksService) DeleteComment(ctx context.Context, projectID, taskID, commentID int) (*Response, error) {
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/tasks/%d/comments/%d", projectID, taskID, commentID), nil)
+}

@@ -765,3 +765,36 @@ func TestTasksService_Add_EnterprisePendingTaskCreateForm_WithRequestValidation(
 		})
 	}
 }
+
+func TestTaskCommentAddRequestValidate(t *testing.T) {
+	tests := []struct {
+		name  string
+		req   *TaskCommentAddRequest
+		err   string
+		valid bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "valid request",
+			req: &TaskCommentAddRequest{
+				Text:      "Work in task",
+				TimeSpent: 3600,
+			},
+			valid: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.req.Validate(); tt.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.err)
+			}
+		})
+	}
+}
