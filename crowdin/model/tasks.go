@@ -980,3 +980,45 @@ func (r *TaskSettingsTemplateAddRequest) Validate() error {
 
 	return nil
 }
+
+// TaskComment represents a comment on a task.
+type TaskComment struct {
+	ID        int    `json:"id"`
+	UserID    int    `json:"userId"`
+	TaskID    int    `json:"taskId"`
+	Text      string `json:"text"`
+	TimeSpent int    `json:"timeSpent"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+}
+
+// TaskCommentResponse defines the structure of the response
+// when getting a task comment.
+type TaskCommentResponse struct {
+	Data *TaskComment `json:"data"`
+}
+
+// TaskCommentsListResponse defines the structure of the response
+// when getting a list of task comments.
+type TaskCommentsListResponse struct {
+	Data []*TaskCommentResponse `json:"data"`
+}
+
+// TaskCommentAddRequest defines the structure of the request
+// when adding a new comment to a task.
+type TaskCommentAddRequest struct {
+	// Comment text
+	Text string `json:"text,omitempty"`
+	// Specifies the time spent on the task in seconds
+	TimeSpent int `json:"timeSpent,omitempty"`
+}
+
+// Validate checks if the request is valid.
+// It implements the crowdin.Validator interface.
+func (r *TaskCommentAddRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
+
+	return nil
+}
