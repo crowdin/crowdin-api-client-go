@@ -69,4 +69,3 @@ func (s *StringCorrectionsService) RestoreCorrection(ctx context.Context, projec
 func (s *StringCorrectionsService) DeleteCorrection(ctx context.Context, projectID, correctionID int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/corrections/%d", projectID, correctionID), nil)
 }
-

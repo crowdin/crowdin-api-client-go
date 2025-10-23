@@ -1,17 +1,17 @@
 package model
 
 import (
-        "errors"
-        "fmt"
-        "net/url"
+	"errors"
+	"fmt"
+	"net/url"
 )
 
 type StringCorrection struct {
-	ID                  int       `json:"id"`
-	Text                string    `json:"text"`
-	PluralCategoryName  *string   `json:"pluralCategoryName,omitempty"`
-	User                *User     `json:"user,omitempty"`
-	CreatedAt           string    `json:"createdAt"`
+	ID                 int     `json:"id"`
+	Text               string  `json:"text"`
+	PluralCategoryName *string `json:"pluralCategoryName,omitempty"`
+	User               *User   `json:"user,omitempty"`
+	CreatedAt          string  `json:"createdAt"`
 }
 
 type StringCorrectionGetResponse struct {
@@ -40,9 +40,9 @@ type StringCorrectionGetOptions struct {
 }
 
 type StringCorrectionAddRequest struct {
-	StringID            int     `json:"stringId"`
-	Text                string  `json:"text"`
-	PluralCategoryName  *string `json:"pluralCategoryName,omitempty"`
+	StringID           int     `json:"stringId"`
+	Text               string  `json:"text"`
+	PluralCategoryName *string `json:"pluralCategoryName,omitempty"`
 }
 
 type StringCorrectionsDeleteOptions struct {
@@ -106,4 +106,3 @@ func (r *StringCorrectionAddRequest) Validate() error {
 	}
 	return nil
 }
-
