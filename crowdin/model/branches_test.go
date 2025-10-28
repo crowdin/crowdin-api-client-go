@@ -116,7 +116,7 @@ func TestBranchesMergeRequestValidate(t *testing.T) {
 		},
 		{
 			name:  "valid request",
-			req:   &BranchesMergeRequest{SourceBranchID: 1, DeleteAfterMerge: toPtr(true), DryRun: toPtr(false)},
+			req:   &BranchesMergeRequest{SourceBranchID: 1, DeleteAfterMerge: toPtr(true), AcceptSourceChanges: toPtr(false), DryRun: toPtr(false)},
 			valid: true,
 		},
 	}

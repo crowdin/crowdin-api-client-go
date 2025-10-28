@@ -91,8 +91,9 @@ type BranchMerge struct {
 	Status     string `json:"status"`
 	Progress   int    `json:"progress"`
 	Attributes struct {
-		SourceBranchID   int  `json:"sourceBranchId"`
-		DeleteAfterMerge bool `json:"deleteAfterMerge"`
+		SourceBranchID      int  `json:"sourceBranchId"`
+		DeleteAfterMerge    bool `json:"deleteAfterMerge"`
+		AcceptSourceChanges bool `json:"acceptSourceChanges,omitempty"`
 	} `json:"attributes"`
 	CreatedAt  string `json:"createdAt"`
 	UpdatedAt  string `json:"updatedAt"`
@@ -125,6 +126,8 @@ type BranchesMergeRequest struct {
 	SourceBranchID int `json:"sourceBranchId"`
 	// Whether to delete branch after merge. Default: false.
 	DeleteAfterMerge *bool `json:"deleteAfterMerge,omitempty"`
+	// Whether to accept source changes. Default: false.
+	AcceptSourceChanges *bool `json:"acceptSourceChanges,omitempty"`
 	// Simulate merging without making any real changes. Default: false.
 	DryRun *bool `json:"dryRun,omitempty"`
 }
