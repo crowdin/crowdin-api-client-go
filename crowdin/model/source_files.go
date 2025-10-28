@@ -596,14 +596,14 @@ func (r *ReviewedBuildRequest) Validate() error {
 }
 
 
-//AddAssetReferenceRequest describes a structure to add a reference file for an asset.
+// AddAssetReferenceRequest describes a structure to add a reference file for an asset.
 type AddAssetReferenceRequest struct {
 	StorageID  int `json:"storageId"`
 	Name  string `json:"name"`
 }
 
 
-//UserInfo describes a structure for user received in response.
+// UserInfo describes a structure for user received in response.
 type UserInfo struct {
 	ID int `json:"id"`
 	UserName string `json:"username"`
@@ -611,7 +611,7 @@ type UserInfo struct {
 	AvatarURL string `json:"avatarUrl"`
 }
 
-//AssetReference describes the structure for Asset Reference.
+// AssetReference describes the structure for Asset Reference.
 type AssetReference struct {
 	ID int `json:"id"`
 	Name string `json:"name"`
@@ -622,12 +622,12 @@ type AssetReference struct {
 
 }
 
-//AssetReferenceResponse describes the structure of a single Asset Reference.
+// AssetReferenceResponse describes the structure of a single Asset Reference.
 type AssetReferenceResponse struct {
 	Data *AssetReference `json:"data"`
 }
 
-//AssetReferencesListResponse describes is structure array of AssetReferenceResponse 
+// AssetReferencesListResponse describes is structure array of AssetReferenceResponse 
 type AssetReferencesListResponse struct {
 	Data []* AssetReferenceResponse `json:"data"`
 }
