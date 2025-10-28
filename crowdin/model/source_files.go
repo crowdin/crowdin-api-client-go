@@ -595,13 +595,11 @@ func (r *ReviewedBuildRequest) Validate() error {
 	return nil
 }
 
-
 // AddAssetReferenceRequest describes a structure to add a reference file for an asset.
 type AddAssetReferenceRequest struct {
 	StorageID  int `json:"storageId"`
 	Name  string `json:"name"`
 }
-
 
 // UserInfo describes a structure for user received in response.
 type UserInfo struct {
@@ -631,6 +629,3 @@ type AssetReferenceResponse struct {
 type AssetReferencesListResponse struct {
 	Data []* AssetReferenceResponse `json:"data"`
 }
-
-
-

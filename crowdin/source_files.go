@@ -197,7 +197,7 @@ func (s *SourceFilesService) ListAssetReferences(ctx context.Context, projectID,
 	return assetReferences, resp, err
 }
 
-// AddAssetReference upload a reference file for an asset.
+// AddAssetReference uploads a reference file for an asset.
 //
 // https://developer/api/v2/#tag/Source-Files/operation/api.projects.files.references.post
 func (s *SourceFilesService) AddAssetReference(ctx context.Context, projectID, fileID int, req *model.AddAssetReferenceRequest) (
@@ -218,7 +218,7 @@ func (s *SourceFilesService) GetAssetReference(ctx context.Context, projectID, f
 	return res.Data, resp, err
 }
 
-// DeleteAssetReference delete a reference file for an asset.
+// DeleteAssetReference deletes a reference file for an asset.
 //
 // https://developer/api/v2/#tag/Source-Files/operation/api.projects.files.references.delete
 func (s *SourceFilesService) DeleteAssetReference(ctx context.Context, projectID, fileID int, referenceID int) (*Response, error) {
