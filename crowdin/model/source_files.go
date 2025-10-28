@@ -617,7 +617,6 @@ type AssetReference struct {
 	User UserInfo `json:"user"`
 	CreatedAt string `json:"createdAt"`
 	MimeType string `json:"mimeType"`
-
 }
 
 // AssetReferenceResponse describes the structure of a single Asset Reference.

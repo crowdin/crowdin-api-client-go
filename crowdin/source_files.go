@@ -185,7 +185,7 @@ func (s *SourceFilesService) DownloadFile(ctx context.Context, projectID, fileID
 // ListAssetReferences returns a list of all reference files for an asset.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.references.getMany
-func (s *SourceFilesService) ListAssetReferences(ctx context.Context, projectID, fileID int, opt *model.ListOptions) ([]*model.AssetReference , *Response, error) {
+func (s *SourceFilesService) ListAssetReferences(ctx context.Context, projectID, fileID int, opt *model.ListOptions) ([]*model.AssetReference, *Response, error) {
 	res := new(model.AssetReferencesListResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d/references", projectID, fileID), opt, res)
 
