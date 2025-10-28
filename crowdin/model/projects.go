@@ -228,6 +228,8 @@ type ProjectsAddRequest struct {
 	UseGlobalTM *bool `json:"useGlobalTm,omitempty"`
 	// If true - show primary language TM suggestions for dialects if there are no dialect-specific ones. Default: true.
 	ShowTMSuggestionsDialects *bool `json:"showTmSuggestionsDialects,omitempty"`
+	// If true - only approved suggestions will be saved to the project default TM.
+	TmApprovedSuggestionsOnly *bool `json:"tmApprovedSuggestionsOnly,omitempty"`
 	// Defines whether to skip untranslated strings.
 	SkipUntranslatedStrings *bool `json:"skipUntranslatedStrings,omitempty"`
 	// Defines whether to export only approved strings.
