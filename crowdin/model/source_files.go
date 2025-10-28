@@ -597,13 +597,13 @@ func (r *ReviewedBuildRequest) Validate() error {
 
 // AddAssetReferenceRequest describes a structure to add a reference file for an asset.
 type AddAssetReferenceRequest struct {
-	StorageID  int `json:"storageId"`
-	Name  string `json:"name"`
+	StorageID int `json:"storageId"`
+	Name string `json:"name"`
 }
 
 // UserInfo describes a structure for user received in response.
 type UserInfo struct {
-	ID int `json:"id"`
+	UserID int `json:"id"`
 	UserName string `json:"username"`
 	FullName string `json:"fullName"`
 	AvatarURL string `json:"avatarUrl"`
