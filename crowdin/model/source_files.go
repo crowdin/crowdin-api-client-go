@@ -594,3 +594,41 @@ func (r *ReviewedBuildRequest) Validate() error {
 	}
 	return nil
 }
+
+
+
+type AddAssetReferenceRequest struct {
+	StorageID  int `json:"storageId"`
+	Name  string `json:"name"`
+}
+
+type UserObject struct {
+	ID int `json:"id"`
+	UserName string `json:"username"`
+	FullName string `json:"fullName"`
+	AvatarURL string `json:"avatarUrl"`
+}
+
+type AssetReference struct {
+	ID int `json:"id"`
+	Name string `json:"name"`
+	URL string `json:"url"`
+	User UserObject `json:"user"`
+	CreatedAt string `json:"createdAt"`
+	MimeType string `json:"mimeType"`
+
+}
+
+
+type AssetReferenceDataResponse struct {
+	Data *AssetReference `json:"data"`
+}
+
+
+type AssetReferencesListResponse struct {
+	Data []* AssetReferenceDataResponse `json:"data"`
+
+}
+
+
+
