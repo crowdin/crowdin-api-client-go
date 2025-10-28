@@ -352,7 +352,7 @@ func TestBranchesService_Merge(t *testing.T) {
 	mux.HandleFunc(fmt.Sprintf("/api/v2/projects/%d/branches/%d/merges", projectID, branchID), func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodPost)
 		testURL(t, r, fmt.Sprintf("/api/v2/projects/%d/branches/%d/merges", projectID, branchID))
-		testBody(t, r, `{"sourceBranchId":38,"deleteAfterMerge":false,"dryRun":true}`+"\n")
+		testBody(t, r, `{"sourceBranchId":38,"deleteAfterMerge":false,"acceptSourceChanges":true,"dryRun":true}`+"\n")
 
 		fmt.Fprint(w, `{
 			"data": {
@@ -361,7 +361,8 @@ func TestBranchesService_Merge(t *testing.T) {
 				"progress": 100,
 				"attributes": {
 					"sourceBranchId": 38,
-					"deleteAfterMerge": false
+					"deleteAfterMerge": false,
+					"acceptSourceChanges": true
 				},
 				"createdAt": "2023-09-23T11:26:54+00:00",
 				"updatedAt": "2023-09-23T11:26:54+00:00",
@@ -372,9 +373,10 @@ func TestBranchesService_Merge(t *testing.T) {
 	})
 
 	req := &model.BranchesMergeRequest{
-		SourceBranchID:   38,
-		DeleteAfterMerge: ToPtr(false),
-		DryRun:           ToPtr(true),
+		SourceBranchID:      38,
+		DeleteAfterMerge:    ToPtr(false),
+		DryRun:              ToPtr(true),
+		AcceptSourceChanges: ToPtr(true),
 	}
 	merge, _, err := client.Branches.Merge(context.Background(), projectID, branchID, req)
 	if err != nil {
@@ -386,11 +388,13 @@ func TestBranchesService_Merge(t *testing.T) {
 		Status:     "finished",
 		Progress:   100,
 		Attributes: struct {
-			SourceBranchID   int  `json:"sourceBranchId"`
-			DeleteAfterMerge bool `json:"deleteAfterMerge"`
+			SourceBranchID      int  `json:"sourceBranchId"`
+			DeleteAfterMerge    bool `json:"deleteAfterMerge"`
+			AcceptSourceChanges bool `json:"acceptSourceChanges,omitempty"`
 		}{
-			SourceBranchID:   38,
-			DeleteAfterMerge: false,
+			SourceBranchID:      38,
+			DeleteAfterMerge:    false,
+			AcceptSourceChanges: true,
 		},
 		CreatedAt:  "2023-09-23T11:26:54+00:00",
 		UpdatedAt:  "2023-09-23T11:26:54+00:00",
@@ -448,7 +452,8 @@ func TestBranchesService_CheckMergeStatus(t *testing.T) {
 				"progress": 100,
 				"attributes": {
 					"sourceBranchId": 38,
-					"deleteAfterMerge": false
+					"deleteAfterMerge": false,
+					"acceptSourceChanges": true
 				},
 				"createdAt": "2023-09-23T11:26:54+00:00",
 				"updatedAt": "2023-09-23T11:26:54+00:00",
@@ -468,11 +473,13 @@ func TestBranchesService_CheckMergeStatus(t *testing.T) {
 		Status:     "finished",
 		Progress:   100,
 		Attributes: struct {
-			SourceBranchID   int  `json:"sourceBranchId"`
-			DeleteAfterMerge bool `json:"deleteAfterMerge"`
+			SourceBranchID      int  `json:"sourceBranchId"`
+			DeleteAfterMerge    bool `json:"deleteAfterMerge"`
+			AcceptSourceChanges bool `json:"acceptSourceChanges,omitempty"`
 		}{
-			SourceBranchID:   38,
-			DeleteAfterMerge: false,
+			SourceBranchID:      38,
+			DeleteAfterMerge:    false,
+			AcceptSourceChanges: true,
 		},
 		CreatedAt:  "2023-09-23T11:26:54+00:00",
 		UpdatedAt:  "2023-09-23T11:26:54+00:00",
