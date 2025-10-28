@@ -625,7 +625,7 @@ type AssetReferenceResponse struct {
 	Data *AssetReference `json:"data"`
 }
 
-// AssetReferencesListResponse describes is structure array of AssetReferenceResponse 
+// AssetReferencesListResponse describes the structure array of an AssetReferenceResponse 
 type AssetReferencesListResponse struct {
-	Data []* AssetReferenceResponse `json:"data"`
+	Data []*AssetReferenceResponse `json:"data"`
 }
