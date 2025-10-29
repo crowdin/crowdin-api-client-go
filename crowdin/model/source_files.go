@@ -594,3 +594,37 @@ func (r *ReviewedBuildRequest) Validate() error {
 	}
 	return nil
 }
+
+// AddAssetReferenceRequest describes a structure to add a reference file for an asset.
+type AddAssetReferenceRequest struct {
+	StorageID 	int 	`json:"storageId"`
+	Name 		string 	`json:"name"`
+}
+
+// UserInfo describes a structure for user received in response.
+type UserInfo struct {
+	UserID 		int 	`json:"id"`
+	UserName 	string 	`json:"username"`
+	FullName 	string 	`json:"fullName"`
+	AvatarURL 	string 	`json:"avatarUrl"`
+}
+
+// AssetReference describes the structure for Asset Reference.
+type AssetReference struct {
+	ID 			int 		`json:"id"`
+	Name 		string 		`json:"name"`
+	URL 		string 		`json:"url"`
+	User 		UserInfo 	`json:"user"`
+	CreatedAt 	string 		`json:"createdAt"`
+	MimeType 	string 		`json:"mimeType"`
+}
+
+// AssetReferenceResponse describes the structure of a single Asset Reference.
+type AssetReferenceResponse struct {
+	Data *AssetReference `json:"data"`
+}
+
+// AssetReferencesListResponse describes the structure array of an AssetReferenceResponse 
+type AssetReferencesListResponse struct {
+	Data []*AssetReferenceResponse `json:"data"`
+}
