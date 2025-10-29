@@ -224,5 +224,5 @@ type TeamsGetResponse struct {
 // GroupsTeam  represents a group team.
 type GroupsTeam struct {
 	ID   int   `json:"id"`
-	User *Team `json:"user"`
+	Team *Team `json:"team"`
 }
