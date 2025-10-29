@@ -696,8 +696,8 @@ func TestGroupsTeamsService_List(t *testing.T) {
 			"data": [
 				{
 					"data": {
-							"id": 27,
-							"user": {
+						"id": 27,
+						"team": {
 							"id": 2,
 							"name": "Translators Team",
 							"totalMembers": 8,
@@ -725,7 +725,7 @@ func TestGroupsTeamsService_List(t *testing.T) {
 		{
 			Data: &model.GroupsTeam{
 				ID: 27,
-				User: &model.Team{
+				Team: &model.Team{
 					ID:           2,
 					Name:         "Translators Team",
 					TotalMembers: 8,
@@ -737,7 +737,7 @@ func TestGroupsTeamsService_List(t *testing.T) {
 		},
 	}
 
-	if teams[0].User.Name != want[0].Data.User.Name {
+	if teams[0].Team.Name != want[0].Data.Team.Name {
 		t.Errorf("Managers.List returned ID %v, want %v", teams[0].ID, want[0].Data.ID)
 	}
 
@@ -770,13 +770,13 @@ func TestGroupTeamsService_Get(t *testing.T) {
 		fmt.Fprint(w, `{
 			"data": {
 				"id": 27,
-				"user": {
-				"id": 2,
-				"name": "Translators Team",
-				"totalMembers": 8,
-				"webUrl": "https://example.crowdin.com/u/teams/1",
-				"createdAt": "2019-09-23T09:04:29+00:00",
-				"updatedAt": "2019-09-23T09:04:29+00:00"
+				"team": {
+					"id": 2,
+					"name": "Translators Team",
+					"totalMembers": 8,
+					"webUrl": "https://example.crowdin.com/u/teams/1",
+					"createdAt": "2019-09-23T09:04:29+00:00",
+					"updatedAt": "2019-09-23T09:04:29+00:00"
 				}
 			}
 		}`)
@@ -790,7 +790,7 @@ func TestGroupTeamsService_Get(t *testing.T) {
 	want := &model.TeamsGetResponse{
 		Data: &model.GroupsTeam{
 			ID: 18,
-			User: &model.Team{
+			Team: &model.Team{
 				ID:           2,
 				Name:         "Translators Team",
 				TotalMembers: 8,
@@ -801,7 +801,7 @@ func TestGroupTeamsService_Get(t *testing.T) {
 		},
 	}
 
-	if teams.User.ID != want.Data.User.ID {
+	if teams.Team.ID != want.Data.Team.ID {
 		t.Errorf("Managers.Get returned %+v, want %+v", teams, want)
 	}
 }
@@ -817,17 +817,17 @@ func TestGroupTeamsService_Edit(t *testing.T) {
 		fmt.Fprint(w, `{
 			"data": [
 				{
-				"data": {
-					"id": 2,
-					"user": {
-					"id": 18,
-					"name": "Translators Team",
-					"totalMembers": 8,
-					"webUrl": "https://example.crowdin.com/u/teams/1",
-					"createdAt": "2019-09-23T09:04:29+00:00",
-					"updatedAt": "2019-09-23T09:04:29+00:00"
+					"data": {
+						"id": 2,
+						"team": {
+							"id": 18,
+							"name": "Translators Team",
+							"totalMembers": 8,
+							"webUrl": "https://example.crowdin.com/u/teams/1",
+							"createdAt": "2019-09-23T09:04:29+00:00",
+							"updatedAt": "2019-09-23T09:04:29+00:00"
+						}
 					}
-				}
 				}
 			]
 		}`)
@@ -849,8 +849,8 @@ func TestGroupTeamsService_Edit(t *testing.T) {
 
 	want := 18
 
-	if teams[0].User.ID != want {
-		t.Errorf("Managers.Edit returned %+v, want %+v", teams[0].User.ID, want)
+	if teams[0].Team.ID != want {
+		t.Errorf("Managers.Edit returned %+v, want %+v", teams[0].Team.ID, want)
 	}
 }
 
