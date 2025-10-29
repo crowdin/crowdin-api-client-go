@@ -52,6 +52,7 @@ type (
 		UseGlobalTM                     bool                       `json:"useGlobalTm,omitempty"`
 		TMContextType                   string                     `json:"tmContextType,omitempty"`
 		ShowTMSuggestionsDialects       bool                       `json:"showTmSuggestionsDialects,omitempty"`
+		TmApprovedSuggestionsOnly       bool                       `json:"tmApprovedSuggestionsOnly,omitempty"`
 		IsSuspended                     bool                       `json:"isSuspended,omitempty"`
 		QACheckIsActive                 bool                       `json:"qaCheckIsActive,omitempty"`
 		QAApprovalsCount                int                        `json:"qaApprovalsCount,omitempty"`

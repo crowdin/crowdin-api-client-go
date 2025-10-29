@@ -82,6 +82,7 @@ func TestProjectsService_Get(t *testing.T) {
 			"autoTranslateDialects": true,
 			"useGlobalTm": false,
 			"showTmSuggestionsDialects": true,
+			"tmApprovedSuggestionsOnly": false,
 			"isSuspended": false,
 			"qaCheckIsActive": true,
 			"qaCheckCategories": {
@@ -286,6 +287,7 @@ func TestProjectsService_Get(t *testing.T) {
 		AutoTranslateDialects:           true,
 		UseGlobalTM:                     false,
 		ShowTMSuggestionsDialects:       true,
+		TmApprovedSuggestionsOnly:       false,
 		IsSuspended:                     false,
 		QACheckIsActive:                 true,
 		QACheckCategories: map[string]bool{
@@ -476,6 +478,7 @@ func TestProjectsService_Get_Enterprise(t *testing.T) {
 			"hiddenStringsProofreadersAccess": true,
 			"autoSubstitution": true,
 			"showTmSuggestionsDialects": true,
+			"tmApprovedSuggestionsOnly": false,
 			"exportTranslatedOnly": false,
 			"skipUntranslatedStrings": false,
 			"exportWithMinApprovalsCount": 0,
@@ -675,6 +678,7 @@ func TestProjectsService_Get_Enterprise(t *testing.T) {
 		HiddenStringsProofreadersAccess: true,
 		AutoSubstitution:                true,
 		ShowTMSuggestionsDialects:       true,
+		TmApprovedSuggestionsOnly:       false,
 		ExportTranslatedOnly:            false,
 		SkipUntranslatedStrings:         false,
 		ExportWithMinApprovalsCount:     0,
