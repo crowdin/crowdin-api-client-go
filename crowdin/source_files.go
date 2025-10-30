@@ -182,6 +182,51 @@ func (s *SourceFilesService) DownloadFile(ctx context.Context, projectID, fileID
 	return res.Data, resp, err
 }
 
+// ListAssetReferences returns a list of all reference files for an asset.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.files.references.getMany
+func (s *SourceFilesService) ListAssetReferences(ctx context.Context, projectID, fileID int, opt *model.ListOptions) ([]*model.AssetReference, *Response, error) {
+	res := new(model.AssetReferencesListResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d/references", projectID, fileID), opt, res)
+
+	assetReferences := make([]*model.AssetReference, 0, len(res.Data))
+	for _, a := range res.Data {
+		assetReferences = append(assetReferences, a.Data)
+	}
+
+	return assetReferences, resp, err
+}
+
+// AddAssetReference uploads a reference file for an asset.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.files.references.post
+func (s *SourceFilesService) AddAssetReference(ctx context.Context, projectID, fileID int, req *model.AddAssetReferenceRequest) (
+	*model.AssetReference, *Response, error) {
+	res := new(model.AssetReferenceResponse)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d/references", projectID, fileID), req, res)
+
+	return res.Data, resp, err
+}
+
+// GetAssetReference returns information about a specific asset reference.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.files.references.get
+func (s *SourceFilesService) GetAssetReference(ctx context.Context, projectID, fileID int, referenceID int) (*model.AssetReference, *Response, error) {
+	res := new(model.AssetReferenceResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d/references/%d", projectID, fileID, referenceID), nil, res)
+
+	return res.Data, resp, err
+}
+
+// DeleteAssetReference deletes a reference file for an asset.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.files.references.delete
+func (s *SourceFilesService) DeleteAssetReference(ctx context.Context, projectID, fileID int, referenceID int) (*Response, error) {
+	resp, err := s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d/references/%d", projectID, fileID, referenceID), nil)
+
+	return resp, err
+}
+
 // ListFileRevisions returns a list of file revisions.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.revisions.getMany
