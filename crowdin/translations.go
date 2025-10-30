@@ -77,6 +77,18 @@ func (s *TranslationsService) ApplyPreTranslation(ctx context.Context, projectID
 	return res.Data, resp, err
 }
 
+// PreTranslationReport returns report data for a specific pre-translation.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Translations/operation/api.projects.pre-translations.report.getReport
+func (s *TranslationsService) PreTranslationReport(
+	ctx context.Context, projectID int, preTranslationID string,
+) (*model.PreTranslationReport, *Response, error) {
+	res := new(model.PreTranslationReportResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/pre-translations/%s/reports", projectID, preTranslationID), nil, res)
+
+	return res.Data, resp, err
+}
+
 // BuildProjectDirectoryTranslation builds translations for a specific directory in the project.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.directories.post

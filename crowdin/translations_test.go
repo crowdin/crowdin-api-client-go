@@ -69,6 +69,81 @@ func TestTranslationsService_PreTranslationStatus(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
+func TestTranslationsService_PreTranslationReport(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/pre-translations/9e7de270-4f83-41cb-b606-2f90631f26e2/reports"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+    			"data": {
+    				"languages": [
+    					{
+    						"id": "es",
+    						"files": [
+    							{
+    								"id": "10191",
+    								"statistics": {
+    									"phrases": 6,
+    									"words": 13
+    								}
+    							}
+    						],
+    						"skipped": {
+    							"translation_eq_source": 2,
+    							"qa_check": 1,
+    							"hidden_strings": 0,
+    							"ai_error": 6
+    						},
+    						"skippedQaCheckCategories": {
+    							"duplicate": 1,
+    							"spellcheck": 1
+    						}
+    					}
+    				],
+    				"preTranslateType": "ai"
+    			}
+    		}`)
+	})
+
+	report, resp, err := client.Translations.PreTranslationReport(context.Background(), 1, "9e7de270-4f83-41cb-b606-2f90631f26e2")
+	require.NoError(t, err)
+
+	expected := &model.PreTranslationReport{
+		Languages: []*model.LanguageReport{
+			{
+				ID: "es",
+				Files: []*model.LanguageReportFile{
+					{
+						ID: "10191",
+						Statistics: &model.LanguageReportStatistics{
+							Phrases: 6,
+							Words:   13,
+						},
+					},
+				},
+				Skipped: &model.LanguageReportSkipped{
+					TranslationEQSource: 2,
+					QACheck:             1,
+					HiddenStrings:       0,
+					AIError:             6,
+				},
+				SkippedQaCheckCategories: &model.LanguageReportSkippedQaCheckCategories{
+					Duplicate:  1,
+					Spellcheck: 1,
+				},
+			},
+		},
+		PreTranslateType: "ai",
+	}
+
+	assert.Equal(t, expected, report)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
 func TestTranslationsService_ListPreTranslations(t *testing.T) {
 	tests := []struct {
 		name          string
