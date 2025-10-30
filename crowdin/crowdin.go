@@ -52,6 +52,7 @@ type Client struct {
 	SourceStrings             *SourceStringsService
 	Storages                  *StorageService
 	StringComments            *StringCommentsService
+	StringCorrections         *StringCorrectionsService
 	StringTranslations        *StringTranslationsService
 	Tasks                     *TasksService
 	Teams                     *TeamsService
@@ -119,6 +120,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.SourceStrings = &SourceStringsService{client: c}
 	c.Storages = &StorageService{client: c}
 	c.StringComments = &StringCommentsService{client: c}
+	c.StringCorrections = &StringCorrectionsService{client: c}
 	c.StringTranslations = &StringTranslationsService{client: c}
 	c.Tasks = &TasksService{client: c}
 	c.Teams = &TeamsService{client: c}
