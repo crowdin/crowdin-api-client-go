@@ -30,6 +30,40 @@ type (
 		TranslateUntranslatedOnly     *bool    `json:"translateUntranslatedOnly,omitempty"`
 		TranslateWithPerfectMatchOnly *bool    `json:"translateWithPerfectMatchOnly,omitempty"`
 	}
+
+	PreTranslationReport struct {
+		Languages        []*LanguageReport `json:"languages"`
+		PreTranslateType string            `json:"preTranslateType"`
+	}
+
+	LanguageReport struct {
+		ID                       string                                  `json:"id"`
+		Files                    []*LanguageReportFile                   `json:"files"`
+		Skipped                  *LanguageReportSkipped                  `json:"skipped,omitempty"`
+		SkippedQaCheckCategories *LanguageReportSkippedQaCheckCategories `json:"skippedQaCheckCategories,omitempty"`
+	}
+
+	LanguageReportFile struct {
+		ID         string                    `json:"id"`
+		Statistics *LanguageReportStatistics `json:"statistics"`
+	}
+
+	LanguageReportStatistics struct {
+		Phrases int `json:"phrases"`
+		Words   int `json:"words"`
+	}
+
+	LanguageReportSkipped struct {
+		TranslationEQSource int `json:"translation_eq_source"`
+		QACheck             int `json:"qa_check"`
+		HiddenStrings       int `json:"hidden_strings"`
+		AIError             int `json:"ai_error"`
+	}
+
+	LanguageReportSkippedQaCheckCategories struct {
+		Duplicate  int `json:"duplicate"`
+		Spellcheck int `json:"spellcheck"`
+	}
 )
 
 // PreTranslationsResponse defines the structure of a response when
@@ -42,6 +76,12 @@ type PreTranslationsResponse struct {
 // getting a list of pre-translations.
 type PreTranslationsListResponse struct {
 	Data []*PreTranslationsResponse `json:"data"`
+}
+
+// PreTranslationReportResponse defines the structure of a response when
+// getting a pre-translation report.
+type PreTranslationReportResponse struct {
+	Data *PreTranslationReport `json:"data"`
 }
 
 // PreTranslationRequest defines the structure of a request to apply pre-translation.
