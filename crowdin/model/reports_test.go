@@ -100,6 +100,54 @@ func TestReportGenerateRequestValidate(t *testing.T) {
 			valid: true,
 		},
 		{
+			name: "valid schema (ReportSourceContentUpdates)",
+			req: &ReportGenerateRequest{
+				Name:   ReportSourceContentUpdates,
+				Schema: &SourceContentUpdatesSchema{Unit: ReportUnitWords},
+			},
+			valid: true,
+		},
+		{
+			name: "valid schema (ReportProjectMembers)",
+			req: &ReportGenerateRequest{
+				Name:   ReportProjectMembers,
+				Schema: &ProjectMembersSchema{Format: ReportFormatXLSX},
+			},
+			valid: true,
+		},
+		{
+			name: "valid schema (ReportEditorIssues)",
+			req: &ReportGenerateRequest{
+				Name:   ReportEditorIssues,
+				Schema: &EditorIssuesSchema{IssueType: "general_question"},
+			},
+			valid: true,
+		},
+		{
+			name: "valid schema (ReportQACheckIssues)",
+			req: &ReportGenerateRequest{
+				Name:   ReportQACheckIssues,
+				Schema: &QACheckIssuesSchema{LanguageID: "ach"},
+			},
+			valid: true,
+		},
+		{
+			name: "valid schema (ReportSavingActivity)",
+			req: &ReportGenerateRequest{
+				Name:   ReportSavingActivity,
+				Schema: &SavingActivitySchema{LanguageID: "ach", Unit: ReportUnitWords},
+			},
+			valid: true,
+		},
+		{
+			name: "valid schema (ReportTranslationActivity)",
+			req: &ReportGenerateRequest{
+				Name:   ReportTranslationActivity,
+				Schema: &TranslationActivitySchema{LanguageID: "ach", Unit: ReportUnitWords},
+			},
+			valid: true,
+		},
+		{
 			name: "valid schema (TranslatorAccuracySchema)",
 			req: &ReportGenerateRequest{
 				Name:   ReportTranslatorAccuracy,
@@ -199,6 +247,24 @@ func TestGroupReportGenerateRequestValidate(t *testing.T) {
 			name: "valid request (GroupTopMembersSchema)",
 			req: &GroupReportGenerateRequest{Name: ReportGroupTranslationCostsPostEditing,
 				Schema: &GroupTopMembersSchema{ProjectIDs: []int{1, 2}, Unit: ReportUnitWords, LanguageID: "uk"}},
+			valid: true,
+		},
+		{
+			name: "valid request (GroupTaskUsageSchema)",
+			req: &GroupReportGenerateRequest{Name: ReportGroupTaskUsage,
+				Schema: &GroupTaskUsageSchema{ProjectIDs: []int{1}, Type: "workload"}},
+			valid: true,
+		},
+		{
+			name: "valid request (GroupQACheckIssuesSchema)",
+			req: &GroupReportGenerateRequest{Name: ReportGroupQACheckIssues,
+				Schema: &GroupQACheckIssuesSchema{ProjectIDs: []int{1, 2}, Format: ReportFormatXLSX}},
+			valid: true,
+		},
+		{
+			name: "valid request (GroupTranslationActivitySchema)",
+			req: &GroupReportGenerateRequest{Name: ReportGroupTranslationActivity,
+				Schema: &GroupTranslationActivitySchema{ProjectIDs: []int{1}, Unit: ReportUnitWords}},
 			valid: true,
 		},
 	}

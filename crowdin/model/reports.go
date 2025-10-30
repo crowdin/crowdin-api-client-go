@@ -54,6 +54,12 @@ const (
 	ReportTopMembers                  ReportName = "top-members"
 	ReportTranslatorAccuracy          ReportName = "translator-accuracy"
 	ReportPreTranslateAccuracy        ReportName = "pre-translate-accuracy"
+	ReportSourceContentUpdates        ReportName = "source-content-updates"
+	ReportProjectMembers              ReportName = "project-members"
+	ReportEditorIssues                ReportName = "editor-issues"
+	ReportQACheckIssues               ReportName = "qa-check-issues"
+	ReportSavingActivity              ReportName = "saving-activity"
+	ReportTranslationActivity         ReportName = "translation-activity"
 
 	// Deprecated: Use ReportPreTranslateAccuracy instead.
 	ReportPreTranslateEfficiency ReportName = "pre-translate-efficiency"
@@ -61,6 +67,9 @@ const (
 	// Organization reports.
 	ReportGroupTranslationCostsPostEditing ReportName = "group-translation-costs-pe"
 	ReportGroupTopMembers                  ReportName = "group-top-members"
+	ReportGroupTaskUsage                   ReportName = "group-task-usage"
+	ReportGroupQACheckIssues               ReportName = "group-qa-check-issues"
+	ReportGroupTranslationActivity         ReportName = "group-translation-activity"
 )
 
 // ReportArchive represents a report archive.
@@ -208,6 +217,12 @@ type ReportGenerateRequest struct {
 	//  - TranslatorAccuracySchema
 	//  - PreTranslateAccuracySchema
 	//  - PreTranslateEfficiencySchema (Deprecated)
+	//  - SourceContentUpdatesSchema
+	//  - ProjectMembersSchema
+	//  - EditorIssuesSchema
+	//  - QACheckIssuesSchema
+	//  - SavingActivitySchema
+	//  - TranslationActivitySchema
 	Schema ReportSchema `json:"schema"`
 }
 
@@ -431,6 +446,80 @@ type (
 		// Report date to in UTC, ISO 8601.
 		DateTo string `json:"dateTo,omitempty"`
 	}
+
+	// SourceContentUpdatesSchema defines the schema for the source content updates report.
+	SourceContentUpdatesSchema struct {
+		// Report unit. Enum: strings, words, chars, chars_with_spaces. Default: words.
+		Unit ReportUnit `json:"unit,omitempty"`
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+	}
+
+	// ProjectMembersSchema defines the schema for the project members report.
+	ProjectMembersSchema struct {
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+	}
+
+	// EditorIssuesSchema defines the schema for the editor issues report.
+	EditorIssuesSchema struct {
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Issue type filter.
+		IssueType string `json:"issueType,omitempty"`
+	}
+
+	// QACheckIssuesSchema defines the schema for the QA check issues report.
+	QACheckIssuesSchema struct {
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Language Identifier for which the report should be generated.
+		LanguageID string `json:"languageId,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+	}
+
+	// SavingActivitySchema defines the schema for the saving activity report.
+	SavingActivitySchema struct {
+		// Report unit. Enum: strings, words, chars, chars_with_spaces. Default: words.
+		Unit ReportUnit `json:"unit,omitempty"`
+		// Language Identifier for which the report should be generated.
+		LanguageID string `json:"languageId,omitempty"`
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+	}
+
+	// TranslationActivitySchema defines the schema for the translation activity report.
+	TranslationActivitySchema struct {
+		// Report unit. Enum: strings, words, chars, chars_with_spaces. Default: words.
+		Unit ReportUnit `json:"unit,omitempty"`
+		// Language Identifier for which the report should be generated.
+		LanguageID string `json:"languageId,omitempty"`
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+	}
 )
 
 // Validate checks if the request is valid.
@@ -495,6 +584,42 @@ func (r *PreTranslateEfficiencySchema) ValidateSchema() error {
 	return nil
 }
 
+// ValidateSchema implements the ReportSchema interface and checks if the
+// SourceContentUpdates schema is valid.
+func (r *SourceContentUpdatesSchema) ValidateSchema() error {
+	return nil
+}
+
+// ValidateSchema implements the ReportSchema interface and checks if the
+// ProjectMembers schema is valid.
+func (r *ProjectMembersSchema) ValidateSchema() error {
+	return nil
+}
+
+// ValidateSchema implements the ReportSchema interface and checks if the
+// EditorIssues schema is valid.
+func (r *EditorIssuesSchema) ValidateSchema() error {
+	return nil
+}
+
+// ValidateSchema implements the ReportSchema interface and checks if the
+// QACheckIssues schema is valid.
+func (r *QACheckIssuesSchema) ValidateSchema() error {
+	return nil
+}
+
+// ValidateSchema implements the ReportSchema interface and checks if the
+// SavingActivity schema is valid.
+func (r *SavingActivitySchema) ValidateSchema() error {
+	return nil
+}
+
+// ValidateSchema implements the ReportSchema interface and checks if the
+// TranslationActivity schema is valid.
+func (r *TranslationActivitySchema) ValidateSchema() error {
+	return nil
+}
+
 // GroupReportGenerateRequest defines the structure of a request to
 // generate a group or organization report.
 type GroupReportGenerateRequest struct {
@@ -504,6 +629,9 @@ type GroupReportGenerateRequest struct {
 	// One of the following types:
 	//  - GroupTransactionCostsPostEditingSchema
 	//  - GroupTopMembersSchema
+	//  - GroupTaskUsageSchema
+	//  - GroupQACheckIssuesSchema
+	//  - GroupTranslationActivitySchema
 	Schema ReportGroupSchema `json:"schema"`
 }
 
@@ -513,6 +641,9 @@ type GroupReportGenerateRequest struct {
 // Schema can be one of the following types:
 //   - GroupTransactionCostsPostEditingSchema
 //   - GroupTopMembersSchema
+//   - GroupTaskUsageSchema
+//   - GroupQACheckIssuesSchema
+//   - GroupTranslationActivitySchema
 type ReportGroupSchema interface {
 	ValidateGroupSchema() error
 }
@@ -571,6 +702,56 @@ type (
 		// Report date to in UTC, ISO 8601.
 		DateTo string `json:"dateTo,omitempty"`
 	}
+
+	// GroupTaskUsageSchema defines the schema for the group task usage report.
+	GroupTaskUsageSchema struct {
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Report type filter.
+		Type string `json:"type,omitempty"`
+		// Project identifiers for which the report should be generated.
+		ProjectIDs []int `json:"projectIds,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+		// Group results by the specified attribute.
+		GroupBy string `json:"groupBy,omitempty"`
+		// Task type identifier filter.
+		TypeTasks int `json:"typeTasks,omitempty"`
+		// Language Identifier for which the report should be generated.
+		LanguageID string `json:"languageId,omitempty"`
+		// Task creator identifier filter.
+		CreatorID int `json:"creatorId,omitempty"`
+		// Task assignee identifier filter.
+		AssigneeID int `json:"assigneeId,omitempty"`
+	}
+
+	// GroupQACheckIssuesSchema defines the schema for the group QA check issues report.
+	GroupQACheckIssuesSchema struct {
+		// Project identifiers for which the report should be generated.
+		ProjectIDs []int `json:"projectIds,omitempty"`
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+	}
+
+	// GroupTranslationActivitySchema defines the schema for the group translation activity report.
+	GroupTranslationActivitySchema struct {
+		// Project identifiers for which the report should be generated.
+		ProjectIDs []int `json:"projectIds,omitempty"`
+		// Report unit. Enum: strings, words, chars, chars_with_spaces. Default: words.
+		Unit ReportUnit `json:"unit,omitempty"`
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+	}
 )
 
 // Validate checks if the request is valid.
@@ -606,6 +787,21 @@ func (r *GroupTransactionCostsPostEditingSchema) ValidateGroupSchema() error {
 
 // ValidateGroupSchema checks if the GroupTopMembers schema is valid.
 func (r *GroupTopMembersSchema) ValidateGroupSchema() error {
+	return nil
+}
+
+// ValidateGroupSchema checks if the GroupTaskUsage schema is valid.
+func (r *GroupTaskUsageSchema) ValidateGroupSchema() error {
+	return nil
+}
+
+// ValidateGroupSchema checks if the GroupQACheckIssues schema is valid.
+func (r *GroupQACheckIssuesSchema) ValidateGroupSchema() error {
+	return nil
+}
+
+// ValidateGroupSchema checks if the GroupTranslationActivity schema is valid.
+func (r *GroupTranslationActivitySchema) ValidateGroupSchema() error {
 	return nil
 }
 
