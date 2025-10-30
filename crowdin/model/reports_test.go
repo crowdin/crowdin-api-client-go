@@ -118,7 +118,7 @@ func TestReportGenerateRequestValidate(t *testing.T) {
 		{
 			name: "valid schema (ReportEditorIssues)",
 			req: &ReportGenerateRequest{
-				Name: ReportEditorIssues,
+				Name:   ReportEditorIssues,
 				Schema: &EditorIssuesSchema{IssueType: "general_question"},
 			},
 			valid: true,
@@ -134,7 +134,7 @@ func TestReportGenerateRequestValidate(t *testing.T) {
 		{
 			name: "valid schema (ReportSavingActivity)",
 			req: &ReportGenerateRequest{
-				Name: ReportSavingActivity,
+				Name:   ReportSavingActivity,
 				Schema: &SavingActivitySchema{LanguageID: "ach", Unit: ReportUnitWords},
 			},
 			valid: true,
@@ -142,7 +142,7 @@ func TestReportGenerateRequestValidate(t *testing.T) {
 		{
 			name: "valid schema (ReportTranslationActivity)",
 			req: &ReportGenerateRequest{
-				Name: ReportTranslationActivity,
+				Name:   ReportTranslationActivity,
 				Schema: &TranslationActivitySchema{LanguageID: "ach", Unit: ReportUnitWords},
 			},
 			valid: true,
