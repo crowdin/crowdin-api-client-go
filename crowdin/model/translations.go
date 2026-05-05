@@ -543,9 +543,9 @@ type (
 )
 
 type BatchPreTranslationRequest struct {
-	Op    string      `json:"op"`
-	Path  string      `json:"path"`
-	Value interface{} `json:"value"`
+	Op    string `json:"op"`
+	Path  string `json:"path"`
+	Value string `json:"value"`
 }
 
 func (b *BatchPreTranslationRequest) Validate() error {
@@ -559,7 +559,7 @@ func (b *BatchPreTranslationRequest) Validate() error {
 		return errors.New("path is required")
 	}
 
-	if b.Value == nil {
+	if b.Value == "" {
 		return errors.New("value is required")
 	}
 

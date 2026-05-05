@@ -217,9 +217,10 @@ func (s *TranslationsService) ExportProjectTranslation(ctx context.Context, proj
 	return res.Data, resp, err
 }
 
-// BatchPreTranslation
+// BatchPreTranslation executes a batch pre-translation operation for the given project
+//
 // https://developer.crowdin.com/api/v2/#operation/api.projects.pre-translations.patchBatch
-func (s *TranslationsService) BatchPreTranslation(ctx context.Context, projectID int, req *model.BatchPreTranslationRequest) (
+func (s *TranslationsService) BatchPreTranslation(ctx context.Context, projectID int, req []*model.BatchPreTranslationRequest) (
 	[]*model.PreTranslation, *Response, error,
 ) {
 	res := new(model.PreTranslationsListResponse)
