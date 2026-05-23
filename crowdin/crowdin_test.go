@@ -77,7 +77,8 @@ func testJSONBody(t *testing.T, r *http.Request, want string) {
 	}
 }
 
-// testJSONBody checks if the request body matches the expected JSON.
+// testJSONBodyAny checks if the request body matches the expected JSON,
+// including non-object JSON values such as arrays.
 func testJSONBodyAny(t *testing.T, r *http.Request, want string) {
 	t.Helper()
 

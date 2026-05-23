@@ -541,27 +541,3 @@ type (
 		Data *DownloadLink `json:"data"`
 	}
 )
-
-type BatchPreTranslationRequest struct {
-	Op    string `json:"op"`
-	Path  string `json:"path"`
-	Value string `json:"value"`
-}
-
-func (b *BatchPreTranslationRequest) Validate() error {
-	if b == nil {
-		return errors.New("patch operation is nil")
-	}
-	if b.Op == "" {
-		return errors.New("op is required")
-	}
-	if b.Path == "" {
-		return errors.New("path is required")
-	}
-
-	if b.Value == "" {
-		return errors.New("value is required")
-	}
-
-	return nil
-}

@@ -1070,7 +1070,7 @@ func TestTranslationsService_BatchPreTranslation(t *testing.T) {
 		}`)
 	})
 
-	req := []*model.BatchPreTranslationRequest{
+	req := []*model.UpdateRequest{
 		{
 			Op:    "replace",
 			Path:  "/9e7de270-4f83-41cb-b606-2f90631f26e2/status",
