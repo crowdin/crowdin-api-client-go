@@ -29,6 +29,7 @@ type (
 		SkipApprovedTranslations      *bool    `json:"skipApprovedTranslations,omitempty"`
 		TranslateUntranslatedOnly     *bool    `json:"translateUntranslatedOnly,omitempty"`
 		TranslateWithPerfectMatchOnly *bool    `json:"translateWithPerfectMatchOnly,omitempty"`
+		Priority                      *string  `json:"priority,omitempty"`
 	}
 
 	PreTranslationReport struct {

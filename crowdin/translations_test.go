@@ -1017,3 +1017,106 @@ func TestTranslationsService_ExportProjectTranslation(t *testing.T) {
 	assert.Equal(t, expected, downloadLink)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
+
+func TestTranslationsService_BatchPreTranslation(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/pre-translations"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPatch)
+		testURL(t, r, path)
+
+		expectedReqBody := `[
+			{
+				"op": "replace",
+				"path": "/9e7de270-4f83-41cb-b606-2f90631f26e2/status",
+				"value": "canceled"
+			},
+			{
+				"op": "replace",
+				"path": "/9e7de270-4f83-41cb-b606-2f90631f26e2/priority",
+				"value": "high"
+			}
+		]`
+		testJSONBodyAny(t, r, expectedReqBody)
+
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"identifier": "9e7de270-4f83-41cb-b606-2f90631f26e2",
+						"status": "created",
+						"progress": 90,
+						"attributes": {
+							"languageIds": ["uk"],
+							"fileIds": [742],
+							"method": "tm",
+							"autoApproveOption": "all",
+							"duplicateTranslations": true,
+							"skipApprovedTranslations": true,
+							"translateUntranslatedOnly": true,
+							"translateWithPerfectMatchOnly": true,
+							"priority": "normal"
+						},
+						"createdAt": "2019-09-20T14:05:50+00:00",
+						"updatedAt": "2019-09-20T14:05:50+00:00",
+						"startedAt": "2019-08-24T14:15:22Z",
+						"finishedAt": "2019-08-24T14:15:22Z"
+					}
+				}
+			]
+		}`)
+	})
+
+	req := []*model.UpdateRequest{
+		{
+			Op:    "replace",
+			Path:  "/9e7de270-4f83-41cb-b606-2f90631f26e2/status",
+			Value: "canceled",
+		},
+		{
+			Op:    "replace",
+			Path:  "/9e7de270-4f83-41cb-b606-2f90631f26e2/priority",
+			Value: "high",
+		},
+	}
+
+	result, resp, err := client.Translations.BatchPreTranslation(context.Background(), 1, req)
+	require.NoError(t, err)
+
+	require.Len(t, result, 1)
+
+	method := "tm"
+	autoApprove := "all"
+	duplicate := true
+	skipApproved := true
+	untranslatedOnly := true
+	perfectMatchOnly := true
+	priority := "normal"
+
+	expected := &model.PreTranslation{
+		Identifier: "9e7de270-4f83-41cb-b606-2f90631f26e2",
+		Status:     "created",
+		Progress:   90,
+		Attributes: &model.PreTranslationAttributes{
+			LanguageIDs:                   []string{"uk"},
+			FileIDs:                       []int{742},
+			Method:                        &method,
+			AutoApproveOption:             &autoApprove,
+			DuplicateTranslations:         &duplicate,
+			SkipApprovedTranslations:      &skipApproved,
+			TranslateUntranslatedOnly:     &untranslatedOnly,
+			TranslateWithPerfectMatchOnly: &perfectMatchOnly,
+			Priority:                      &priority,
+		},
+		CreatedAt:  "2019-09-20T14:05:50+00:00",
+		UpdatedAt:  "2019-09-20T14:05:50+00:00",
+		StartedAt:  "2019-08-24T14:15:22Z",
+		FinishedAt: "2019-08-24T14:15:22Z",
+	}
+
+	assert.Equal(t, expected, result[0])
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}

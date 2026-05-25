@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -74,6 +75,19 @@ func testJSONBody(t *testing.T, r *http.Request, want string) {
 	if !reflect.DeepEqual(wantMap, gotMap) {
 		t.Errorf("JSON does not match:\nExpected: %v\nGot: %v", wantMap, gotMap)
 	}
+}
+
+// testJSONBodyAny checks if the request body matches the expected JSON,
+// including non-object JSON values such as arrays.
+func testJSONBodyAny(t *testing.T, r *http.Request, want string) {
+	t.Helper()
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		t.Fatalf("failed to read request body: %v", err)
+	}
+
+	assert.JSONEq(t, want, string(body))
 }
 
 func testHeader(t *testing.T, r *http.Request, header, want string) {
