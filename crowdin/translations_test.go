@@ -323,6 +323,7 @@ func TestTranslationsService_ApplyPreTranslation(t *testing.T) {
 		expectedReqBody := `{
 			"languageIds": ["uk"],
 			"fileIds": [742],
+			"styleGuideIds": [1, 2],
 			"method": "tm",
 			"engineId": 1,
 			"autoApproveOption": "all",
@@ -365,6 +366,7 @@ func TestTranslationsService_ApplyPreTranslation(t *testing.T) {
 	req := &model.PreTranslationRequest{
 		LanguageIDs:                   []string{"uk"},
 		FileIDs:                       []int{742},
+		StyleGuideIDs:                 []int{1, 2},
 		Method:                        "tm",
 		EngineID:                      1,
 		AutoApproveOption:             "all",

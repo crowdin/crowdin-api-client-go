@@ -91,6 +91,8 @@ type PreTranslationRequest struct {
 	LanguageIDs []string `json:"languageIds"`
 	// Files array that should be translated.
 	FileIDs []int `json:"fileIds"`
+	// Style Guide Identifiers used during pre-translation.
+	StyleGuideIDs []int `json:"styleGuideIds,omitempty"`
 	// Defines pre-translation method. Enum: "tm", "mt", "ai". Default: "tm".
 	//  - tm – pre-translation via Translation Memory.
 	//  - mt – pre-translation via Machine Translation. "mt" should be used with `engineId` parameter.
