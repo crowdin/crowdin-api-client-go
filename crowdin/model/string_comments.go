@@ -27,6 +27,41 @@ type StringComment struct {
 	IsShared             *bool         `json:"isShared,omitempty"`
 	SenderOrganization   *Organization `json:"senderOrganization,omitempty"`
 	ResolverOrganization *Organization `json:"resolverOrganization,omitempty"`
+
+	// List of attachments added to the comment.
+	Attachments []*StringCommentAttachment `json:"attachments,omitempty"`
+	// File identifier. It is set for asset comments only.
+	FileID *int `json:"fileId,omitempty"`
+	// File object. It is set for asset comments only.
+	File *StringCommentFile `json:"file,omitempty"`
+}
+
+// StringCommentAttachment represents a file attached to a string comment.
+type StringCommentAttachment struct {
+	// Attachment ID.
+	ID int `json:"id"`
+	// Original file name.
+	Name string `json:"name"`
+	// MIME type.
+	Mime string `json:"mime"`
+	// File size in bytes.
+	Size int `json:"size"`
+	// Attachment category. Enum: image, video, audio, document, other.
+	Category string `json:"category"`
+	// Thumbnail URL.
+	ThumbnailURL *string `json:"thumbnailUrl,omitempty"`
+	// Preview URL.
+	URL string `json:"url"`
+	// Download URL.
+	DownloadURL string `json:"downloadUrl"`
+}
+
+// StringCommentFile represents the asset file of an asset comment.
+type StringCommentFile struct {
+	ID      int    `json:"id"`
+	Name    string `json:"name"`
+	Type    string `json:"type"`
+	Context string `json:"context"`
 }
 
 type String struct {
@@ -113,7 +148,11 @@ type StringCommentsAddRequest struct {
 	// Text of the comment.
 	Text string `json:"text"`
 	// String Identifier.
-	StringID int `json:"stringId"`
+	// Note: Can't be used with `fileId` in the same request.
+	StringID int `json:"stringId,omitempty"`
+	// File Identifier. Use it to add a comment to an asset file.
+	// Note: Can't be used with `stringId` in the same request.
+	FileID int `json:"fileId,omitempty"`
 	// Target Language Identifier.
 	TargetLanguageID string `json:"targetLanguageId"`
 	// Defines comment or issue.
@@ -125,6 +164,15 @@ type StringCommentsAddRequest struct {
 	IssueType string `json:"issueType,omitempty"`
 	// Defines shared comment or issue.
 	IsShared *bool `json:"isShared,omitempty"`
+	// List of attachments to be added to the comment.
+	Attachments []*StringCommentAttachmentRequest `json:"attachments,omitempty"`
+}
+
+// StringCommentAttachmentRequest defines an attachment to be added
+// to a string comment.
+type StringCommentAttachmentRequest struct {
+	// Storage Identifier.
+	ID int `json:"id"`
 }
 
 // Validate checks if the StringCommentsAddRequest is valid.
@@ -136,14 +184,22 @@ func (r *StringCommentsAddRequest) Validate() error {
 	if r.Text == "" {
 		return errors.New("text is required")
 	}
-	if r.StringID == 0 {
-		return errors.New("stringId is required")
+	if r.StringID == 0 && r.FileID == 0 {
+		return errors.New("stringId or fileId is required")
+	}
+	if r.StringID != 0 && r.FileID != 0 {
+		return errors.New("stringId and fileId cannot be used in the same request")
 	}
 	if r.TargetLanguageID == "" {
 		return errors.New("targetLanguageId is required")
 	}
 	if r.Type == "" {
 		return errors.New("type is required")
+	}
+	for _, a := range r.Attachments {
+		if a == nil || a.ID == 0 {
+			return errors.New("attachment id is required")
+		}
 	}
 
 	return nil

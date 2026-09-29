@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 )
 
@@ -15,6 +16,8 @@ type Branch struct {
 	UpdatedAt     string  `json:"updatedAt"`
 	ExportPattern *string `json:"exportPattern,omitempty"`
 	Priority      *string `json:"priority,omitempty"`
+	// IsProtected is available for string-based projects only.
+	IsProtected *bool `json:"isProtected,omitempty"`
 }
 
 // BranchesGetResponse describes a response with a single branch.
@@ -71,6 +74,10 @@ type BranchesAddRequest struct {
 	// Defines priority level for each branch.
 	// Enum: low, normal, high. Default: normal.
 	Priority string `json:"priority,omitempty"`
+	// If true, the branch is protected from some actions (for example,
+	// delete or force-push operations may be restricted). Default: false.
+	// Note: Available for string-based projects only.
+	IsProtected *bool `json:"isProtected,omitempty"`
 }
 
 // Validate checks if the request is valid.
@@ -151,6 +158,9 @@ type BranchesCloneRequest struct {
 	// Title is used to provide more details for translators.
 	// It is available in UI only.
 	Title string `json:"title,omitempty"`
+	// If true, the branch is protected from some actions (for example,
+	// delete or force-push operations may be restricted). Default: false.
+	IsProtected *bool `json:"isProtected,omitempty"`
 }
 
 // Validate checks if the request is valid.
@@ -163,4 +173,104 @@ func (r *BranchesCloneRequest) Validate() error {
 		return errors.New("name is required")
 	}
 	return nil
+}
+
+// BranchesSearchOptions specifies the parameters to the
+// BranchesService.Search method.
+type BranchesSearchOptions struct {
+	// Search branches by `name` or `title` (required).
+	Filter string `json:"filter"`
+	// Project identifiers to search across (max 50).
+	// Omit to search all accessible projects.
+	// Note: On crowdin.com all projects must belong to the same owner.
+	ProjectIDs []int `json:"projectIds,omitempty"`
+	// Owner (user) whose projects to search when `projectIds` is omitted.
+	// Defaults to your own account.
+	// Note: Available for crowdin.com only.
+	UserID int `json:"userId,omitempty"`
+
+	ListOptions
+}
+
+// Values returns the url.Values representation of BranchesSearchOptions.
+// It implements the crowdin.ListOptionsProvider interface.
+func (o *BranchesSearchOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
+	v, _ := o.ListOptions.Values()
+	if o.Filter != "" {
+		v.Add("filter", o.Filter)
+	}
+	if len(o.ProjectIDs) > 0 {
+		v.Add("projectIds", JoinSlice(o.ProjectIDs))
+	}
+	if o.UserID > 0 {
+		v.Add("userId", fmt.Sprintf("%d", o.UserID))
+	}
+
+	return v, len(v) > 0
+}
+
+// Validate checks if the search options are valid.
+func (o *BranchesSearchOptions) Validate() error {
+	if o == nil {
+		return ErrNilRequest
+	}
+	return validateSearchOptions(o.Filter, o.ProjectIDs)
+}
+
+// maxSearchProjectIDs is the maximum number of project identifiers
+// that can be passed to the organization-level search endpoints.
+const maxSearchProjectIDs = 50
+
+// validateSearchOptions validates the common parameters of the
+// organization-level search endpoints.
+func validateSearchOptions(filter string, projectIDs []int) error {
+	if filter == "" {
+		return errors.New("filter is required")
+	}
+	if len(projectIDs) > maxSearchProjectIDs {
+		return fmt.Errorf("projectIds cannot contain more than %d items", maxSearchProjectIDs)
+	}
+	return nil
+}
+
+// NodeDeleteJob represents an asynchronous delete job of a branch,
+// directory or file.
+type NodeDeleteJob struct {
+	// Delete operation identifier (UUID).
+	Identifier string `json:"identifier"`
+	// Job status. Enum: created, in_progress, finished, failed.
+	Status string `json:"status"`
+	// Progress in percentages.
+	Progress int `json:"progress"`
+	// The deleted node identifier, keyed by resource type.
+	Attributes NodeDeleteJobAttributes `json:"attributes"`
+	CreatedAt  string                  `json:"createdAt"`
+	UpdatedAt  string                  `json:"updatedAt"`
+	StartedAt  string                  `json:"startedAt"`
+	FinishedAt string                  `json:"finishedAt"`
+	// Error is present only when the operation failed with
+	// a user-actionable reason.
+	Error *NodeDeleteJobError `json:"error,omitempty"`
+}
+
+// NodeDeleteJobAttributes contains the identifier of the deleted node.
+// Only one of the fields is set, depending on the resource type.
+type NodeDeleteJobAttributes struct {
+	BranchID    *int `json:"branchId,omitempty"`
+	DirectoryID *int `json:"directoryId,omitempty"`
+	FileID      *int `json:"fileId,omitempty"`
+}
+
+// NodeDeleteJobError describes the reason of a failed delete job.
+type NodeDeleteJobError struct {
+	Message string `json:"message"`
+}
+
+// NodeDeleteJobResponse describes a response with a single delete job.
+type NodeDeleteJobResponse struct {
+	Data *NodeDeleteJob `json:"data"`
 }

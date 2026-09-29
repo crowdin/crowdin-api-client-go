@@ -284,6 +284,16 @@ type (
 		FirstLineContainsHeader *bool `json:"firstLineContainsHeader,omitempty"`
 		// Defines whether hidden sheets that should be imported. Default: true.
 		ImportHiddenSheets *bool `json:"importHiddenSheets,omitempty"`
+		// Defines whether hidden rows that should be imported. Default: true.
+		ImportHiddenRows *bool `json:"importHiddenRows,omitempty"`
+		// Defines whether to import translations identical to sources. Default: false.
+		ImportEqSuggestions *bool `json:"importEqSuggestions,omitempty"`
+		// Defines whether to auto-approve imported translations. Default: false.
+		AutoApproveImported *bool `json:"autoApproveImported,omitempty"`
+		// Defines whether to import translations for hidden strings. Default: false.
+		TranslateHidden *bool `json:"translateHidden,omitempty"`
+		// Defines whether to add imported translations to TM. Default: true.
+		AddToTM *bool `json:"addToTm,omitempty"`
 		// Defines whether to import translations from the file. Default: false.
 		ImportTranslations *bool `json:"importTranslations,omitempty"`
 		// Defines data columns mapping. The column numbering starts at 0.
@@ -302,6 +312,8 @@ type (
 		TranslateContent *bool `json:"translateContent,omitempty"`
 		// Defines whether to translate tags attributes. Default: true.
 		TranslateAttributes *bool `json:"translateAttributes,omitempty"`
+		// Specify tags that should be considered inline.
+		InlineTags []string `json:"inlineTags,omitempty"`
 		// This is an array of strings, where each item is the XPaths to DOM element that should be imported.
 		TranslatableElements []string `json:"translatableElements,omitempty"`
 
@@ -332,9 +344,115 @@ type (
 		// When checked, exposes hidden slides for translation. Default: false
 		// Note: Works only for files with the following extensions: *.pptx, *.potx, *.ppsx, *.pptm, *.potm, *.ppsm.
 		ImportHiddenSlides *bool `json:"importHiddenSlides,omitempty"`
+		// When checked, exposes document properties such as title, subject, and creator
+		// for translation. Default: false.
+		TranslateDocProperties *bool `json:"translateDocProperties,omitempty"`
+		// When checked, exposes comments for translation. Default: true.
+		TranslateComments *bool `json:"translateComments,omitempty"`
+		// When checked, formatting that differs only in whitespace no longer produces
+		// separate tags. Default: false.
+		// Note: Can be set only when `cleanTagsAggressively` is enabled.
+		IgnoreWhitespaceStyles *bool `json:"ignoreWhitespaceStyles,omitempty"`
+		// When checked, a tab inside a text run is exposed as a character instead of a tag.
+		// Default: false.
+		AddTabAsCharacter *bool `json:"addTabAsCharacter,omitempty"`
+		// When checked, a line break inside a text run is exposed as `lineSeparatorReplacement`
+		// instead of a tag. Default: false.
+		AddLineSeparatorAsCharacter *bool `json:"addLineSeparatorAsCharacter,omitempty"`
+		// Character that replaces a line break when `addLineSeparatorAsCharacter` is enabled.
+		// Note: Must be exactly one character.
+		LineSeparatorReplacement string `json:"lineSeparatorReplacement,omitempty"`
+		// When checked, a non-breaking hyphen is exposed as a character instead of a tag.
+		// Default: false.
+		ReplaceNoBreakHyphenTag *bool `json:"replaceNoBreakHyphenTag,omitempty"`
+		// When checked, soft hyphens are removed instead of being exposed as tags.
+		// Default: false.
+		IgnoreSoftHyphenTag *bool `json:"ignoreSoftHyphenTag,omitempty"`
+		// Word complex field types whose text is exposed for translation.
+		// Note: `HYPERLINK` is always extracted and can't be removed.
+		ComplexFieldDefinitionsToExtract []string `json:"complexFieldDefinitionsToExtract,omitempty"`
+		// When checked, exposes headers and footers for translation. Default: true.
+		TranslateWordHeadersFooters *bool `json:"translateWordHeadersFooters,omitempty"`
+		// When checked, exposes the name of a shape or image for translation. Default: true.
+		TranslateWordGraphicName *bool `json:"translateWordGraphicName,omitempty"`
+		// When checked, exposes the alternative text of a shape or image for translation.
+		// Default: false.
+		TranslateWordGraphicDescription *bool `json:"translateWordGraphicDescription,omitempty"`
+		// When checked, excludes text whose font color falls between
+		// `wordFontColorsMinIgnoranceThreshold` and `wordFontColorsMaxIgnoranceThreshold`
+		// from translation. Default: false.
+		IgnoreWordFontColors *bool `json:"ignoreWordFontColors,omitempty"`
+		// Darkest font color ignored when `ignoreWordFontColors` is enabled, as six hexadecimal
+		// digits with an optional leading hash. Empty means black.
+		WordFontColorsMinIgnoranceThreshold string `json:"wordFontColorsMinIgnoranceThreshold,omitempty"`
+		// Lightest font color ignored when `ignoreWordFontColors` is enabled, as six hexadecimal
+		// digits with an optional leading hash. Empty means white.
+		WordFontColorsMaxIgnoranceThreshold string `json:"wordFontColorsMaxIgnoranceThreshold,omitempty"`
+		// Paragraph style names singled out by `translateWordInExcludeStyleMode`,
+		// for example `Heading1`.
+		ExcludeWordStyles []string `json:"excludeWordStyles,omitempty"`
+		// How `excludeWordStyles` is read. If true, the listed styles are excluded from
+		// translation; if false, only they are translated. Default: true.
+		TranslateWordInExcludeStyleMode *bool `json:"translateWordInExcludeStyleMode,omitempty"`
+		// Word highlight colors singled out by `translateWordInExcludeHighlightMode`.
+		WordHighlightColors []string `json:"wordHighlightColors,omitempty"`
+		// How `wordHighlightColors` is read. If true, text with the listed highlights is
+		// excluded from translation; if false, only it is translated. Default: true.
+		TranslateWordInExcludeHighlightMode *bool `json:"translateWordInExcludeHighlightMode,omitempty"`
+		// When checked, excludes text whose color is listed in `wordExcludedColors`
+		// from translation. Default: false.
+		TranslateWordExcludeColors *bool `json:"translateWordExcludeColors,omitempty"`
+		// Text colors excluded from translation when `translateWordExcludeColors` is enabled,
+		// each six hexadecimal digits with an optional leading hash.
+		WordExcludedColors []string `json:"wordExcludedColors,omitempty"`
+		// When checked, a cell whose text is shared with another cell is exposed once
+		// for translation. Default: true.
+		TranslateExcelCellsCopied *bool `json:"translateExcelCellsCopied,omitempty"`
+		// When checked, exposes worksheet names for translation. Default: false.
+		TranslateExcelSheetNames *bool `json:"translateExcelSheetNames,omitempty"`
+		// Cell fill colors whose cells are excluded from translation, each the six-digit RGB
+		// with an optional leading hash.
+		ExcelExcludedColors []string `json:"excelExcludedColors,omitempty"`
+		// When checked, exposes text inside SmartArt and diagram data for translation.
+		// Default: false.
+		TranslateExcelDiagramData *bool `json:"translateExcelDiagramData,omitempty"`
+		// When checked, exposes text inside drawings and shapes on a worksheet for translation.
+		// Default: false.
+		TranslateExcelDrawings *bool `json:"translateExcelDrawings,omitempty"`
 
 		// Important: ContentSegmentation option disables the possibility to upload existing translations
 		// for XML files when enabled.
+		CommonFileImportOptions
+	}
+
+	// WebXMLFileImportOptions implements the FileImportOptions interface.
+	WebXMLFileImportOptions struct {
+		// Specify tags that should be considered inline.
+		InlineTags []string `json:"inlineTags,omitempty"`
+		// HTML attributes (e.g., src, href, data) will be imported as hidden strings.
+		// Default: false.
+		HideAttributeValues *bool `json:"hideAttributeValues,omitempty"`
+
+		CommonFileImportOptions
+	}
+
+	// VSDXFileImportOptions implements the FileImportOptions interface.
+	VSDXFileImportOptions struct {
+		// When checked, strips additional formatting tags related to text spacing.
+		// Default: false.
+		CleanTagsAggressively *bool `json:"cleanTagsAggressively,omitempty"`
+		// When checked, exposes hidden hyperlinks for translation. Default: false.
+		TranslateHyperlinkURLs *bool `json:"translateHyperlinkUrls,omitempty"`
+
+		CommonFileImportOptions
+	}
+
+	// IDMLFileImportOptions implements the FileImportOptions interface.
+	IDMLFileImportOptions struct {
+		// When checked, a hyperlink's text is extracted as part of the surrounding
+		// sentence so it can be translated in context. Default: false.
+		InlineHyperlinkText *bool `json:"inlineHyperlinkText,omitempty"`
+
 		CommonFileImportOptions
 	}
 
@@ -342,6 +460,11 @@ type (
 	HTMLFileImportOptions struct {
 		// Specify CSS selectors for elements that should not be imported.
 		ExcludedElements []string `json:"excludedElements,omitempty"`
+		// Specify tags that should be considered inline.
+		InlineTags []string `json:"inlineTags,omitempty"`
+		// HTML attributes (e.g., src, href, data) will be imported as hidden strings.
+		// Default: false.
+		HideAttributeValues *bool `json:"hideAttributeValues,omitempty"`
 
 		CommonFileImportOptions
 	}
@@ -352,6 +475,11 @@ type (
 		ExcludedElements []string `json:"excludedElements,omitempty"`
 		// Specify elements that should not be imported.
 		ExcludedFrontMatterElements []string `json:"excludedFrontMatterElements,omitempty"`
+		// Specify tags that should be considered inline.
+		InlineTags []string `json:"inlineTags,omitempty"`
+		// HTML attributes (e.g., src, href, data) will be imported as hidden strings.
+		// Default: false.
+		HideAttributeValues *bool `json:"hideAttributeValues,omitempty"`
 
 		CommonFileImportOptions
 	}
@@ -376,11 +504,36 @@ type (
 		CommonFileImportOptions
 	}
 
+	// MDFileImportOptions implements the FileImportOptions interface.
+	MDFileImportOptions struct {
+		// Specify elements that should not be imported.
+		ExcludedFrontMatterElements []string `json:"excludedFrontMatterElements,omitempty"`
+		// Defines whether to import code blocks. Default: false.
+		ExcludeCodeBlocks *bool `json:"excludeCodeBlocks,omitempty"`
+		// Specify tags that should be considered inline.
+		InlineTags []string `json:"inlineTags,omitempty"`
+
+		CommonFileImportOptions
+	}
+
 	// StringCatalogFileImportOptions implements the FileImportOptions interface.
 	StringCatalogFileImportOptions struct {
 		// Determines whether to import the key as source string if it does not exist.
-		// Default: false.
+		// Default: true.
 		ImportKeyAsSource *bool `json:"importKeyAsSource,omitempty"`
+		// Defines whether to import translations from the file. Default: false.
+		ImportTranslations *bool `json:"importTranslations,omitempty"`
+	}
+
+	// VDFFileImportOptions implements the FileImportOptions interface.
+	VDFFileImportOptions struct {
+		// Defines whether to convert placeholders to the ICU MessageFormat syntax.
+		// Default: true.
+		ConvertICU *bool `json:"convertIcu,omitempty"`
+		// Defines whether to append _gender suffix to variable names when converting
+		// gender ICU to ICU MessageFormat. Default: false.
+		// Note: Can be enabled only when `convertIcu` is enabled.
+		AddGenderArgument *bool `json:"addGenderArgument,omitempty"`
 	}
 
 	// AdocFileImportOptions implements the FileImportOptions interface.
@@ -412,6 +565,7 @@ type (
 func (o *CommonFileImportOptions) ValidateFileImportOptions() error        { return nil }
 func (o *AdocFileImportOptions) ValidateFileImportOptions() error          { return nil }
 func (o *StringCatalogFileImportOptions) ValidateFileImportOptions() error { return nil }
+func (o *VDFFileImportOptions) ValidateFileImportOptions() error           { return nil }
 
 type (
 	FileExportOptions interface{ ValidateFileExportOptions() error }
@@ -452,11 +606,48 @@ type (
 		// `double` - Output will be enclosed in double quotes.
 		ExportQuotes string `json:"exportQuotes,omitempty"`
 	}
+
+	// MDFileExportOptions implements the FileExportOptions interface.
+	// It is also used for MDX v1 and MDX v2 files (`frontMatterQuotes`
+	// is supported for Markdown files only).
+	MDFileExportOptions struct {
+		// File export pattern. Defines file name and path in resulting translations bundle.
+		// Note: Can't contain : * ? " < > | symbols.
+		ExportPattern string `json:"exportPattern,omitempty"`
+		// Marker to use for strong. Enum: asterisk, underscore. Default: asterisk.
+		StrongMarker string `json:"strongMarker,omitempty"`
+		// Marker to use for emphasis. Enum: asterisk, underscore. Default: underscore.
+		EmphasisMarker string `json:"emphasisMarker,omitempty"`
+		// Marker to use for unordered list bullet. Enum: asterisks, plus, dash. Default: dash.
+		UnorderedListBullet string `json:"unorderedListBullet,omitempty"`
+		// Table formatting. Enum: consolidate, evenly_distribute_cells.
+		// Default: evenly_distribute_cells.
+		TableColumnWidth string `json:"tableColumnWidth,omitempty"`
+		// Export front matter values in quotes. Enum: auto, single, double. Default: auto.
+		// Note: Markdown files only.
+		FrontMatterQuotes string `json:"frontMatterQuotes,omitempty"`
+	}
+
+	// DOCXFileExportOptions implements the FileExportOptions interface.
+	DOCXFileExportOptions struct {
+		// File export pattern. Defines file name and path in resulting translations bundle.
+		// Note: Can't contain : * ? " < > | symbols.
+		ExportPattern string `json:"exportPattern,omitempty"`
+		// When checked, run properties in the exported document are minified against
+		// the style definitions instead of being kept verbatim. Default: true.
+		AllowWordStyleOptimization *bool `json:"allowWordStyleOptimization,omitempty"`
+		// When checked, excludes colored text runs inside a spreadsheet cell from
+		// translation. Default: false.
+		// Note: Applied when the file is parsed, even though it is set through `exportOptions`.
+		TranslateExcelExcludeColors *bool `json:"translateExcelExcludeColors,omitempty"`
+	}
 )
 
 func (o *GeneralFileExportOptions) ValidateFileExportOptions() error    { return nil }
 func (o *PropertyFileExportOptions) ValidateFileExportOptions() error   { return nil }
 func (o *JavaScriptFileExportOptions) ValidateFileExportOptions() error { return nil }
+func (o *MDFileExportOptions) ValidateFileExportOptions() error         { return nil }
+func (o *DOCXFileExportOptions) ValidateFileExportOptions() error       { return nil }
 
 // FileUpdateRestoreRequest defines the structure of a request
 // to update or restore a file.
@@ -591,6 +782,143 @@ type ReviewedBuildRequest struct {
 func (r *ReviewedBuildRequest) Validate() error {
 	if r == nil {
 		return ErrNilRequest
+	}
+	return nil
+}
+
+// DirectoriesSearchOptions specifies the parameters to the
+// SourceFilesService.SearchDirectories method.
+type DirectoriesSearchOptions struct {
+	// Search directories by `name` or `title` (required).
+	Filter string `json:"filter"`
+	// Project identifiers to search across (max 50).
+	// Omit to search all accessible projects.
+	// Note: On crowdin.com all projects must belong to the same owner.
+	ProjectIDs []int `json:"projectIds,omitempty"`
+	// Owner (user) whose projects to search when `projectIds` is omitted.
+	// Defaults to your own account.
+	// Note: Available for crowdin.com only.
+	UserID int `json:"userId,omitempty"`
+
+	ListOptions
+}
+
+// Values returns the url.Values representation of DirectoriesSearchOptions.
+// It implements the crowdin.ListOptionsProvider interface.
+func (o *DirectoriesSearchOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
+	v, _ := o.ListOptions.Values()
+	if o.Filter != "" {
+		v.Add("filter", o.Filter)
+	}
+	if len(o.ProjectIDs) > 0 {
+		v.Add("projectIds", JoinSlice(o.ProjectIDs))
+	}
+	if o.UserID > 0 {
+		v.Add("userId", fmt.Sprintf("%d", o.UserID))
+	}
+
+	return v, len(v) > 0
+}
+
+// Validate checks if the search options are valid.
+func (o *DirectoriesSearchOptions) Validate() error {
+	if o == nil {
+		return ErrNilRequest
+	}
+	return validateSearchOptions(o.Filter, o.ProjectIDs)
+}
+
+// FilesSearchOptions specifies the parameters to the
+// SourceFilesService.SearchFiles method.
+type FilesSearchOptions struct {
+	// Search files by `name` or `title` (required).
+	Filter string `json:"filter"`
+	// Project identifiers to search across (max 50).
+	// Omit to search all accessible projects.
+	// Note: On crowdin.com all projects must belong to the same owner.
+	ProjectIDs []int `json:"projectIds,omitempty"`
+	// Owner (user) whose projects to search when `projectIds` is omitted.
+	// Defaults to your own account.
+	// Note: Available for crowdin.com only.
+	UserID int `json:"userId,omitempty"`
+
+	ListOptions
+}
+
+// Values returns the url.Values representation of FilesSearchOptions.
+// It implements the crowdin.ListOptionsProvider interface.
+func (o *FilesSearchOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
+	v, _ := o.ListOptions.Values()
+	if o.Filter != "" {
+		v.Add("filter", o.Filter)
+	}
+	if len(o.ProjectIDs) > 0 {
+		v.Add("projectIds", JoinSlice(o.ProjectIDs))
+	}
+	if o.UserID > 0 {
+		v.Add("userId", fmt.Sprintf("%d", o.UserID))
+	}
+
+	return v, len(v) > 0
+}
+
+// Validate checks if the search options are valid.
+func (o *FilesSearchOptions) Validate() error {
+	if o == nil {
+		return ErrNilRequest
+	}
+	return validateSearchOptions(o.Filter, o.ProjectIDs)
+}
+
+// AssetReference represents a reference file attached to an asset file.
+type AssetReference struct {
+	ID        int        `json:"id"`
+	Name      string     `json:"name"`
+	URL       string     `json:"url"`
+	User      *ShortUser `json:"user"`
+	CreatedAt string     `json:"createdAt"`
+	// MIME type of the reference file.
+	MimeType string `json:"mimeType"`
+}
+
+// AssetReferenceResponse describes a response with a single asset reference.
+type AssetReferenceResponse struct {
+	Data *AssetReference `json:"data"`
+}
+
+// AssetReferenceListResponse describes a response with a list of asset references.
+type AssetReferenceListResponse struct {
+	Data []*AssetReferenceResponse `json:"data"`
+}
+
+// AssetReferenceAddRequest defines the structure of a request
+// to add an asset reference.
+type AssetReferenceAddRequest struct {
+	// Storage Identifier.
+	StorageID int `json:"storageId"`
+	// Reference file name.
+	Name string `json:"name"`
+}
+
+// Validate checks if the request is valid.
+// It implements the crowdin.RequestValidator interface.
+func (r *AssetReferenceAddRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
+	if r.StorageID == 0 {
+		return errors.New("storageId is required")
+	}
+	if r.Name == "" {
+		return errors.New("name is required")
 	}
 	return nil
 }

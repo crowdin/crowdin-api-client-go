@@ -1,10 +1,50 @@
 package model
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestSourceStringUnmarshalJSON(t *testing.T) {
+	tests := []struct {
+		name       string
+		in         string
+		text       string
+		pluralText map[string]string
+	}{
+		{
+			name: "regular string",
+			in:   `{"id":1,"text":"Hello","type":"text"}`,
+			text: "Hello",
+		},
+		{
+			name:       "plural string",
+			in:         `{"id":1,"text":{"one":"1 file","other":"{count} files"},"type":"plural"}`,
+			pluralText: map[string]string{"one": "1 file", "other": "{count} files"},
+		},
+		{
+			name: "null text",
+			in:   `{"id":1,"text":null}`,
+		},
+		{
+			name: "no text",
+			in:   `{"id":1}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var s SourceString
+			require.NoError(t, json.Unmarshal([]byte(tt.in), &s))
+			assert.Equal(t, 1, s.ID)
+			assert.Equal(t, tt.text, s.Text)
+			assert.Equal(t, tt.pluralText, s.PluralText)
+		})
+	}
+}
 
 func TestSourceStringsListOptionsValues(t *testing.T) {
 	tests := []struct {
@@ -24,6 +64,11 @@ func TestSourceStringsListOptionsValues(t *testing.T) {
 			name: "with DenormalizePlaceholders = 0",
 			opts: &SourceStringsListOptions{DenormalizePlaceholders: toPtr(0)},
 			out:  "denormalizePlaceholders=0",
+		},
+		{
+			name: "with orderBy",
+			opts: &SourceStringsListOptions{OrderBy: "createdAt desc,identifier"},
+			out:  "orderBy=createdAt+desc%2Cidentifier",
 		},
 		{
 			name: "with all options",
@@ -199,6 +244,11 @@ func TestSourceStringsUploadRequestValidate(t *testing.T) {
 			err: "updateStrings must be set to true to use updateOption",
 		},
 		{
+			name: "updateOption without updateStrings",
+			req:  &SourceStringsUploadRequest{StorageID: 1, BranchID: 1, UpdateOption: "keep_translations"},
+			err:  "updateStrings must be set to true to use updateOption",
+		},
+		{
 			name: "valid request",
 			req: &SourceStringsUploadRequest{StorageID: 1, BranchID: 1, Type: "xlsx", ParserVersion: 1,
 				LabelIDs: []int{1, 2, 3}, UpdateStrings: toPtr(false), CleanupMode: toPtr(false),
@@ -222,6 +272,130 @@ func TestSourceStringsUploadRequestValidate(t *testing.T) {
 				assert.NoError(t, err)
 			} else {
 				assert.EqualError(t, err, tt.err)
+			}
+		})
+	}
+}
+
+func TestSourceStringsSearchOptionsValues(t *testing.T) {
+	tests := []struct {
+		name string
+		opts *SourceStringsSearchOptions
+		out  string
+	}{
+		{
+			name: "nil options",
+			opts: nil,
+		},
+		{
+			name: "empty options",
+			opts: &SourceStringsSearchOptions{},
+		},
+		{
+			name: "with filter",
+			opts: &SourceStringsSearchOptions{Filter: "main"},
+			out:  "filter=main",
+		},
+		{
+			name: "with all options",
+			opts: &SourceStringsSearchOptions{Filter: "main", ProjectIDs: []int{1, 2, 3}, UserID: 4, Scope: "text",
+				DenormalizePlaceholders: toPtr(1),
+				ListOptions:             ListOptions{Limit: 10, Offset: 5}},
+			out: "denormalizePlaceholders=1&filter=main&limit=10&offset=5&projectIds=1%2C2%2C3&scope=text&userId=4",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v, ok := tt.opts.Values()
+			if len(tt.out) > 0 {
+				assert.True(t, ok)
+				assert.Equal(t, tt.out, v.Encode())
+			} else {
+				assert.False(t, ok)
+				assert.Empty(t, v)
+			}
+		})
+	}
+}
+
+func TestSourceStringsSearchOptionsValidate(t *testing.T) {
+	tests := []struct {
+		name  string
+		opts  *SourceStringsSearchOptions
+		err   string
+		valid bool
+	}{
+		{
+			name: "nil options",
+			opts: nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty options",
+			opts: &SourceStringsSearchOptions{},
+			err:  "filter is required",
+		},
+		{
+			name: "too many project IDs",
+			opts: &SourceStringsSearchOptions{Filter: "main", ProjectIDs: make([]int, 51)},
+			err:  "projectIds cannot contain more than 50 items",
+		},
+		{
+			name:  "valid options",
+			opts:  &SourceStringsSearchOptions{Filter: "main", ProjectIDs: make([]int, 50)},
+			valid: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.opts.Validate(); tt.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.err)
+			}
+		})
+	}
+}
+
+func TestSourceStringsSearchOptionsValues_invalidDenormalizePlaceholders(t *testing.T) {
+	opts := &SourceStringsSearchOptions{Filter: "main", DenormalizePlaceholders: toPtr(2)}
+	v, ok := opts.Values()
+	assert.True(t, ok)
+	assert.Equal(t, "filter=main", v.Encode())
+}
+
+func TestSourceStringsEditOptionsValues(t *testing.T) {
+	tests := []struct {
+		name string
+		opts *SourceStringsEditOptions
+		out  string
+	}{
+		{
+			name: "nil options",
+			opts: nil,
+		},
+		{
+			name: "empty options",
+			opts: &SourceStringsEditOptions{},
+		},
+		{
+			name: "with updateOption",
+			opts: &SourceStringsEditOptions{UpdateOption: "keep_translations"},
+			out:  "updateOption=keep_translations",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v, ok := tt.opts.Values()
+			if len(tt.out) > 0 {
+				assert.True(t, ok)
+				assert.Equal(t, tt.out, v.Encode())
+			} else {
+				assert.False(t, ok)
+				assert.Empty(t, v)
 			}
 		})
 	}

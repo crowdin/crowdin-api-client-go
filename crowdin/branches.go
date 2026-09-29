@@ -3,6 +3,7 @@ package crowdin
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
 )
@@ -56,7 +57,8 @@ func (s *BranchesService) Add(ctx context.Context, projectID int, req *model.Bra
 //
 // Request body:
 // - op: The operation to perform. Enum: replace, test.
-// - path: A JSON Pointer as defined in RFC 6901.  Enum: "/name", "/title", "/exportPattern", "/priority".
+// - path: A JSON Pointer as defined in RFC 6901.  Enum: "/name", "/title", "/exportPattern", "/priority",
+// "/isProtected" (string-based projects only).
 // - value: The value to be used within the operations. The value must be one of string.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.branches.patch
@@ -74,6 +76,51 @@ func (s *BranchesService) Edit(ctx context.Context, projectID, branchID int, req
 // https://developer.crowdin.com/api/v2/#operation/api.projects.branches.delete
 func (s *BranchesService) Delete(ctx context.Context, projectID, branchID int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/branches/%d", projectID, branchID), nil)
+}
+
+// DeleteAsync deletes a project branch asynchronously.
+// It sends the `Prefer: respond-async` header and returns a delete job.
+// Use CheckDeleteStatus to poll the status of the job.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.branches.delete
+func (s *BranchesService) DeleteAsync(ctx context.Context, projectID, branchID int) (*model.NodeDeleteJob, *Response, error) {
+	return s.client.deleteAsync(ctx, fmt.Sprintf("/api/v2/projects/%d/branches/%d", projectID, branchID))
+}
+
+// CheckDeleteStatus checks the status of an asynchronous branch deletion.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.branches.jobs.get
+func (s *BranchesService) CheckDeleteStatus(ctx context.Context, projectID, branchID int, jobID string) (
+	*model.NodeDeleteJob, *Response, error,
+) {
+	path := fmt.Sprintf("/api/v2/projects/%d/branches/%d/jobs/%s", projectID, branchID, jobID)
+	res := new(model.NodeDeleteJobResponse)
+	resp, err := s.client.Get(ctx, path, nil, res)
+
+	return res.Data, resp, err
+}
+
+// Search searches branches by name or title across multiple projects.
+// The `filter` option is required.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.branches.getMany
+func (s *BranchesService) Search(ctx context.Context, opts *model.BranchesSearchOptions) ([]*model.Branch, *Response, error) {
+	if err := opts.Validate(); err != nil {
+		return nil, nil, err
+	}
+
+	res := new(model.BranchesListResponse)
+	resp, err := s.client.Get(ctx, "/api/v2/branches", opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	branches := make([]*model.Branch, 0, len(res.Data))
+	for _, b := range res.Data {
+		branches = append(branches, b.Data)
+	}
+
+	return branches, resp, nil
 }
 
 // Merge merges a project branch.
@@ -147,6 +194,20 @@ func (s *BranchesService) CheckCloneStatus(ctx context.Context, projectID, branc
 	path := fmt.Sprintf("/api/v2/projects/%d/branches/%d/clones/%s", projectID, branchID, cloneID)
 	res := new(model.BranchesMergeResponse)
 	resp, err := s.client.Get(ctx, path, nil, res)
+
+	return res.Data, resp, err
+}
+
+// deleteAsync sends a DELETE request with the `Prefer: respond-async` header
+// and decodes the returned delete job.
+func (c *Client) deleteAsync(ctx context.Context, path string) (*model.NodeDeleteJob, *Response, error) {
+	req, err := c.newRequest(ctx, http.MethodDelete, path, nil, Header("Prefer", "respond-async"))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res := new(model.NodeDeleteJobResponse)
+	resp, err := c.do(req, res)
 
 	return res.Data, resp, err
 }

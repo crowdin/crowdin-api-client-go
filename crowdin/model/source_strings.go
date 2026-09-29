@@ -1,6 +1,8 @@
 package model
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -8,25 +10,54 @@ import (
 
 // SourceString represents the text units for translation.
 type SourceString struct {
-	ID             int     `json:"id"`
-	ProjectID      int     `json:"projectId"`
-	BranchID       *int    `json:"branchId,omitempty"`
-	Identifier     string  `json:"identifier"`
-	Text           string  `json:"text"`
-	Type           string  `json:"type"`
-	Context        string  `json:"context"`
-	MaxLength      int     `json:"maxLength"`
-	IsHidden       bool    `json:"isHidden"`
-	IsDuplicate    bool    `json:"isDuplicate"`
-	MasterStringID *int    `json:"masterStringId,omitempty"`
-	LabelIDs       []int   `json:"labelIds"`
-	WebURL         string  `json:"webUrl"`
-	CreatedAt      *string `json:"createdAt,omitempty"`
-	UpdatedAt      *string `json:"updatedAt,omitempty"`
-	Fields         any     `json:"fields,omitempty"`
-	FileID         *int    `json:"fileId,omitempty"`
-	DirectoryID    *int    `json:"directoryId,omitempty"`
-	Revision       *int    `json:"revision,omitempty"`
+	ID         int    `json:"id"`
+	ProjectID  int    `json:"projectId"`
+	BranchID   *int   `json:"branchId,omitempty"`
+	Identifier string `json:"identifier"`
+	// Text of a regular string. It is empty for plural strings, see PluralText.
+	Text string `json:"text"`
+	// PluralText holds the plural forms of a plural string
+	// (for example, {"one": "...", "other": "..."}). It is nil for regular strings.
+	PluralText     map[string]string `json:"-"`
+	Type           string            `json:"type"`
+	Context        string            `json:"context"`
+	MaxLength      int               `json:"maxLength"`
+	IsHidden       bool              `json:"isHidden"`
+	IsDuplicate    bool              `json:"isDuplicate"`
+	MasterStringID *int              `json:"masterStringId,omitempty"`
+	LabelIDs       []int             `json:"labelIds"`
+	WebURL         string            `json:"webUrl"`
+	CreatedAt      *string           `json:"createdAt,omitempty"`
+	UpdatedAt      *string           `json:"updatedAt,omitempty"`
+	Fields         any               `json:"fields,omitempty"`
+	FileID         *int              `json:"fileId,omitempty"`
+	DirectoryID    *int              `json:"directoryId,omitempty"`
+	Revision       *int              `json:"revision,omitempty"`
+}
+
+// UnmarshalJSON decodes a source string. The `text` field is a string for
+// regular strings and an object of plural forms for plural strings; the former
+// is stored in Text and the latter in PluralText.
+func (s *SourceString) UnmarshalJSON(data []byte) error {
+	type alias SourceString
+	aux := struct {
+		*alias
+		Text json.RawMessage `json:"text"`
+	}{alias: (*alias)(s)}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	s.Text, s.PluralText = "", nil
+	raw := bytes.TrimSpace(aux.Text)
+	switch {
+	case len(raw) == 0 || bytes.Equal(raw, []byte("null")):
+		return nil
+	case raw[0] == '{':
+		return json.Unmarshal(raw, &s.PluralText)
+	default:
+		return json.Unmarshal(raw, &s.Text)
+	}
 }
 
 // SourceStringsGetResponse describes the response when getting
@@ -44,6 +75,9 @@ type SourceStringsListResponse struct {
 // SourceStringsListOptions specifies the optional parameters
 // to the SourceStringsService.List method.
 type SourceStringsListOptions struct {
+	// Sort strings by the specified field.
+	// Example: orderBy=createdAt desc,identifier.
+	OrderBy string `json:"orderBy,omitempty"`
 	// Enable denormalize placeholders. Enum: 0 1. Default: 0.
 	DenormalizePlaceholders *int `json:"denormalizePlaceholders,omitempty"`
 	// Filter strings by labelIds (Label Identifiers).
@@ -82,6 +116,9 @@ func (o *SourceStringsListOptions) Values() (url.Values, bool) {
 	}
 
 	v, _ := o.ListOptions.Values()
+	if o.OrderBy != "" {
+		v.Add("orderBy", o.OrderBy)
+	}
 	if o.DenormalizePlaceholders != nil &&
 		(*o.DenormalizePlaceholders == 0 || *o.DenormalizePlaceholders == 1) {
 		v.Add("denormalizePlaceholders", fmt.Sprintf("%d", *o.DenormalizePlaceholders))
@@ -274,6 +311,15 @@ type SourceStringsImportOptions struct {
 	// Defines data columns mapping. The key is the column name and the value
 	// is the column index. The column numbering starts at 0.
 	Scheme map[string]int `json:"scheme,omitempty"`
+	// Determines whether to import the key as source string if it does not exist.
+	// Default: true.
+	// Note: String Catalog files only.
+	ImportKeyAsSource *bool `json:"importKeyAsSource,omitempty"`
+	// Defines whether to split long texts into smaller text segments.
+	// Note: Only for android, arb, macosx, json, xliff and xliff_two files.
+	ContentSegmentation *bool `json:"contentSegmentation,omitempty"`
+	// Storage identifier of the SRX segmentation rules file. Default: null.
+	SRXStorageID *int `json:"srxStorageId,omitempty"`
 }
 
 // Validate checks if the upload request is valid.
@@ -288,9 +334,93 @@ func (o *SourceStringsUploadRequest) Validate() error {
 	if o.BranchID == 0 {
 		return errors.New("branchId is required")
 	}
-	if o.UpdateOption != "" && !(*o.UpdateStrings) {
+	if o.UpdateOption != "" && (o.UpdateStrings == nil || !*o.UpdateStrings) {
 		return errors.New("updateStrings must be set to true to use updateOption")
 	}
 
 	return nil
+}
+
+// SourceStringsEditOptions specifies the optional parameters to the
+// SourceStringsService.EditWithOptions and
+// SourceStringsService.BatchOperationsWithOptions methods.
+type SourceStringsEditOptions struct {
+	// Defines whether to keep existing translations and approvals for
+	// updated strings. Applied only when `text` or `identifier` is changed.
+	// Enum: keep_translations_and_approvals, keep_translations,
+	// clear_translations_and_approvals. Default: keep_translations_and_approvals.
+	UpdateOption string `json:"updateOption,omitempty"`
+}
+
+// Values returns the url.Values representation of SourceStringsEditOptions.
+// It implements the crowdin.ListOptionsProvider interface.
+func (o *SourceStringsEditOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
+	v := url.Values{}
+	if o.UpdateOption != "" {
+		v.Add("updateOption", o.UpdateOption)
+	}
+
+	return v, len(v) > 0
+}
+
+// SourceStringsSearchOptions specifies the parameters to the
+// SourceStringsService.Search method.
+type SourceStringsSearchOptions struct {
+	// Search strings by the fields selected in `scope` (required).
+	Filter string `json:"filter"`
+	// Project identifiers to search across (max 50).
+	// Omit to search all accessible projects.
+	// Note: On crowdin.com all projects must belong to the same owner.
+	ProjectIDs []int `json:"projectIds,omitempty"`
+	// Owner (user) whose projects to search when `projectIds` is omitted.
+	// Defaults to your own account.
+	// Note: Available for crowdin.com only.
+	UserID int `json:"userId,omitempty"`
+	// Specify field to be the target of filtering.
+	// Enum: all, text, context, key. Default: all.
+	Scope string `json:"scope,omitempty"`
+	// Enable denormalize placeholders. Enum: 0 1. Default: 0.
+	DenormalizePlaceholders *int `json:"denormalizePlaceholders,omitempty"`
+
+	ListOptions
+}
+
+// Values returns the url.Values representation of SourceStringsSearchOptions.
+// It implements the crowdin.ListOptionsProvider interface.
+func (o *SourceStringsSearchOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
+	v, _ := o.ListOptions.Values()
+	if o.Filter != "" {
+		v.Add("filter", o.Filter)
+	}
+	if len(o.ProjectIDs) > 0 {
+		v.Add("projectIds", JoinSlice(o.ProjectIDs))
+	}
+	if o.UserID > 0 {
+		v.Add("userId", fmt.Sprintf("%d", o.UserID))
+	}
+	if o.Scope != "" {
+		v.Add("scope", o.Scope)
+	}
+	if o.DenormalizePlaceholders != nil &&
+		(*o.DenormalizePlaceholders == 0 || *o.DenormalizePlaceholders == 1) {
+		v.Add("denormalizePlaceholders", fmt.Sprintf("%d", *o.DenormalizePlaceholders))
+	}
+
+	return v, len(v) > 0
+}
+
+// Validate checks if the search options are valid.
+func (o *SourceStringsSearchOptions) Validate() error {
+	if o == nil {
+		return ErrNilRequest
+	}
+	return validateSearchOptions(o.Filter, o.ProjectIDs)
 }

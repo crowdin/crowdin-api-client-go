@@ -86,6 +86,55 @@ func (s *SourceFilesService) DeleteDirectory(ctx context.Context, projectID, dir
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/directories/%d", projectID, directoryID), nil)
 }
 
+// DeleteDirectoryAsync deletes a directory in the project asynchronously.
+// It sends the `Prefer: respond-async` header and returns a delete job.
+// Use CheckDirectoryDeleteStatus to poll the status of the job.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.directories.delete
+func (s *SourceFilesService) DeleteDirectoryAsync(ctx context.Context, projectID, directoryID int) (
+	*model.NodeDeleteJob, *Response, error,
+) {
+	return s.client.deleteAsync(ctx, fmt.Sprintf("/api/v2/projects/%d/directories/%d", projectID, directoryID))
+}
+
+// CheckDirectoryDeleteStatus checks the status of an asynchronous directory deletion.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.directories.jobs.get
+func (s *SourceFilesService) CheckDirectoryDeleteStatus(ctx context.Context, projectID, directoryID int, jobID string) (
+	*model.NodeDeleteJob, *Response, error,
+) {
+	path := fmt.Sprintf("/api/v2/projects/%d/directories/%d/jobs/%s", projectID, directoryID, jobID)
+	res := new(model.NodeDeleteJobResponse)
+	resp, err := s.client.Get(ctx, path, nil, res)
+
+	return res.Data, resp, err
+}
+
+// SearchDirectories searches directories by name or title across multiple projects.
+// The `filter` option is required.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.directories.getMany
+func (s *SourceFilesService) SearchDirectories(ctx context.Context, opts *model.DirectoriesSearchOptions) (
+	[]*model.Directory, *Response, error,
+) {
+	if err := opts.Validate(); err != nil {
+		return nil, nil, err
+	}
+
+	res := new(model.DirectoryListResponse)
+	resp, err := s.client.Get(ctx, "/api/v2/directories", opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	dirs := make([]*model.Directory, 0, len(res.Data))
+	for _, d := range res.Data {
+		dirs = append(dirs, d.Data)
+	}
+
+	return dirs, resp, nil
+}
+
 // ListFiles returns a list of files in the project.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.getMany
@@ -160,6 +209,105 @@ func (s *SourceFilesService) EditFile(ctx context.Context, projectID, fileID int
 // https://developer.crowdin.com/api/v2/#operation/api.projects.files.delete
 func (s *SourceFilesService) DeleteFile(ctx context.Context, projectID, fileID int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d", projectID, fileID), nil)
+}
+
+// DeleteFileAsync deletes a file in the project asynchronously.
+// It sends the `Prefer: respond-async` header and returns a delete job.
+// Use CheckFileDeleteStatus to poll the status of the job.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.files.delete
+func (s *SourceFilesService) DeleteFileAsync(ctx context.Context, projectID, fileID int) (*model.NodeDeleteJob, *Response, error) {
+	return s.client.deleteAsync(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d", projectID, fileID))
+}
+
+// CheckFileDeleteStatus checks the status of an asynchronous file deletion.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.files.jobs.get
+func (s *SourceFilesService) CheckFileDeleteStatus(ctx context.Context, projectID, fileID int, jobID string) (
+	*model.NodeDeleteJob, *Response, error,
+) {
+	path := fmt.Sprintf("/api/v2/projects/%d/files/%d/jobs/%s", projectID, fileID, jobID)
+	res := new(model.NodeDeleteJobResponse)
+	resp, err := s.client.Get(ctx, path, nil, res)
+
+	return res.Data, resp, err
+}
+
+// SearchFiles searches files by name or title across multiple projects.
+// The `filter` option is required.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.files.getMany
+func (s *SourceFilesService) SearchFiles(ctx context.Context, opts *model.FilesSearchOptions) (
+	[]*model.File, *Response, error,
+) {
+	if err := opts.Validate(); err != nil {
+		return nil, nil, err
+	}
+
+	res := new(model.FileListResponse)
+	resp, err := s.client.Get(ctx, "/api/v2/files", opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	files := make([]*model.File, 0, len(res.Data))
+	for _, f := range res.Data {
+		files = append(files, f.Data)
+	}
+
+	return files, resp, nil
+}
+
+// ListAssetReferences returns a list of references of an asset file.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.files.references.getMany
+func (s *SourceFilesService) ListAssetReferences(ctx context.Context, projectID, fileID int, opts *model.ListOptions) (
+	[]*model.AssetReference, *Response, error,
+) {
+	res := new(model.AssetReferenceListResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d/references", projectID, fileID), opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.AssetReference, 0, len(res.Data))
+	for _, ref := range res.Data {
+		list = append(list, ref.Data)
+	}
+
+	return list, resp, nil
+}
+
+// GetAssetReference returns a single reference of an asset file.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.files.references.get
+func (s *SourceFilesService) GetAssetReference(ctx context.Context, projectID, fileID, referenceID int) (
+	*model.AssetReference, *Response, error,
+) {
+	path := fmt.Sprintf("/api/v2/projects/%d/files/%d/references/%d", projectID, fileID, referenceID)
+	res := new(model.AssetReferenceResponse)
+	resp, err := s.client.Get(ctx, path, nil, res)
+
+	return res.Data, resp, err
+}
+
+// AddAssetReference adds a new reference to an asset file.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.files.references.post
+func (s *SourceFilesService) AddAssetReference(ctx context.Context, projectID, fileID int, req *model.AssetReferenceAddRequest) (
+	*model.AssetReference, *Response, error,
+) {
+	res := new(model.AssetReferenceResponse)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d/references", projectID, fileID), req, res)
+
+	return res.Data, resp, err
+}
+
+// DeleteAssetReference deletes a reference of an asset file.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.files.references.delete
+func (s *SourceFilesService) DeleteAssetReference(ctx context.Context, projectID, fileID, referenceID int) (*Response, error) {
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/files/%d/references/%d", projectID, fileID, referenceID), nil)
 }
 
 // DownloadFilePreview returns a download link for a specific file preview.

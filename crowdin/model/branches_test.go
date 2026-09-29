@@ -171,3 +171,84 @@ func TestBranchesCloneRequestValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestBranchesSearchOptionsValues(t *testing.T) {
+	tests := []struct {
+		name string
+		opts *BranchesSearchOptions
+		out  string
+	}{
+		{
+			name: "nil options",
+			opts: nil,
+		},
+		{
+			name: "empty options",
+			opts: &BranchesSearchOptions{},
+		},
+		{
+			name: "with filter",
+			opts: &BranchesSearchOptions{Filter: "main"},
+			out:  "filter=main",
+		},
+		{
+			name: "with all options",
+			opts: &BranchesSearchOptions{Filter: "main", ProjectIDs: []int{1, 2, 3}, UserID: 4,
+				ListOptions: ListOptions{Limit: 10, Offset: 5}},
+			out: "filter=main&limit=10&offset=5&projectIds=1%2C2%2C3&userId=4",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v, ok := tt.opts.Values()
+			if len(tt.out) > 0 {
+				assert.True(t, ok)
+				assert.Equal(t, tt.out, v.Encode())
+			} else {
+				assert.False(t, ok)
+				assert.Empty(t, v)
+			}
+		})
+	}
+}
+
+func TestBranchesSearchOptionsValidate(t *testing.T) {
+	tests := []struct {
+		name  string
+		opts  *BranchesSearchOptions
+		err   string
+		valid bool
+	}{
+		{
+			name: "nil options",
+			opts: nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty options",
+			opts: &BranchesSearchOptions{},
+			err:  "filter is required",
+		},
+		{
+			name: "too many project IDs",
+			opts: &BranchesSearchOptions{Filter: "main", ProjectIDs: make([]int, 51)},
+			err:  "projectIds cannot contain more than 50 items",
+		},
+		{
+			name:  "valid options",
+			opts:  &BranchesSearchOptions{Filter: "main", ProjectIDs: make([]int, 50)},
+			valid: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.opts.Validate(); tt.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.err)
+			}
+		})
+	}
+}

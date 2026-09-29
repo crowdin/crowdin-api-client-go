@@ -77,8 +77,24 @@ func (s *SourceStringsService) Add(ctx context.Context, projectID int, req *mode
 func (s *SourceStringsService) BatchOperations(ctx context.Context, projectID int, req []*model.UpdateRequest) (
 	[]*model.SourceString, *Response, error,
 ) {
+	return s.BatchOperationsWithOptions(ctx, projectID, req, nil)
+}
+
+// BatchOperationsWithOptions allows performing multiple operations on source strings
+// with additional query parameters (for example, `updateOption`).
+// See BatchOperations for the request body description.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.strings.batchPatch
+func (s *SourceStringsService) BatchOperationsWithOptions(ctx context.Context, projectID int, req []*model.UpdateRequest,
+	opts *model.SourceStringsEditOptions,
+) ([]*model.SourceString, *Response, error) {
+	path := fmt.Sprintf("/api/v2/projects/%d/strings", projectID)
+	if v, ok := opts.Values(); ok {
+		path += "?" + v.Encode()
+	}
+
 	res := new(model.SourceStringsListResponse)
-	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/projects/%d/strings", projectID), req, res)
+	resp, err := s.client.Patch(ctx, path, req, res)
 	if err != nil {
 		return nil, resp, err
 	}
@@ -105,10 +121,51 @@ func (s *SourceStringsService) BatchOperations(ctx context.Context, projectID in
 func (s *SourceStringsService) Edit(ctx context.Context, projectID, stringID int, req []*model.UpdateRequest) (
 	*model.SourceString, *Response, error,
 ) {
+	return s.EditWithOptions(ctx, projectID, stringID, req, nil)
+}
+
+// EditWithOptions updates a specific string by its identifier with additional
+// query parameters (for example, `updateOption`).
+// See Edit for the request body description.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.strings.patch
+func (s *SourceStringsService) EditWithOptions(ctx context.Context, projectID, stringID int, req []*model.UpdateRequest,
+	opts *model.SourceStringsEditOptions,
+) (*model.SourceString, *Response, error) {
+	path := fmt.Sprintf("/api/v2/projects/%d/strings/%d", projectID, stringID)
+	if v, ok := opts.Values(); ok {
+		path += "?" + v.Encode()
+	}
+
 	res := new(model.SourceStringsGetResponse)
-	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/projects/%d/strings/%d", projectID, stringID), req, res)
+	resp, err := s.client.Patch(ctx, path, req, res)
 
 	return res.Data, resp, err
+}
+
+// Search searches strings across multiple projects.
+// The `filter` option is required.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.strings.getMany
+func (s *SourceStringsService) Search(ctx context.Context, opts *model.SourceStringsSearchOptions) (
+	[]*model.SourceString, *Response, error,
+) {
+	if err := opts.Validate(); err != nil {
+		return nil, nil, err
+	}
+
+	res := new(model.SourceStringsListResponse)
+	resp, err := s.client.Get(ctx, "/api/v2/strings", opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.SourceString, 0, len(res.Data))
+	for _, str := range res.Data {
+		list = append(list, str.Data)
+	}
+
+	return list, resp, nil
 }
 
 // Delete removes a specific string by its identifier.
