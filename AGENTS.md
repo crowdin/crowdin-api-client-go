@@ -23,7 +23,7 @@ Two packages, both under `crowdin/`:
 Fetch the endpoint spec first (see Crowdin API reference below). Then:
 
 1. Models in `crowdin/model/<resource>.go`: the entity struct with `json` tags; wrappers `XResponse{Data *X}` and `XListResponse{Data []*XResponse}`; list options embed `ListOptions` and implement `Values() (url.Values, bool)`; request structs implement `Validate() error` beginning with `if r == nil { return ErrNilRequest }` — `Post`/`Put`/`Patch` call it automatically, and a request type without `Validate()` silently skips validation. Optional request booleans are `*bool` with `omitempty` (so an explicit `false` transmits); optional request strings/ints are plain values with `omitempty`; nullable response fields are pointers. Initialisms stay upper-case: `ID`, `URL`, `IDs`.
-2. Service methods in `crowdin/<resource>.go` on `type <X>Service struct { client *Client }`: the first parameter is always `ctx context.Context`; return `(payload, *Response, error)`, or `(*Response, error)` for deletes; the godoc comment ends with the developer.crowdin.com operation URL (enterprise URL for Enterprise-only endpoints) and a period.
+2. Service methods in `crowdin/<resource>.go` on `type <X>Service struct { client *Client }`: the first parameter is always `ctx context.Context`; return `(payload, *Response, error)`, or `(*Response, error)` for deletes; the godoc comment ends with the operation URL on its own line with no trailing period, e.g. `// https://developer.crowdin.com/api/v2/#operation/api.projects.strings.getMany` (`https://developer.crowdin.com/enterprise/api/v2/#operation/...` for Enterprise-only endpoints).
 3. For a new service, register it with two edits in `crowdin/crowdin.go`: a field on `Client` (alphabetical, gofmt-aligned) and an init line in `NewClient` under `// Initialize services.`.
 4. Tests: `client, mux, teardown := setupClient(); defer teardown()`, then `mux.HandleFunc(path, ...)` using the shared helpers from `crowdin/crowdin_test.go` (`testMethod`, `testURL`, `testJSONBody`) and an inline JSON reply; assert with testify (`require.NoError`, `assert.Equal`) — the current house style; name tests `Test<X>Service_<Method>`. Model option/validation tests are table-driven in `crowdin/model/<resource>_test.go` and use the package-local lowercase `toPtr` (importing `crowdin.ToPtr` there is an import cycle).
 
@@ -33,7 +33,7 @@ A complete new service touches 4–5 files: the service file, its model file, `c
 
 `.golangci.yml` enables 46 linters at their defaults, on tests too, and the tree contains zero `//nolint` — write code that satisfies the linters rather than suppressing them:
 
-- `godot`: every declaration comment ends with a period, struct-field comments included.
+- `godot`: every declaration comment ends with a period, struct-field comments included — except a trailing operation-URL line, which has none.
 - `prealloc`: list methods preallocate — `list := make([]*model.X, 0, len(res.Data))` before the append loop.
 - `exhaustive`: a switch over the typed string enums covers every constant — the house idiom is `case A, B: // valid` then `default: return errors.New(...)`.
 - `gochecknoglobals`: no new package-level vars (`ErrNilRequest` passes only via its `Err` prefix).
