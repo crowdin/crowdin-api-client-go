@@ -1077,8 +1077,8 @@ func (o *SupportedModelsListOptions) Values() (url.Values, bool) {
 type AIReportType string
 
 const (
-	// AIReportTokensUsageRawData is a report with one record per AI call.
-	AIReportTokensUsageRawData AIReportType = "tokens-usage-raw-data"
+	// AIReportUsageRawData is a report with one record per AI call.
+	AIReportUsageRawData AIReportType = "tokens-usage-raw-data"
 	// AIReportCostsByUsers is a report with AI spend per user.
 	AIReportCostsByUsers AIReportType = "costs-by-users"
 )
@@ -1145,10 +1145,10 @@ func (r *AIReportGenerateRequest) Validate() error {
 	}
 
 	switch r.Type {
-	case AIReportTokensUsageRawData, AIReportCostsByUsers: // valid
+	case AIReportUsageRawData, AIReportCostsByUsers: // valid
 	default:
 		return fmt.Errorf("invalid type: %q, must be one of %s, %s",
-			r.Type, AIReportTokensUsageRawData, AIReportCostsByUsers)
+			r.Type, AIReportUsageRawData, AIReportCostsByUsers)
 	}
 
 	if r.Schema == nil {

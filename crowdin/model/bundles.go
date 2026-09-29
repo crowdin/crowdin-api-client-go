@@ -94,9 +94,6 @@ func (b *BundleAddRequest) Validate() error {
 	if b.Name == "" {
 		return errors.New("name is required")
 	}
-	if b.Format == "" {
-		return errors.New("format is required")
-	}
 	if len(b.SourcePatterns) == 0 {
 		return errors.New("sourcePatterns is required")
 	}

@@ -1108,7 +1108,7 @@ func TestTranslationMemoryService_TMSegmentBatchOperations(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
-	path := "/api/v2/tms/4/segments"
+	const path = "/api/v2/tms/4/segments"
 	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodPatch)
 		testURL(t, r, path)
@@ -1227,7 +1227,8 @@ func TestTranslationMemoryService_TMSegmentBatchOperations_invalidJSON(t *testin
 	client, mux, teardown := setupClient()
 	defer teardown()
 
-	mux.HandleFunc("/api/v2/tms/4/segments", func(w http.ResponseWriter, _ *http.Request) {
+	const path = "/api/v2/tms/4/segments"
+	mux.HandleFunc(path, func(w http.ResponseWriter, _ *http.Request) {
 		fmt.Fprint(w, `invalid json`)
 	})
 

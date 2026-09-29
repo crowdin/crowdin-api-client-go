@@ -648,7 +648,7 @@ func TestAIReportGenerateRequestValidate(t *testing.T) {
 		},
 		{
 			name: "missing schema",
-			req:  &AIReportGenerateRequest{Type: AIReportTokensUsageRawData},
+			req:  &AIReportGenerateRequest{Type: AIReportUsageRawData},
 			err:  "schema is required",
 		},
 		{
@@ -663,7 +663,7 @@ func TestAIReportGenerateRequestValidate(t *testing.T) {
 		},
 		{
 			name:  "valid tokens usage raw data request",
-			req:   &AIReportGenerateRequest{Type: AIReportTokensUsageRawData, Schema: schema},
+			req:   &AIReportGenerateRequest{Type: AIReportUsageRawData, Schema: schema},
 			valid: true,
 		},
 		{

@@ -1698,7 +1698,7 @@ func TestSourceFilesService_ListAssetReferences_invalidJSON(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
-	mux.HandleFunc("/api/v2/projects/1/files/2/references", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v2/projects/1/files/2/references", func(w http.ResponseWriter, _ *http.Request) {
 		fmt.Fprint(w, `invalid json`)
 	})
 

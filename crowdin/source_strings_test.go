@@ -1122,7 +1122,7 @@ func TestSourceStringsService_BatchOperationsWithOptions_invalidJSON(t *testing.
 	client, mux, teardown := setupClient()
 	defer teardown()
 
-	mux.HandleFunc("/api/v2/projects/2/strings", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v2/projects/2/strings", func(w http.ResponseWriter, _ *http.Request) {
 		fmt.Fprint(w, `invalid json`)
 	})
 

@@ -2097,7 +2097,7 @@ func TestAIService_GenerateReport(t *testing.T) {
 	})
 
 	req := &model.AIReportGenerateRequest{
-		Type: model.AIReportTokensUsageRawData,
+		Type: model.AIReportUsageRawData,
 		Schema: &model.AIReportSchema{
 			DateFrom:   "2024-01-23T07:00:14+00:00",
 			DateTo:     "2024-09-27T07:00:14+00:00",

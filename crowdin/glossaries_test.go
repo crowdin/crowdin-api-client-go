@@ -1647,7 +1647,7 @@ func TestGlossariesService_AddGlossary_withIsShared(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
-	path := "/api/v2/glossaries"
+	const path = "/api/v2/glossaries"
 	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodPost)
 		testURL(t, r, path)
@@ -1720,7 +1720,7 @@ func TestGlossariesService_ListGlossaries_withFilter(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
-	path := "/api/v2/glossaries"
+	const path = "/api/v2/glossaries"
 	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodGet)
 		testURL(t, r, path+"?filter=iOS&groupId=0&limit=10")
@@ -1744,7 +1744,7 @@ func TestGlossariesService_ListTerms_withTranslationOfTermID(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
-	path := "/api/v2/glossaries/1/terms"
+	const path = "/api/v2/glossaries/1/terms"
 	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodGet)
 		testURL(t, r, path+"?languageId=de&translationOfTermId=4")
@@ -1764,7 +1764,7 @@ func TestGlossariesService_AddTerm_withFields(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
-	path := "/api/v2/glossaries/1/terms"
+	const path = "/api/v2/glossaries/1/terms"
 	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodPost)
 		testURL(t, r, path)
@@ -1846,7 +1846,7 @@ func TestGlossariesService_ClearGlossary_withTranslationOfTermID(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
-	path := "/api/v2/glossaries/1/terms"
+	const path = "/api/v2/glossaries/1/terms"
 	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodDelete)
 		testURL(t, r, path+"?translationOfTermId=4")
