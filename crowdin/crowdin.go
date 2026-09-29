@@ -251,7 +251,7 @@ func (c *Client) do(r *http.Request, v any) (*Response, error) {
 		return response, fmt.Errorf("client: error reading response body: %w", err)
 	}
 
-	if resp.StatusCode == http.StatusNoContent {
+	if code := resp.StatusCode; code == http.StatusNoContent || (code < http.StatusBadRequest && len(body) == 0) {
 		return response, nil
 	}
 

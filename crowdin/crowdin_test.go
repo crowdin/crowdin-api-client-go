@@ -226,6 +226,37 @@ func TestPost(t *testing.T) {
 	}
 }
 
+func TestPost_emptyBody(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/post", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		w.WriteHeader(http.StatusOK)
+	})
+
+	res := new(map[string]any)
+	resp, err := client.Post(context.Background(), "/post", map[string]string{"foo": "bar"}, res)
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestGet_paginationTotal(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		fmt.Fprint(w, `{"data":[],"pagination":{"offset":0,"limit":25,"total":42}}`)
+	})
+
+	resp, err := client.Get(context.Background(), "/get", nil, nil)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 42, resp.Pagination.Total)
+}
+
 func TestPut(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
