@@ -73,10 +73,20 @@ func (s *UsersService) AddProjectMember(ctx context.Context, projectID int, req 
 		added = append(added, pm.Data)
 	}
 
-	return map[string][]*model.ProjectMember{
+	result := map[string][]*model.ProjectMember{
 		"skipped": skipped,
 		"added":   added,
-	}, resp, err
+	}
+
+	if len(res.Updated) > 0 {
+		updated := make([]*model.ProjectMember, 0, len(res.Updated))
+		for _, pm := range res.Updated {
+			updated = append(updated, pm.Data)
+		}
+		result["updated"] = updated
+	}
+
+	return result, resp, err
 }
 
 // ReplaceProjectMemberPermissions replaces permissions of a specific project member.
@@ -118,6 +128,22 @@ func (s *UsersService) GetAuthenticated(ctx context.Context) (*model.User, *Resp
 	return res.Data, resp, err
 }
 
+// EditAuthenticated updates information about the authenticated user.
+//
+// Request body:
+//   - op (string): Operation to perform. Enum: replace.
+//   - path (string <json-pointer>): Path to the field to update.
+//     Enum: "/username", "/fullName", "/timezone", "/avatarStorageId".
+//   - value (string): Value to set.
+//
+// https://support.crowdin.com/developer/api/v2/#operation/api.user.patch
+func (s *UsersService) EditAuthenticated(ctx context.Context, req []*model.UpdateRequest) (*model.User, *Response, error) {
+	res := new(model.UserResponse)
+	resp, err := s.client.Patch(ctx, "/api/v2/user", req, res)
+
+	return res.Data, resp, err
+}
+
 // List returns a list of users in the organization.
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.users.getMany
@@ -151,7 +177,7 @@ func (s *UsersService) Invite(ctx context.Context, req *model.InviteUserRequest)
 // Request body:
 //   - op (string): Operation to perform. Enum: replace.
 //   - path (string <json-pointer>): Path to the field to update.
-//     Enum: "/firstName", "/lastName", "/timezone", "/status", "/adminAccess".
+//     Enum: "/firstName", "/lastName", "/timezone", "/status", "/adminAccess", "/avatarStorageId".
 //   - value (string): Value to set.
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.users.patch
@@ -167,6 +193,71 @@ func (s *UsersService) Edit(ctx context.Context, userID int, req []*model.Update
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.users.delete
 func (s *UsersService) Delete(ctx context.Context, userID int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/users/%d", userID), nil)
+}
+
+// ListProjectsPermissions returns a list of the user's permissions in projects.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.users.projects.permissions.getMany
+func (s *UsersService) ListProjectsPermissions(ctx context.Context, userID int, opts *model.ListOptions) (
+	[]*model.UserProjectPermissions, *Response, error,
+) {
+	res := new(model.UserProjectPermissionsListResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/users/%d/projects/permissions", userID), opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.UserProjectPermissions, 0, len(res.Data))
+	for _, p := range res.Data {
+		list = append(list, p.Data)
+	}
+
+	return list, resp, err
+}
+
+// EditProjectsPermissions updates the user's permissions in projects (batch operations).
+//
+// Request body:
+//   - op (string): Operation to perform. Enum: add, replace, remove.
+//   - path (string <json-pointer>): Path to the field to update. Enum: "/{projectId}/roles".
+//   - value (array of roles): Roles to set. Required for `add` and `replace` operations.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.users.projects.permissions.patch
+func (s *UsersService) EditProjectsPermissions(ctx context.Context, userID int, req []*model.UpdateRequest) (
+	[]*model.UserProjectPermissions, *Response, error,
+) {
+	res := new(model.UserProjectPermissionsListResponse)
+	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/users/%d/projects/permissions", userID), req, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.UserProjectPermissions, 0, len(res.Data))
+	for _, p := range res.Data {
+		list = append(list, p.Data)
+	}
+
+	return list, resp, err
+}
+
+// ListProjectsContributions returns a list of the user's contributions in projects.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.users.projects.contributions.getMany
+func (s *UsersService) ListProjectsContributions(ctx context.Context, userID int, opts *model.ListOptions) (
+	[]*model.UserProjectContribution, *Response, error,
+) {
+	res := new(model.UserProjectContributionsListResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/users/%d/projects/contributions", userID), opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.UserProjectContribution, 0, len(res.Data))
+	for _, c := range res.Data {
+		list = append(list, c.Data)
+	}
+
+	return list, resp, err
 }
 
 // List returns a list of managers.
@@ -189,12 +280,25 @@ func (s *UsersService) ListManagers(ctx context.Context, groupID int, opts *mode
 	return list, resp, nil
 }
 
-// Get returns a manager by its identifier.
+// GetManagers returns a manager of the group.
+//
+// Deprecated: this method requests the managers collection path without a user
+// identifier. Use GetManager instead.
 //
 // https://support.crowdin.com/developer/enterprise/api/v2/#tag/Users/operation/api.groups.managers.get
 func (s *UsersService) GetManagers(ctx context.Context, groupID int) (*model.Manager, *Response, error) {
 	res := new(model.ManagerGetResponse)
 	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/groups/%d/managers", groupID), nil, res)
+
+	return res.Data, resp, err
+}
+
+// GetManager returns a group manager by the user identifier.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#tag/Users/operation/api.groups.managers.get
+func (s *UsersService) GetManager(ctx context.Context, groupID, userID int) (*model.Manager, *Response, error) {
+	res := new(model.ManagerGetResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/groups/%d/managers/%d", groupID, userID), nil, res)
 
 	return res.Data, resp, err
 }

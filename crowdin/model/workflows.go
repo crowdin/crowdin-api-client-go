@@ -52,6 +52,9 @@ type (
 		Config WorkflowTemplateStepConfig `json:"config,omitempty"`
 		// Machine translation identifier.
 		MTID int `json:"mtId,omitempty"`
+		// Auto-translation prompt identifier (a prompt with the `pre_translate` action).
+		// Used when creating a project from a workflow template.
+		PromptID int `json:"promptId,omitempty"`
 	}
 
 	// WorkflowTemplateStepConfig represents a workflow template step configuration.
@@ -60,6 +63,16 @@ type (
 		MinRelevant *int `json:"minRelevant,omitempty"`
 		// Improves TM suggestions.
 		AutoSubstitution *bool `json:"autoSubstitution,omitempty"`
+		// Approve added translations. Enum: all, perfectMatchOnly,
+		// exceptAutoSubstituted, perfectMatchApprovedOnly, none.
+		// Used when creating a project from a workflow template.
+		AutoApproveOption string `json:"autoApproveOption,omitempty"`
+		// Step assignees. Keys are language identifiers, values are user identifiers.
+		// Used when creating a project from a workflow template.
+		Assignees map[string][]int `json:"assignees,omitempty"`
+		// Step assigned teams. Keys are language identifiers, values are team identifiers.
+		// Used when creating a project from a workflow template.
+		AssignedTeams map[string][]int `json:"assignedTeams,omitempty"`
 	}
 )
 

@@ -243,12 +243,13 @@ func TestTasksService_List(t *testing.T) {
 				OrderBy:    "createdAt desc,title",
 				Status:     []model.TaskStatus{model.TaskStatusTodo, model.TaskStatusInProgress},
 				AssigneeID: 123,
+				BatchID:    5,
 				ListOptions: model.ListOptions{
 					Offset: 10,
 					Limit:  25,
 				},
 			},
-			want: "?assigneeId=123&limit=25&offset=10&orderBy=createdAt+desc%2Ctitle&status=todo%2Cin_progress",
+			want: "?assigneeId=123&batchId=5&limit=25&offset=10&orderBy=createdAt+desc%2Ctitle&status=todo%2Cin_progress",
 		},
 	}
 
@@ -572,7 +573,7 @@ func TestTasksService_Add_TaskCreateForm(t *testing.T) {
 	assert.Equal(t, expected, task)
 }
 
-func TestTasksService_Add_LanguageServiceTaskCreateForm(t *testing.T) {
+func TestTasksService_Add_VendorTaskCreateForm(t *testing.T) {
 	client, mux, teardown := setupClient()
 	defer teardown()
 
@@ -580,27 +581,246 @@ func TestTasksService_Add_LanguageServiceTaskCreateForm(t *testing.T) {
 	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodPost)
 		testURL(t, r, path)
-		testBody(t, r, `{"title":"French","languageId":"en","type":3,"vendor":"crowdin_language_service","branchIds":[1,2,3]}`+"\n")
+		testJSONBody(t, r, `{
+			"title": "French",
+			"languageId": "en",
+			"type": 3,
+			"vendor": "crowdin_language_service",
+			"branchIds": [1, 2, 3],
+			"directoryIds": [4],
+			"labelIds": [5],
+			"labelMatchRule": "any",
+			"skipAssignedStrings": true,
+			"deadline": "2024-09-27T07:00:14+00:00",
+			"translationsUpdatedDateFrom": "2024-09-23T07:00:14+00:00",
+			"translationsUpdatedDateTo": "2024-09-27T07:00:14+00:00",
+			"generateCostEstimate": false,
+			"generateTranslationCost": true,
+			"reportSettingsTemplateId": 7
+		}`)
 
 		w.WriteHeader(http.StatusCreated)
 		fmt.Fprint(w, `{
 			"data": {
-				"id": 2
+				"id": 2,
+				"vendor": "crowdin_language_service"
 			}
 		}`)
 	})
 
-	req := &model.LanguageServiceTaskCreateForm{
-		Title:      "French",
-		LanguageID: "en",
-		Type:       model.TaskTypeProofreadByVendor,
-		Vendor:     model.TaskVendorCrowdinLanguageService,
-		BranchIDs:  []int{1, 2, 3},
+	req := &model.VendorTaskCreateForm{
+		Title:                       "French",
+		LanguageID:                  "en",
+		Type:                        model.TaskTypeProofreadByVendor,
+		Vendor:                      model.TaskVendorCrowdinLanguageService,
+		BranchIDs:                   []int{1, 2, 3},
+		DirectoryIDs:                []int{4},
+		LabelIDs:                    []int{5},
+		LabelMatchRule:              "any",
+		SkipAssignedStrings:         ToPtr(true),
+		Deadline:                    "2024-09-27T07:00:14+00:00",
+		TranslationsUpdatedDateFrom: "2024-09-23T07:00:14+00:00",
+		TranslationsUpdatedDateTo:   "2024-09-27T07:00:14+00:00",
+		GenerateCostEstimate:        ToPtr(false),
+		GenerateTranslationCost:     ToPtr(true),
+		ReportSettingsTemplateID:    7,
 	}
 	task, resp, err := client.Tasks.Add(context.Background(), 1, req)
 	require.NoError(t, err)
 	assert.Equal(t, 2, task.ID)
+	assert.Equal(t, "crowdin_language_service", task.Vendor)
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+}
+
+func TestTasksService_Add_TaskCreateFormWithBatch(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"title": "French",
+			"languageId": "fr",
+			"type": 1,
+			"fileIds": [1],
+			"excludeLabelIds": [3],
+			"excludeLabelMatchRule": "all",
+			"batchId": 9
+		}`)
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2,
+				"batchId": 9
+			}
+		}`)
+	})
+
+	req := &model.TaskCreateForm{
+		Title:                 "French",
+		LanguageID:            "fr",
+		Type:                  ToPtr(model.TaskTypeProofread),
+		FileIDs:               []int{1},
+		ExcludeLabelIDs:       []int{3},
+		ExcludeLabelMatchRule: "all",
+		BatchID:               9,
+	}
+	task, resp, err := client.Tasks.Add(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.Equal(t, 2, task.ID)
+	assert.Equal(t, ToPtr(9), task.BatchID)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+}
+
+func TestTasksService_Add_EnterpriseTaskCreateForm(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"type": null,
+			"workflowStepId": 10,
+			"title": "French",
+			"languageId": "fr",
+			"branchIds": [1],
+			"status": "in_progress",
+			"skipAssignedStrings": true,
+			"skipAssignedStringsScope": "sameWorkflowStep",
+			"batchId": 3
+		}`)
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2,
+				"status": "in_progress"
+			}
+		}`)
+	})
+
+	req := &model.EnterpriseTaskCreateForm{
+		WorkflowStepID:           10,
+		Title:                    "French",
+		LanguageID:               "fr",
+		BranchIDs:                []int{1},
+		Status:                   model.TaskStatusInProgress,
+		SkipAssignedStrings:      ToPtr(true),
+		SkipAssignedStringsScope: "sameWorkflowStep",
+		BatchID:                  3,
+	}
+	task, resp, err := client.Tasks.Add(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.Equal(t, 2, task.ID)
+	assert.Equal(t, model.TaskStatusInProgress, task.Status)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+}
+
+func TestTasksService_Add_EnterprisePendingTaskCreateForm(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"precedingTaskId": 1,
+			"workflowStepId": 5,
+			"title": "French"
+		}`)
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{"data": {"id": 2}}`)
+	})
+
+	req := &model.EnterprisePendingTaskCreateForm{
+		PrecedingTaskID: 1,
+		WorkflowStepID:  5,
+		Title:           "French",
+	}
+	task, _, err := client.Tasks.Add(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.Equal(t, 2, task.ID)
+}
+
+func TestTasksService_Get_WithCostAndSyncScope(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/tasks/2"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2,
+				"creatorId": 6,
+				"batchId": 1,
+				"assignees": [{"id": 12, "wordsCount": 5, "wordsLeft": 3, "timeSpent": 3600}],
+				"assignedTeams": [{"id": 1, "wordsCount": 5, "timeSpent": 1800}],
+				"wordsCount": 20,
+				"originalWordsCount": 24,
+				"translationsUpdatedTimeRange": "2025-06-23T09:04:29+00:00|2025-08-23T09:04:29+00:00",
+				"labelMatchRule": "all",
+				"excludeLabelMatchRule": null,
+				"estimatedCost": {
+					"cost": 24.12,
+					"date": "2019-09-23T09:04:29+00:00",
+					"currency": "USD"
+				},
+				"actualCost": null,
+				"generateCostEstimate": true,
+				"generateTranslationCost": false,
+				"reportSettingsTemplateId": 1,
+				"syncScope": {
+					"syncedWords": 820,
+					"pendingWords": 120,
+					"skippedWords": 60
+				}
+			}
+		}`)
+	})
+
+	task, resp, err := client.Tasks.Get(context.Background(), 1, 2)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := &model.Task{
+		ID:        2,
+		CreatorID: 6,
+		BatchID:   ToPtr(1),
+		Assignees: []*model.TaskAssignee{
+			{ID: 12, WordsCount: 5, WordsLeft: 3, TimeSpent: 3600},
+		},
+		AssignedTeams: []*model.TaskAssignedTeam{
+			{ID: 1, WordsCount: 5, TimeSpent: 1800},
+		},
+		WordsCount:                   20,
+		OriginalWordsCount:           24,
+		TranslationsUpdatedTimeRange: "2025-06-23T09:04:29+00:00|2025-08-23T09:04:29+00:00",
+		LabelMatchRule:               ToPtr("all"),
+		EstimatedCost: &model.TaskCost{
+			Cost:     24.12,
+			Date:     "2019-09-23T09:04:29+00:00",
+			Currency: "USD",
+		},
+		GenerateCostEstimate:     ToPtr(true),
+		GenerateTranslationCost:  ToPtr(false),
+		ReportSettingsTemplateID: ToPtr(1),
+		SyncScope: &model.TaskSyncScope{
+			SyncedWords:  820,
+			PendingWords: 120,
+			SkippedWords: 60,
+		},
+	}
+	assert.Equal(t, expected, task)
 }
 
 func TestTasksService_Edit(t *testing.T) {
@@ -1406,4 +1626,113 @@ func TestTasksService_DeleteComment(t *testing.T) {
 	resp, err := client.Tasks.DeleteComment(context.Background(), 1, 2, 3)
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}
+
+func TestTasksService_ListAll(t *testing.T) {
+	tests := []struct {
+		name    string
+		userID  int
+		options *model.AllTasksListOptions
+		path    string
+		want    string
+	}{
+		{
+			name:    "enterprise organization level",
+			userID:  0,
+			options: nil,
+			path:    "/api/v2/tasks",
+			want:    "",
+		},
+		{
+			name:   "user level with options",
+			userID: 7,
+			options: &model.AllTasksListOptions{
+				Status:      []model.TaskStatus{model.TaskStatusTodo},
+				Type:        []model.TaskType{model.TaskTypeTranslate, model.TaskTypeProofread},
+				ProjectIDs:  []int{1, 2},
+				AssigneeIDs: []int{3},
+				ListOptions: model.ListOptions{Limit: 25, Offset: 10},
+			},
+			path: "/api/v2/users/7/tasks",
+			want: "?assigneeIds=3&limit=25&offset=10&projectIds=1%2C2&status=todo&type=0%2C1",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client, mux, teardown := setupClient()
+			defer teardown()
+
+			mux.HandleFunc(tt.path, func(w http.ResponseWriter, r *http.Request) {
+				testMethod(t, r, http.MethodGet)
+				testURL(t, r, tt.path+tt.want)
+
+				fmt.Fprint(w, `{
+					"data": [
+						{
+							"data": {
+								"id": 2,
+								"projectId": 1,
+								"originalWordsCount": 24,
+								"syncScope": null
+							}
+						},
+						{
+							"data": {
+								"id": 4,
+								"projectId": 2,
+								"syncScope": {"syncedWords": 1, "pendingWords": 2, "skippedWords": 3}
+							}
+						}
+					],
+					"pagination": {
+						"offset": 10,
+						"limit": 25
+					}
+				}`)
+			})
+
+			tasks, resp, err := client.Tasks.ListAll(context.Background(), tt.userID, tt.options)
+			require.NoError(t, err)
+
+			expected := []*model.Task{
+				{ID: 2, ProjectID: 1, OriginalWordsCount: 24},
+				{ID: 4, ProjectID: 2, SyncScope: &model.TaskSyncScope{SyncedWords: 1, PendingWords: 2, SkippedWords: 3}},
+			}
+			assert.Equal(t, expected, tasks)
+			assert.Equal(t, 10, resp.Pagination.Offset)
+			assert.Equal(t, 25, resp.Pagination.Limit)
+		})
+	}
+}
+
+func TestTasksService_ListAll_crowdinUserLevel(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+	client.organization = ""
+
+	const path = "/api/v2/users/0/tasks"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{"data": [{"data": {"id": 1}}]}`)
+	})
+
+	tasks, _, err := client.Tasks.ListAll(context.Background(), 0, nil)
+	require.NoError(t, err)
+	assert.Len(t, tasks, 1)
+}
+
+func TestTasksService_ListAll_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/tasks", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Tasks.ListAll(context.Background(), 0, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
 }

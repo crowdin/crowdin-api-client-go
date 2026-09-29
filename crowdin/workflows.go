@@ -69,7 +69,7 @@ func (s *WorkflowsService) GetStep(ctx context.Context, projectID, stepID int) (
 
 // ListTemplates returns a list of workflow templates available in the organization.
 //
-// https://developer.crowdin.com/enterprise/api/v2/#operation/api.workflow-templates.get
+// https://developer.crowdin.com/enterprise/api/v2/#operation/api.workflow-templates.getMany
 func (s *WorkflowsService) ListTemplates(ctx context.Context, opts *model.WorkflowTemplatesListOptions) (
 	[]*model.WorkflowTemplate, *Response, error,
 ) {

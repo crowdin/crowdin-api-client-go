@@ -28,18 +28,23 @@ type ManagerResponse struct {
 // ManagerListOptions specifies the optional parameters to the
 // GroupManagersService.List method.
 type ManagerListOptions struct {
+	// Filter by team identifiers.
 	TeamIDs []int `json:"teamIds,omitempty"`
 
+	// Sort a list of managers by a specified field.
 	OrderBy string `json:"orderBy,omitempty"`
+
+	ListOptions
 }
 
 // Values returns the url.Values representation of the ManagerListOptions.
 // It implements the crowdin.ListOptionsProvider interface.
 func (o *ManagerListOptions) Values() (url.Values, bool) {
-	v := url.Values{}
 	if o == nil {
 		return nil, false
 	}
+
+	v, _ := o.ListOptions.Values()
 
 	if len(o.TeamIDs) > 0 {
 		ids := make([]string, len(o.TeamIDs))

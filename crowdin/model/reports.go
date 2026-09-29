@@ -33,6 +33,8 @@ const (
 	ReportUnitWords           ReportUnit = "words"
 	ReportUnitChars           ReportUnit = "chars"
 	ReportUnitCharsWithSpaces ReportUnit = "chars_with_spaces"
+	// ReportUnitHours is used by hourly report settings templates.
+	ReportUnitHours ReportUnit = "hours"
 )
 
 // ReportMode represents the mode of a report.
@@ -60,6 +62,9 @@ const (
 	ReportQACheckIssues               ReportName = "qa-check-issues"
 	ReportSavingActivity              ReportName = "saving-activity"
 	ReportTranslationActivity         ReportName = "translation-activity"
+	ReportTimeSpent                   ReportName = "time-spent"
+	// ReportTaskUsage is available for the Enterprise client only.
+	ReportTaskUsage ReportName = "task-usage"
 
 	// Deprecated: Use ReportPreTranslateAccuracy instead.
 	ReportPreTranslateEfficiency ReportName = "pre-translate-efficiency"
@@ -70,6 +75,11 @@ const (
 	ReportGroupTaskUsage                   ReportName = "group-task-usage"
 	ReportGroupQACheckIssues               ReportName = "group-qa-check-issues"
 	ReportGroupTranslationActivity         ReportName = "group-translation-activity"
+	ReportGroupSourceContentUpdates        ReportName = "group-source-content-updates"
+	ReportGroupTimeSpent                   ReportName = "group-time-spent"
+	ReportGroupPreTranslateAccuracy        ReportName = "group-pre-translate-accuracy"
+	ReportGroupTranslatorAccuracy          ReportName = "group-translator-accuracy"
+	ReportGroupSavingActivity              ReportName = "group-saving-activity"
 )
 
 // ReportArchive represents a report archive.
@@ -81,6 +91,8 @@ type ReportArchive struct {
 	Name      string `json:"name"`
 	WebURL    string `json:"webUrl"`
 	Scheme    any    `json:"scheme"`
+	Status    string `json:"status,omitempty"`
+	Progress  int    `json:"progress,omitempty"`
 	CreatedAt string `json:"createdAt"`
 }
 
@@ -105,6 +117,16 @@ type ReportArchivesListOptions struct {
 	// Filter archives by specific scope id.
 	// [Enterprise client] Use only if scopeType set to group or project.
 	ScopeID int `json:"scopeId,omitempty"`
+	// Filter archives by user identifier.
+	UserID int `json:"userId,omitempty"`
+	// Filter archives by task identifier.
+	TaskID int `json:"taskId,omitempty"`
+	// Filter archives by name.
+	Name string `json:"name,omitempty"`
+	// Archive date from in UTC, ISO 8601.
+	DateFrom string `json:"dateFrom,omitempty"`
+	// Archive date to in UTC, ISO 8601.
+	DateTo string `json:"dateTo,omitempty"`
 
 	ListOptions
 }
@@ -123,6 +145,21 @@ func (o *ReportArchivesListOptions) Values() (url.Values, bool) {
 	}
 	if o.ScopeID != 0 {
 		v.Add("scopeId", fmt.Sprintf("%d", o.ScopeID))
+	}
+	if o.UserID != 0 {
+		v.Add("userId", fmt.Sprintf("%d", o.UserID))
+	}
+	if o.TaskID != 0 {
+		v.Add("taskId", fmt.Sprintf("%d", o.TaskID))
+	}
+	if o.Name != "" {
+		v.Add("name", o.Name)
+	}
+	if o.DateFrom != "" {
+		v.Add("dateFrom", o.DateFrom)
+	}
+	if o.DateTo != "" {
+		v.Add("dateTo", o.DateTo)
 	}
 
 	return v, len(v) > 0
@@ -171,6 +208,9 @@ type (
 		// Applies to all languages by default.
 		FullTranslation float64 `json:"fullTranslation,omitempty"`
 		Proofread       float64 `json:"proofread,omitempty"`
+		// Hourly rate. Used by the time spent reports and
+		// hourly report settings templates.
+		Hourly float64 `json:"hourly,omitempty"`
 	}
 
 	// ReportIndividualRates defines the individual rates for a report.
@@ -180,6 +220,9 @@ type (
 		UserIDs         []int    `json:"userIds,omitempty"`
 		FullTranslation float64  `json:"fullTranslation,omitempty"`
 		Proofread       float64  `json:"proofread,omitempty"`
+		// Hourly rate. Used by the time spent reports and
+		// hourly report settings templates.
+		Hourly float64 `json:"hourly,omitempty"`
 	}
 
 	// ReportNetRateSchemes defines the net rate schemes for a report.
@@ -189,6 +232,9 @@ type (
 		TMMatch []ReportNetRateSchemeMatch `json:"tmMatch,omitempty"`
 		// Match type enum: "100", "99-82", "81-60".
 		MTMatch []ReportNetRateSchemeMatch `json:"mtMatch,omitempty"`
+		// AI match. Match type: "100" or a percentage range (e.g., "99-82").
+		// Note: If this field is not filled in, the schema will use the MT match values.
+		AIMatch []ReportNetRateSchemeMatch `json:"aiMatch,omitempty"`
 		// Match type enum: "100", "99-82".
 		SuggestionMatch []ReportNetRateSchemeMatch `json:"suggestionMatch,omitempty"`
 	}
@@ -223,6 +269,8 @@ type ReportGenerateRequest struct {
 	//  - QACheckIssuesSchema
 	//  - SavingActivitySchema
 	//  - TranslationActivitySchema
+	//  - TimeSpentSchema
+	//  - TaskUsageSchema (Enterprise only)
 	Schema ReportSchema `json:"schema"`
 }
 
@@ -275,10 +323,19 @@ type (
 		DateFrom string `json:"dateFrom,omitempty"`
 		// Report date to in UTC, ISO 8601.
 		DateTo string `json:"dateTo,omitempty"`
+		// Workflow step identifier (Enterprise only).
+		WorkflowStepID int `json:"workflowStepId,omitempty"`
 
 		// Task Identifier.
 		// Used to generate report by task.
+		//
+		// Deprecated: use TaskIDs instead.
 		TaskID int `json:"taskId,omitempty"`
+		// Task identifiers.
+		// Used to generate report by tasks.
+		TaskIDs []int `json:"taskIds,omitempty"`
+		// If true, the report will not be saved to the archive.
+		SkipArchiving *bool `json:"skipArchiving,omitempty"`
 	}
 
 	// TransactionCostsPostEditingSchema defines the schema for the transaction
@@ -303,7 +360,15 @@ type (
 		// if multiple scheme categories can be applied to the translation.
 		NetRateSchemes *ReportNetRateSchemes `json:"netRateSchemes,omitempty"`
 		// Exclude approvals when the same user has made translations for the string.
+		//
+		// Deprecated: the API no longer supports this field.
 		ExcludeApprovalsForEditedTranslations *bool `json:"excludeApprovalsForEditedTranslations,omitempty"`
+		// Approvals are treated as submitting an identical translation at the
+		// 100% match rate of the corresponding category.
+		UseCategoryBasedProofreadRates *bool `json:"useCategoryBasedProofreadRates,omitempty"`
+		// Calculations are based on the edit distance between the TM match
+		// and final translation.
+		UseTmEditDistance *bool `json:"useTmEditDistance,omitempty"`
 		// Grouping parameter.
 		// Enum: user, language. Default: user.
 		GroupBy string `json:"groupBy,omitempty"`
@@ -326,10 +391,19 @@ type (
 		DateFrom string `json:"dateFrom,omitempty"`
 		// Report date to in UTC, ISO 8601.
 		DateTo string `json:"dateTo,omitempty"`
+		// Workflow step identifier (Enterprise only).
+		WorkflowStepID int `json:"workflowStepId,omitempty"`
 
 		// Task Identifier.
 		// Used to generate report by task.
+		//
+		// Deprecated: use TaskIDs instead.
 		TaskID int `json:"taskId,omitempty"`
+		// Task identifiers.
+		// Used to generate report by tasks.
+		TaskIDs []int `json:"taskIds,omitempty"`
+		// If true, the report will not be saved to the archive.
+		SkipArchiving *bool `json:"skipArchiving,omitempty"`
 	}
 
 	// TopMembersSchema defines the schema for the top members report.
@@ -346,6 +420,8 @@ type (
 		DateFrom string `json:"dateFrom,omitempty"`
 		// Report date to in UTC, ISO 8601.
 		DateTo string `json:"dateTo,omitempty"`
+		// List of user identifiers.
+		UserIDs []int `json:"userIds,omitempty"`
 	}
 
 	// ContributionRawDataSchema defines the schema for the contribution
@@ -373,6 +449,8 @@ type (
 		TMIDs []int `json:"tmIds,omitempty"`
 		// List of MT identifiers.
 		MTIDs []int `json:"mtIds,omitempty"`
+		// List of AI prompt identifiers.
+		AIPromptIDs []int `json:"aiPromptIds,omitempty"`
 		// List of file identifiers.
 		FileIDs []int `json:"fileIds,omitempty"`
 		// List of directory identifiers.
@@ -395,7 +473,12 @@ type (
 		// Enum: xlsx, csv, json. Default: xlsx.
 		Format ReportFormat `json:"format,omitempty"`
 		// Split into categories by edit distance.
+		//
+		// Deprecated: use MatchScoreCategories instead.
 		PostEditingCategories []string `json:"postEditingCategories,omitempty"`
+		// Split into categories by match score. Ranges should be in
+		// descending order (e.g., 100-90, 89-80).
+		MatchScoreCategories []string `json:"matchScoreCategories,omitempty"`
 		// Language Identifier for which the report should be generated.
 		LanguageID string `json:"languageId,omitempty"`
 		// List of user identifiers.
@@ -404,6 +487,19 @@ type (
 		DateFrom string `json:"dateFrom,omitempty"`
 		// Report date to in UTC, ISO 8601.
 		DateTo string `json:"dateTo,omitempty"`
+		// List of file identifiers.
+		FileIDs []int `json:"fileIds,omitempty"`
+		// List of directory identifiers.
+		DirectoryIDs []int `json:"directoryIds,omitempty"`
+		// List of branch identifiers.
+		BranchIDs []int `json:"branchIds,omitempty"`
+		// List of label identifiers.
+		LabelIDs []int `json:"labelIds,omitempty"`
+		// Defines which strings include in report.
+		// Enum: strings_with_label, strings_without_label.
+		LabelIncludeType string `json:"labelIncludeType,omitempty"`
+		// If true, the report will not be saved to the archive.
+		SkipArchiving *bool `json:"skipArchiving,omitempty"`
 	}
 
 	// PreTranslateAccuracySchema defines the schema for pre translate
@@ -416,7 +512,12 @@ type (
 		// Enum: xlsx, csv, json. Default: xlsx.
 		Format ReportFormat `json:"format,omitempty"`
 		// Split into categories by edit distance.
+		//
+		// Deprecated: use MatchScoreCategories instead.
 		PostEditingCategories []string `json:"postEditingCategories,omitempty"`
+		// Split into categories by match score. Ranges should be in
+		// descending order (e.g., 100-90, 89-80).
+		MatchScoreCategories []string `json:"matchScoreCategories,omitempty"`
 		// Language Identifier for which the report should be generated.
 		LanguageID string `json:"languageId,omitempty"`
 		// Task Identifier for which the report should be generated.
@@ -425,6 +526,19 @@ type (
 		DateFrom string `json:"dateFrom,omitempty"`
 		// Report date to in UTC, ISO 8601.
 		DateTo string `json:"dateTo,omitempty"`
+		// List of file identifiers.
+		FileIDs []int `json:"fileIds,omitempty"`
+		// List of directory identifiers.
+		DirectoryIDs []int `json:"directoryIds,omitempty"`
+		// List of branch identifiers.
+		BranchIDs []int `json:"branchIds,omitempty"`
+		// List of label identifiers.
+		LabelIDs []int `json:"labelIds,omitempty"`
+		// Defines which strings include in report.
+		// Enum: strings_with_label, strings_without_label.
+		LabelIncludeType string `json:"labelIncludeType,omitempty"`
+		// If true, the report will not be saved to the archive.
+		SkipArchiving *bool `json:"skipArchiving,omitempty"`
 	}
 
 	// PreTranslateEfficiencySchema defines the schema for pre translate
@@ -501,10 +615,20 @@ type (
 		LanguageID string `json:"languageId,omitempty"`
 		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
 		Format ReportFormat `json:"format,omitempty"`
+		// Report mode. Enum: currency, relative.
+		Mode string `json:"mode,omitempty"`
 		// Report date from in UTC, ISO 8601.
 		DateFrom string `json:"dateFrom,omitempty"`
 		// Report date to in UTC, ISO 8601.
 		DateTo string `json:"dateTo,omitempty"`
+		// List of file identifiers.
+		FileIDs []int `json:"fileIds,omitempty"`
+		// List of directory identifiers.
+		DirectoryIDs []int `json:"directoryIds,omitempty"`
+		// List of branch identifiers.
+		BranchIDs []int `json:"branchIds,omitempty"`
+		// List of user identifiers.
+		UserIDs []int `json:"userIds,omitempty"`
 	}
 
 	// TranslationActivitySchema defines the schema for the translation activity report.
@@ -519,6 +643,68 @@ type (
 		DateFrom string `json:"dateFrom,omitempty"`
 		// Report date to in UTC, ISO 8601.
 		DateTo string `json:"dateTo,omitempty"`
+		// List of user identifiers.
+		UserIDs []int `json:"userIds,omitempty"`
+	}
+
+	// TimeSpentSchema defines the schema for the time spent report.
+	TimeSpentSchema struct {
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Grouping parameter. Enum: user, language, task.
+		GroupBy string `json:"groupBy,omitempty"`
+		// Base rates. Only the `hourly` rate is used.
+		BaseRates *ReportBaseRates `json:"baseRates,omitempty"`
+		// Individual rates. Only the `hourly` rate is used.
+		IndividualRates []*ReportIndividualRates `json:"individualRates,omitempty"`
+		// Language Identifier for which the report should be generated.
+		LanguageID string `json:"languageId,omitempty"`
+		// List of user identifiers.
+		UserIDs []int `json:"userIds,omitempty"`
+		// Task type. Enum: 0 - translate, 1 - proofread,
+		// 2 - translate by vendor, 3 - proofread by vendor.
+		TypeTasks *int `json:"typeTasks,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+		// Task identifiers for which the report should be generated.
+		TaskIDs []int `json:"taskIds,omitempty"`
+		// Workflow step identifier (Enterprise only).
+		WorkflowStepID int `json:"workflowStepId,omitempty"`
+		// If true, the report will not be saved to the archive.
+		SkipArchiving *bool `json:"skipArchiving,omitempty"`
+	}
+
+	// TaskUsageSchema defines the schema for the project task usage report
+	// (Enterprise only).
+	TaskUsageSchema struct {
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format"`
+		// Report type. Enum: workload, created-vs-resolved, performance, time, cost.
+		Type string `json:"type"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+		// Grouping parameter. Enum: user, language, type.
+		GroupBy string `json:"groupBy,omitempty"`
+		// Task type. Enum: 0 - translate, 1 - proofread,
+		// 2 - translate by vendor, 3 - proofread by vendor.
+		TypeTasks *int `json:"typeTasks,omitempty"`
+		// Language Identifier for which the report should be generated.
+		LanguageID string `json:"languageId,omitempty"`
+		// Task creator identifier.
+		CreatorID int `json:"creatorId,omitempty"`
+		// Task assignee identifier.
+		AssigneeID int `json:"assigneeId,omitempty"`
+		// Words count from (used with type `time`).
+		WordsCountFrom int `json:"wordsCountFrom,omitempty"`
+		// Words count to (used with type `time`).
+		WordsCountTo int `json:"wordsCountTo,omitempty"`
+		// Task statuses to filter by (used with type `cost`).
+		// Enum: todo, in_progress, done, closed, review.
+		Statuses []string `json:"statuses,omitempty"`
 	}
 )
 
@@ -620,6 +806,25 @@ func (r *TranslationActivitySchema) ValidateSchema() error {
 	return nil
 }
 
+// ValidateSchema implements the ReportSchema interface and checks if the
+// TimeSpent schema is valid.
+func (r *TimeSpentSchema) ValidateSchema() error {
+	return nil
+}
+
+// ValidateSchema implements the ReportSchema interface and checks if the
+// TaskUsage schema is valid.
+func (r *TaskUsageSchema) ValidateSchema() error {
+	if r.Format == "" {
+		return errors.New("format is required")
+	}
+	if r.Type == "" {
+		return errors.New("type is required")
+	}
+
+	return nil
+}
+
 // GroupReportGenerateRequest defines the structure of a request to
 // generate a group or organization report.
 type GroupReportGenerateRequest struct {
@@ -632,6 +837,11 @@ type GroupReportGenerateRequest struct {
 	//  - GroupTaskUsageSchema
 	//  - GroupQACheckIssuesSchema
 	//  - GroupTranslationActivitySchema
+	//  - GroupSourceContentUpdatesSchema
+	//  - GroupTimeSpentSchema
+	//  - GroupPreTranslateAccuracySchema
+	//  - GroupTranslatorAccuracySchema
+	//  - GroupSavingActivitySchema
 	Schema ReportGroupSchema `json:"schema"`
 }
 
@@ -644,6 +854,11 @@ type GroupReportGenerateRequest struct {
 //   - GroupTaskUsageSchema
 //   - GroupQACheckIssuesSchema
 //   - GroupTranslationActivitySchema
+//   - GroupSourceContentUpdatesSchema
+//   - GroupTimeSpentSchema
+//   - GroupPreTranslateAccuracySchema
+//   - GroupTranslatorAccuracySchema
+//   - GroupSavingActivitySchema
 type ReportGroupSchema interface {
 	ValidateGroupSchema() error
 }
@@ -673,9 +888,17 @@ type (
 		// if multiple scheme categories can be applied to the translation.
 		NetRateSchemes *ReportNetRateSchemes `json:"netRateSchemes,omitempty"`
 		// Exclude approvals when the same user has made translations for the string.
+		//
+		// Deprecated: the API no longer supports this field.
 		ExcludeApprovalsForEditedTranslations *bool `json:"excludeApprovalsForEditedTranslations,omitempty"`
+		// Approvals are treated as submitting an identical translation at the
+		// 100% match rate of the corresponding category.
+		UseCategoryBasedProofreadRates *bool `json:"useCategoryBasedProofreadRates,omitempty"`
+		// Calculations are based on the edit distance between the TM match
+		// and final translation.
+		UseTmEditDistance *bool `json:"useTmEditDistance,omitempty"`
 		// Grouping parameter.
-		// Enum: user, language. Default: user.
+		// Enum: user, language, project. Default: user.
 		GroupBy string `json:"groupBy,omitempty"`
 		// Report date from in UTC, ISO 8601.
 		DateFrom string `json:"dateFrom,omitempty"`
@@ -683,6 +906,10 @@ type (
 		DateTo string `json:"dateTo,omitempty"`
 		// User Identifier for which the report should be generated.
 		UserIDs []int `json:"userIds,omitempty"`
+		// Task identifiers. Used to generate report by tasks.
+		TaskIDs []int `json:"taskIds,omitempty"`
+		// If true, the report will not be saved to the archive.
+		SkipArchiving *bool `json:"skipArchiving,omitempty"`
 	}
 
 	// GroupTopMembersSchema defines the schema for the group top members report.
@@ -701,6 +928,8 @@ type (
 		DateFrom string `json:"dateFrom,omitempty"`
 		// Report date to in UTC, ISO 8601.
 		DateTo string `json:"dateTo,omitempty"`
+		// List of user identifiers.
+		UserIDs []int `json:"userIds,omitempty"`
 	}
 
 	// GroupTaskUsageSchema defines the schema for the group task usage report.
@@ -725,6 +954,13 @@ type (
 		CreatorID int `json:"creatorId,omitempty"`
 		// Task assignee identifier filter.
 		AssigneeID int `json:"assigneeId,omitempty"`
+		// Words count from (used with type `time`).
+		WordsCountFrom int `json:"wordsCountFrom,omitempty"`
+		// Words count to (used with type `time`).
+		WordsCountTo int `json:"wordsCountTo,omitempty"`
+		// Task statuses to filter by (used with type `cost`).
+		// Enum: todo, in_progress, done, closed, review.
+		Statuses []string `json:"statuses,omitempty"`
 	}
 
 	// GroupQACheckIssuesSchema defines the schema for the group QA check issues report.
@@ -751,6 +987,112 @@ type (
 		DateFrom string `json:"dateFrom,omitempty"`
 		// Report date to in UTC, ISO 8601.
 		DateTo string `json:"dateTo,omitempty"`
+		// List of user identifiers for filtering.
+		UserIDs []int `json:"userIds,omitempty"`
+	}
+
+	// GroupSourceContentUpdatesSchema defines the schema for the group
+	// source content updates report.
+	GroupSourceContentUpdatesSchema struct {
+		// Report unit. Enum: strings, words, chars, chars_with_spaces. Default: words.
+		Unit ReportUnit `json:"unit,omitempty"`
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Project identifiers for which the report should be generated.
+		ProjectIDs []int `json:"projectIds,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+	}
+
+	// GroupTimeSpentSchema defines the schema for the group time spent report.
+	GroupTimeSpentSchema struct {
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Grouping parameter. Enum: user, language, task, project.
+		GroupBy string `json:"groupBy,omitempty"`
+		// Base rates. Only the `hourly` rate is used.
+		BaseRates *ReportBaseRates `json:"baseRates,omitempty"`
+		// Individual rates. Only the `hourly` rate is used.
+		IndividualRates []*ReportIndividualRates `json:"individualRates,omitempty"`
+		// Language Identifier for which the report should be generated.
+		LanguageID string `json:"languageId,omitempty"`
+		// List of user identifiers.
+		UserIDs []int `json:"userIds,omitempty"`
+		// Task type. Enum: 0 - translate, 1 - proofread,
+		// 2 - translate by vendor, 3 - proofread by vendor.
+		TypeTasks *int `json:"typeTasks,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+		// Project identifiers for which the report should be generated.
+		ProjectIDs []int `json:"projectIds,omitempty"`
+		// Task identifiers.
+		TaskIDs []int `json:"taskIds,omitempty"`
+		// If true, the report will not be saved to the archive.
+		SkipArchiving *bool `json:"skipArchiving,omitempty"`
+	}
+
+	// GroupPreTranslateAccuracySchema defines the schema for the group
+	// pre-translation accuracy report.
+	GroupPreTranslateAccuracySchema struct {
+		// Report unit. Enum: strings, words, chars, chars_with_spaces. Default: words.
+		Unit ReportUnit `json:"unit,omitempty"`
+		// Language Identifier for which the report should be generated.
+		LanguageID string `json:"languageId,omitempty"`
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+		// Split into categories by match score. Ranges should be in
+		// descending order (e.g., 100-90, 89-80).
+		MatchScoreCategories []string `json:"matchScoreCategories,omitempty"`
+		// Project identifiers for which the report should be generated.
+		ProjectIDs []int `json:"projectIds,omitempty"`
+		// Task identifiers. Used to generate report by tasks.
+		TaskIDs []int `json:"taskIds,omitempty"`
+		// If true, the report will not be saved to the archive.
+		SkipArchiving *bool `json:"skipArchiving,omitempty"`
+	}
+
+	// GroupTranslatorAccuracySchema defines the schema for the group
+	// translator accuracy report.
+	GroupTranslatorAccuracySchema struct {
+		// Split into categories by match score. Ranges should be in
+		// descending order (e.g., 100-90, 89-80).
+		MatchScoreCategories []string `json:"matchScoreCategories,omitempty"`
+		// Language Identifier for which the report should be generated.
+		LanguageID string `json:"languageId,omitempty"`
+		// List of user identifiers.
+		UserIDs []int `json:"userIds,omitempty"`
+		// Project identifiers for which the report should be generated.
+		ProjectIDs []int `json:"projectIds,omitempty"`
+		// If true, the report will not be saved to the archive.
+		SkipArchiving *bool `json:"skipArchiving,omitempty"`
+	}
+
+	// GroupSavingActivitySchema defines the schema for the group saving activity report.
+	GroupSavingActivitySchema struct {
+		// Report unit. Enum: strings, words, chars, chars_with_spaces. Default: words.
+		Unit ReportUnit `json:"unit,omitempty"`
+		// Project identifiers for which the report should be generated.
+		ProjectIDs []int `json:"projectIds,omitempty"`
+		// Export file format. Enum: xlsx, csv, json. Default: xlsx.
+		Format ReportFormat `json:"format,omitempty"`
+		// Report date from in UTC, ISO 8601.
+		DateFrom string `json:"dateFrom,omitempty"`
+		// Report date to in UTC, ISO 8601.
+		DateTo string `json:"dateTo,omitempty"`
+		// Language Identifier for which the report should be generated.
+		LanguageID string `json:"languageId,omitempty"`
+		// Report mode. Enum: relative, currency.
+		// Note: `currency` mode is available only if the group has
+		// the savingsReportSettingsTemplateId set.
+		Mode string `json:"mode,omitempty"`
 	}
 )
 
@@ -802,6 +1144,31 @@ func (r *GroupQACheckIssuesSchema) ValidateGroupSchema() error {
 
 // ValidateGroupSchema checks if the GroupTranslationActivity schema is valid.
 func (r *GroupTranslationActivitySchema) ValidateGroupSchema() error {
+	return nil
+}
+
+// ValidateGroupSchema checks if the GroupSourceContentUpdates schema is valid.
+func (r *GroupSourceContentUpdatesSchema) ValidateGroupSchema() error {
+	return nil
+}
+
+// ValidateGroupSchema checks if the GroupTimeSpent schema is valid.
+func (r *GroupTimeSpentSchema) ValidateGroupSchema() error {
+	return nil
+}
+
+// ValidateGroupSchema checks if the GroupPreTranslateAccuracy schema is valid.
+func (r *GroupPreTranslateAccuracySchema) ValidateGroupSchema() error {
+	return nil
+}
+
+// ValidateGroupSchema checks if the GroupTranslatorAccuracy schema is valid.
+func (r *GroupTranslatorAccuracySchema) ValidateGroupSchema() error {
+	return nil
+}
+
+// ValidateGroupSchema checks if the GroupSavingActivity schema is valid.
+func (r *GroupSavingActivitySchema) ValidateGroupSchema() error {
 	return nil
 }
 
@@ -899,6 +1266,16 @@ type ReportSettingsTemplateConfig struct {
 	// Note: A new translation will be included in the report at the lowest rate
 	// if multiple scheme categories can be applied to the translation.
 	NetRateSchemes *ReportNetRateSchemes `json:"netRateSchemes,omitempty"`
+	// Calculate internal matches.
+	CalculateInternalMatches *bool `json:"calculateInternalMatches,omitempty"`
+	// Include pre-translated strings.
+	IncludePreTranslatedStrings *bool `json:"includePreTranslatedStrings,omitempty"`
+	// Approvals are treated as submitting an identical translation at the
+	// 100% match rate of the corresponding category.
+	UseCategoryBasedProofreadRates *bool `json:"useCategoryBasedProofreadRates,omitempty"`
+	// Calculations are based on the edit distance between the TM match
+	// and final translation.
+	UseTmEditDistance *bool `json:"useTmEditDistance,omitempty"`
 }
 
 // Validate checks if the request is valid.
@@ -919,7 +1296,11 @@ func (r *ReportSettingsTemplateAddRequest) Validate() error {
 	if r.Config == nil {
 		return errors.New("config is required")
 	}
-	if r.Config.BaseRates == nil || len(r.Config.IndividualRates) == 0 || r.Config.NetRateSchemes == nil {
+	if r.Config.BaseRates == nil || len(r.Config.IndividualRates) == 0 {
+		return errors.New("config fields are required")
+	}
+	// Hourly templates don't use net rate schemes.
+	if r.Unit != ReportUnitHours && r.Config.NetRateSchemes == nil {
 		return errors.New("config fields are required")
 	}
 

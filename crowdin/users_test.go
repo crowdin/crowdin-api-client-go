@@ -1697,3 +1697,407 @@ func TestManagersService_Get(t *testing.T) {
 		t.Errorf("Managers.Get returned %+v, want %+v", managers, want)
 	}
 }
+
+func TestUsersService_GetManager(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/groups/1/managers/12"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 27,
+				"user": {
+					"id": 12,
+					"username": "john_smith",
+					"email": "jsmith@example.com",
+					"emailVerified": true,
+					"twoFactor": "enabled",
+					"joinDetails": {
+						"type": "privateInvitation",
+						"invitedBy": {
+							"id": 19,
+							"username": "john_doe",
+							"fullName": "John Doe",
+							"avatarUrl": ""
+						}
+					},
+					"deviceVerification": "enabled",
+					"trustedDevicesCount": 2,
+					"apiTokensCount": 3,
+					"loginMethods": ["password", "google"],
+					"mfaMethods": ["totp"]
+				},
+				"teams": [
+					{
+						"id": 2,
+						"name": "Translators Team",
+						"totalMembers": 8,
+						"webUrl": "https://example.crowdin.com/u/teams/1",
+						"createdAt": "2019-09-23T09:04:29+00:00",
+						"updatedAt": null
+					}
+				]
+			}
+		}`)
+	})
+
+	manager, resp, err := client.Users.GetManager(context.Background(), 1, 12)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := &model.Manager{
+		ID: 27,
+		User: model.User{
+			ID:            12,
+			Username:      "john_smith",
+			Email:         "jsmith@example.com",
+			EmailVerified: ToPtr(true),
+			TwoFactor:     "enabled",
+			JoinDetails: &model.UserJoinDetails{
+				Type: "privateInvitation",
+				InvitedBy: &model.ShortUser{
+					ID:       19,
+					Username: "john_doe",
+					FullName: "John Doe",
+				},
+			},
+			DeviceVerification:  "enabled",
+			TrustedDevicesCount: 2,
+			APITokensCount:      3,
+			LoginMethods:        []string{"password", "google"},
+			MFAMethods:          []string{"totp"},
+		},
+		Teams: []model.Team{
+			{
+				ID:           2,
+				Name:         "Translators Team",
+				TotalMembers: 8,
+				WebURL:       "https://example.crowdin.com/u/teams/1",
+				CreatedAt:    "2019-09-23T09:04:29+00:00",
+			},
+		},
+	}
+	assert.Equal(t, expected, manager)
+}
+
+func TestUsersService_ListManagers_withPagination(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/groups/1/managers"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?limit=10&offset=5&teamIds=1%2C2")
+
+		fmt.Fprint(w, `{"data": [{"data": {"id": 27}}], "pagination": {"offset": 5, "limit": 10}}`)
+	})
+
+	opts := &model.ManagerListOptions{TeamIDs: []int{1, 2}, ListOptions: model.ListOptions{Limit: 10, Offset: 5}}
+	managers, resp, err := client.Users.ListManagers(context.Background(), 1, opts)
+	require.NoError(t, err)
+	assert.Len(t, managers, 1)
+	assert.Equal(t, 27, managers[0].ID)
+	assert.Equal(t, 5, resp.Pagination.Offset)
+}
+
+func TestUsersService_EditAuthenticated(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/user"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPatch)
+		testURL(t, r, path)
+		testBody(t, r, `[{"op":"replace","path":"/fullName","value":"John Smith"}]`+"\n")
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 12,
+				"username": "john_smith",
+				"email": "jsmith@example.com",
+				"emailVerified": false,
+				"fullName": "John Smith",
+				"avatarUrl": "",
+				"createdAt": "2019-07-11T07:40:22+00:00",
+				"lastSeen": "2019-10-23T11:44:02+00:00",
+				"twoFactor": "enabled",
+				"timezone": "Europe/Kyiv"
+			}
+		}`)
+	})
+
+	req := []*model.UpdateRequest{
+		{
+			Op:    "replace",
+			Path:  "/fullName",
+			Value: "John Smith",
+		},
+	}
+	user, resp, err := client.Users.EditAuthenticated(context.Background(), req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := &model.User{
+		ID:            12,
+		Username:      "john_smith",
+		Email:         "jsmith@example.com",
+		EmailVerified: ToPtr(false),
+		FullName:      ToPtr("John Smith"),
+		CreatedAt:     "2019-07-11T07:40:22+00:00",
+		LastSeen:      "2019-10-23T11:44:02+00:00",
+		TwoFactor:     "enabled",
+		Timezone:      "Europe/Kyiv",
+	}
+	assert.Equal(t, expected, user)
+}
+
+func TestUsersService_EditAuthenticated_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/user", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	req := []*model.UpdateRequest{{Op: "replace", Path: "/timezone", Value: "Europe/Kyiv"}}
+	res, _, err := client.Users.EditAuthenticated(context.Background(), req)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
+const userProjectPermissionsJSON = `{
+	"data": [
+		{
+			"data": {
+				"id": 12,
+				"roles": [
+					{
+						"name": "translator",
+						"permissions": {
+							"allLanguages": false,
+							"languagesAccess": {
+								"uk": {
+									"allContent": true,
+									"workflowStepIds": []
+								}
+							}
+						}
+					}
+				],
+				"project": {
+					"id": 8,
+					"groupId": 4,
+					"name": "Knowledge Base"
+				},
+				"teams": [
+					{
+						"id": 2,
+						"name": "Translators Team",
+						"totalMembers": 8
+					}
+				]
+			}
+		}
+	],
+	"pagination": {
+		"offset": 0,
+		"limit": 25
+	}
+}`
+
+func expectedUserProjectPermissions() []*model.UserProjectPermissions {
+	return []*model.UserProjectPermissions{
+		{
+			ID: 12,
+			Roles: []*model.TranslatorRole{
+				{
+					Name: model.RoleTranslator,
+					Permissions: &model.RolePermissions{
+						AllLanguages: ToPtr(false),
+						LanguagesAccess: model.LanguagesAccess{
+							"uk": {AllContent: ToPtr(true), WorkflowStepIDs: []int{}},
+						},
+					},
+				},
+			},
+			Project: &model.Project{ID: 8, GroupID: 4, Name: "Knowledge Base"},
+			Teams:   []*model.Team{{ID: 2, Name: "Translators Team", TotalMembers: 8}},
+		},
+	}
+}
+
+func TestUsersService_ListProjectsPermissions(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/users/12/projects/permissions"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?limit=25")
+
+		fmt.Fprint(w, userProjectPermissionsJSON)
+	})
+
+	perms, resp, err := client.Users.ListProjectsPermissions(context.Background(), 12, &model.ListOptions{Limit: 25})
+	require.NoError(t, err)
+
+	assert.Equal(t, expectedUserProjectPermissions(), perms)
+	assert.Equal(t, 25, resp.Pagination.Limit)
+}
+
+func TestUsersService_ListProjectsPermissions_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/users/12/projects/permissions", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Users.ListProjectsPermissions(context.Background(), 12, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestUsersService_EditProjectsPermissions(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/users/12/projects/permissions"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPatch)
+		testURL(t, r, path)
+		testBody(t, r, `[{"op":"replace","path":"/8/roles","value":[{"name":"translator"}]},{"op":"remove","path":"/9/roles"}]`+"\n")
+
+		fmt.Fprint(w, userProjectPermissionsJSON)
+	})
+
+	req := []*model.UpdateRequest{
+		{
+			Op:    "replace",
+			Path:  "/8/roles",
+			Value: []*model.TranslatorRole{{Name: model.RoleTranslator}},
+		},
+		{
+			Op:   "remove",
+			Path: "/9/roles",
+		},
+	}
+	perms, resp, err := client.Users.EditProjectsPermissions(context.Background(), 12, req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	assert.Equal(t, expectedUserProjectPermissions(), perms)
+}
+
+func TestUsersService_EditProjectsPermissions_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/users/12/projects/permissions", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	req := []*model.UpdateRequest{{Op: "remove", Path: "/9/roles"}}
+	res, _, err := client.Users.EditProjectsPermissions(context.Background(), 12, req)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestUsersService_ListProjectsContributions(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/users/12/projects/contributions"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?limit=10&offset=5")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 12,
+						"translated": {"strings": 1, "words": 2},
+						"approved": {"strings": 3, "words": 4},
+						"voted": {"strings": 5},
+						"commented": {"strings": 6},
+						"project": {
+							"id": 8,
+							"name": "Knowledge Base"
+						}
+					}
+				}
+			],
+			"pagination": {
+				"offset": 5,
+				"limit": 10
+			}
+		}`)
+	})
+
+	opts := &model.ListOptions{Limit: 10, Offset: 5}
+	contributions, resp, err := client.Users.ListProjectsContributions(context.Background(), 12, opts)
+	require.NoError(t, err)
+
+	expected := []*model.UserProjectContribution{
+		{
+			ID:         12,
+			Translated: &model.ContributionStats{Strings: 1, Words: 2},
+			Approved:   &model.ContributionStats{Strings: 3, Words: 4},
+			Voted:      &model.ContributionStats{Strings: 5},
+			Commented:  &model.ContributionStats{Strings: 6},
+			Project:    &model.Project{ID: 8, Name: "Knowledge Base"},
+		},
+	}
+	assert.Equal(t, expected, contributions)
+	assert.Equal(t, 5, resp.Pagination.Offset)
+	assert.Equal(t, 10, resp.Pagination.Limit)
+}
+
+func TestUsersService_ListProjectsContributions_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/users/12/projects/contributions", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Users.ListProjectsContributions(context.Background(), 12, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestUsersService_AddProjectMember_withUpdated(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/members"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{"userIds": [12, 13], "message": "Welcome to the team!"}`)
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{
+			"skipped": [],
+			"updated": [{"data": {"id": 12, "username": "john_smith", "isAdmin": true}}],
+			"added": [{"data": {"id": 13, "username": "jane_doe"}}]
+		}`)
+	})
+
+	req := &model.ProjectMemberAddRequest{UserIDs: []int{12, 13}, Message: "Welcome to the team!"}
+	members, resp, err := client.Users.AddProjectMember(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	expected := map[string][]*model.ProjectMember{
+		"skipped": {},
+		"updated": {{ID: 12, Username: "john_smith", IsAdmin: ToPtr(true)}},
+		"added":   {{ID: 13, Username: "jane_doe"}},
+	}
+	assert.Equal(t, expected, members)
+}

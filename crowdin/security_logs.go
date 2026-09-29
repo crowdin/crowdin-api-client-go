@@ -14,6 +14,8 @@ type SecurityLogsService struct {
 	client *Client
 }
 
+// ListUserLogs returns a list of the user security logs.
+//
 // https://developer.crowdin.com/api/v2/#operation/api.users.security-logs.getMany
 func (s *SecurityLogsService) ListUserLogs(ctx context.Context, userID int, opts *model.SecurityLogsListOptions) (
 	[]*model.SecurityLog, *Response, error,
@@ -21,18 +23,24 @@ func (s *SecurityLogsService) ListUserLogs(ctx context.Context, userID int, opts
 	return s.listSecurityLogs(ctx, fmt.Sprintf("/api/v2/users/%d/security-logs", userID), opts)
 }
 
-// https://developer.crowdin.com/enterprise/api/v2/#operation/api.users.security-logs.getMany
+// ListOrganizationLogs returns a list of the organization security logs.
+//
+// https://developer.crowdin.com/enterprise/api/v2/#operation/api.security-logs.getMany
 func (s *SecurityLogsService) ListOrganizationLogs(ctx context.Context, opts *model.SecurityLogsListOptions) (
 	[]*model.SecurityLog, *Response, error,
 ) {
 	return s.listSecurityLogs(ctx, "/api/v2/security-logs", opts)
 }
 
+// GetUserLog returns a single user security log by its identifier.
+//
 // https://developer.crowdin.com/api/v2/#operation/api.users.security-logs.get
 func (s *SecurityLogsService) GetUserLog(ctx context.Context, userID, logID int) (*model.SecurityLog, *Response, error) {
 	return s.getSecurityLog(ctx, fmt.Sprintf("/api/v2/users/%d/security-logs/%d", userID, logID))
 }
 
+// GetOrganizationLog returns a single organization security log by its identifier.
+//
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.security-logs.get
 func (s *SecurityLogsService) GetOrganizationLog(ctx context.Context, logID int) (*model.SecurityLog, *Response, error) {
 	return s.getSecurityLog(ctx, fmt.Sprintf("/api/v2/security-logs/%d", logID))

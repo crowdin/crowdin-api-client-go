@@ -59,7 +59,8 @@ func (s *GroupsService) Add(ctx context.Context, req *model.GroupsAddRequest) (*
 //
 // Request body:
 //   - op: The operation to perform. Enum: replace, test.
-//   - path: A JSON Pointer as defined in RFC 6901. Enum: "/name", "/description", "/parentId".
+//   - path: A JSON Pointer as defined in RFC 6901. Enum: "/name", "/description", "/parentId",
+//     "/savingsReportSettingsTemplateId".
 //   - value: The value to be used within the operations. The value must be one of string or integer.
 //
 // https://developer.crowdin.com/enterprise/api/v2/#operation/api.groups.patch

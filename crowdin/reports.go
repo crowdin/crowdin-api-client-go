@@ -23,6 +23,8 @@ type ReportsService struct {
 //	For the Enterprise client, set the userID to 0.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.reports.archives.getMany
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.reports.archives.getMany
 func (s *ReportsService) ListArchives(ctx context.Context, userID int, opts *model.ReportArchivesListOptions) (
 	[]*model.ReportArchive, *Response, error,
 ) {
@@ -45,6 +47,8 @@ func (s *ReportsService) ListArchives(ctx context.Context, userID int, opts *mod
 //	For the Enterprise client, set the userID to 0.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.users.reports.archives.get
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.reports.archives.get
 func (s *ReportsService) GetArchive(ctx context.Context, userID, archiveID int) (*model.ReportArchive, *Response, error) {
 	path := s.getArchivePath(fmt.Sprintf("archives/%d", archiveID), userID)
 	res := new(model.ReportArchiveResponse)
@@ -58,6 +62,8 @@ func (s *ReportsService) GetArchive(ctx context.Context, userID, archiveID int) 
 //	For the Enterprise client, set the userID to 0.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.users.reports.archives.delete
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.reports.archives.delete
 func (s *ReportsService) DeleteArchive(ctx context.Context, userID, archiveID int) (*Response, error) {
 	return s.client.Delete(ctx, s.getArchivePath(fmt.Sprintf("archives/%d", archiveID), userID), nil)
 }
@@ -68,6 +74,8 @@ func (s *ReportsService) DeleteArchive(ctx context.Context, userID, archiveID in
 //	For the Enterprise client, set the userID to 0.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.reports.archives.exports.post
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.reports.archives.exports.post
 func (s *ReportsService) ExportArchive(ctx context.Context, userID, archiveID int, req *model.ExportReportArchiveRequest) (
 	*model.ReportStatus, *Response, error,
 ) {
@@ -87,6 +95,8 @@ func (s *ReportsService) ExportArchive(ctx context.Context, userID, archiveID in
 //	For the Enterprise client, set the userID to 0.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.users.reports.archives.exports.get
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.reports.archives.exports.get
 func (s *ReportsService) CheckArchiveExportStatus(ctx context.Context, userID, archiveID int, exportID string) (
 	*model.ReportStatus, *Response, error,
 ) {
@@ -102,6 +112,8 @@ func (s *ReportsService) CheckArchiveExportStatus(ctx context.Context, userID, a
 //	For the Enterprise client, set the userID to 0.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.users.reports.archives.exports.download.get
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.reports.archives.exports.download.get
 func (s *ReportsService) DownloadArchive(ctx context.Context, userID, archiveID int, exportID string) (
 	*model.DownloadLink, *Response, error,
 ) {
@@ -153,6 +165,8 @@ func (s *ReportsService) Download(ctx context.Context, projectID int, reportID s
 //	For the Enterprise client, set the projectID to 0.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.reports.settings-templates.getMany
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.reports.settings-templates.getMany
 func (s *ReportsService) ListSettingsTemplates(ctx context.Context, projectID int, opts *model.ReportSettingsTemplatesListOptions) (
 	[]*model.ReportSettingsTemplate, *Response, error,
 ) {
@@ -175,6 +189,8 @@ func (s *ReportsService) ListSettingsTemplates(ctx context.Context, projectID in
 //	For the Enterprise client, set the projectID to 0.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.reports.settings-templates.get
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.reports.settings-templates.get
 func (s *ReportsService) GetSettingsTemplate(ctx context.Context, projectID, settingsTemplateID int) (
 	*model.ReportSettingsTemplate, *Response, error,
 ) {
@@ -189,6 +205,8 @@ func (s *ReportsService) GetSettingsTemplate(ctx context.Context, projectID, set
 //	For the Enterprise client, set the projectID to 0.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.reports.settings-templates.post
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.reports.settings-templates.post
 func (s *ReportsService) AddSettingsTemplate(ctx context.Context, projectID int, req *model.ReportSettingsTemplateAddRequest) (
 	*model.ReportSettingsTemplate, *Response, error,
 ) {
@@ -204,11 +222,14 @@ func (s *ReportsService) AddSettingsTemplate(ctx context.Context, projectID int,
 //
 // Request body:
 //   - Op (string): operation to perform. Enum: replace, test.
-//   - Path (string <json-pointer>): path to the field to update. Enum: "/name", "/currency", "/unit",
-//     "/mode", "/config", "/isPublic".
+//   - Path (string <json-pointer>): path to the field to update.
+//     Crowdin: "/name", "/currency", "/unit", "/mode", "/config".
+//     Enterprise: "/name", "/currency", "/unit", "/config", "/isPublic".
 //   - Value (any): new value to set.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.reports.settings-templates.patch
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.reports.settings-templates.patch
 func (s *ReportsService) EditSettingsTemplate(ctx context.Context, projectID, settingsTemplateID int, req []*model.UpdateRequest) (
 	*model.ReportSettingsTemplate, *Response, error,
 ) {
@@ -223,6 +244,8 @@ func (s *ReportsService) EditSettingsTemplate(ctx context.Context, projectID, se
 //	For the Enterprise client, set the projectID to 0.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.projects.reports.settings-templates.delete
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.reports.settings-templates.delete
 func (s *ReportsService) DeleteSettingsTemplate(ctx context.Context, projectID, settingsTemplateID int) (*Response, error) {
 	return s.client.Delete(ctx, s.getSettingsTemplatePath(projectID, settingsTemplateID), nil)
 }
@@ -357,6 +380,7 @@ func (s *ReportsService) EditUserSettingsTemplate(ctx context.Context, userID, s
 }
 
 // DeleteUserSettingsTemplate removes a user report settings template.
+//
 // https://support.crowdin.com/developer/api/v2/#tag/Reports/operation/api.users.reports.settings-templates.delete
 func (s *ReportsService) DeleteUserSettingsTemplate(ctx context.Context, userID, settingsTemplateID int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/users/%d/reports/settings-templates/%d", userID, settingsTemplateID), nil)

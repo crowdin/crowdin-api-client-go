@@ -866,3 +866,165 @@ func TestGroupsTeamsService_Edit_invalidJSON(t *testing.T) {
 	require.Error(t, err)
 	assert.Nil(t, res)
 }
+
+func TestTeamsService_AddToProject_withUpdated(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/teams"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{"teamId": 2, "managerAccess": true}`)
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{
+			"skipped": {},
+			"updated": {
+				"id": 2,
+				"hasManagerAccess": true,
+				"hasDeveloperAccess": false,
+				"hasAccessToAllWorkflowSteps": false,
+				"permissions": {},
+				"roles": []
+			},
+			"added": {}
+		}`)
+	})
+
+	req := &model.ProjectTeamAddRequest{TeamID: 2, ManagerAccess: ToPtr(true)}
+	teams, resp, err := client.Teams.AddToProject(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	expected := map[string]*model.ProjectTeam{
+		"skipped": {},
+		"updated": {
+			ID:               2,
+			HasManagerAccess: true,
+			Permissions:      map[string]any{},
+			Roles:            []*model.TranslatorRole{},
+		},
+		"added": {},
+	}
+	assert.Equal(t, expected, teams)
+}
+
+const teamProjectPermissionsJSON = `{
+	"data": [
+		{
+			"data": {
+				"id": 12,
+				"roles": [
+					{
+						"name": "proofreader",
+						"permissions": {
+							"allLanguages": true,
+							"languagesAccess": []
+						}
+					}
+				],
+				"project": {
+					"id": 8,
+					"name": "Knowledge Base"
+				}
+			}
+		}
+	],
+	"pagination": {
+		"offset": 0,
+		"limit": 25
+	}
+}`
+
+func expectedTeamProjectPermissions() []*model.TeamProjectPermissions {
+	return []*model.TeamProjectPermissions{
+		{
+			ID: 12,
+			Roles: []*model.TranslatorRole{
+				{
+					Name: model.RoleProofreader,
+					Permissions: &model.RolePermissions{
+						AllLanguages:    ToPtr(true),
+						LanguagesAccess: model.LanguagesAccess{},
+					},
+				},
+			},
+			Project: &model.Project{ID: 8, Name: "Knowledge Base"},
+		},
+	}
+}
+
+func TestTeamsService_ListProjectsPermissions(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/teams/2/projects/permissions"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?limit=25&offset=10")
+
+		fmt.Fprint(w, teamProjectPermissionsJSON)
+	})
+
+	opts := &model.ListOptions{Limit: 25, Offset: 10}
+	perms, resp, err := client.Teams.ListProjectsPermissions(context.Background(), 2, opts)
+	require.NoError(t, err)
+
+	assert.Equal(t, expectedTeamProjectPermissions(), perms)
+	assert.Equal(t, 25, resp.Pagination.Limit)
+}
+
+func TestTeamsService_ListProjectsPermissions_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/teams/2/projects/permissions", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Teams.ListProjectsPermissions(context.Background(), 2, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestTeamsService_EditProjectsPermissions(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/teams/2/projects/permissions"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPatch)
+		testURL(t, r, path)
+		testBody(t, r, `[{"op":"add","path":"/8/roles","value":[{"name":"proofreader"}]}]`+"\n")
+
+		fmt.Fprint(w, teamProjectPermissionsJSON)
+	})
+
+	req := []*model.UpdateRequest{
+		{
+			Op:    "add",
+			Path:  "/8/roles",
+			Value: []*model.TranslatorRole{{Name: model.RoleProofreader}},
+		},
+	}
+	perms, resp, err := client.Teams.EditProjectsPermissions(context.Background(), 2, req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	assert.Equal(t, expectedTeamProjectPermissions(), perms)
+}
+
+func TestTeamsService_EditProjectsPermissions_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/teams/2/projects/permissions", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	req := []*model.UpdateRequest{{Op: "remove", Path: "/8/roles"}}
+	res, _, err := client.Teams.EditProjectsPermissions(context.Background(), 2, req)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}

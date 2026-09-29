@@ -26,6 +26,13 @@ func TestReportArchivesListOptionsValues(t *testing.T) {
 				ListOptions: ListOptions{Limit: 10, Offset: 5}},
 			out: "limit=10&offset=5&scopeId=1&scopeType=project",
 		},
+		{
+			name: "with filters",
+			opts: &ReportArchivesListOptions{UserID: 2, TaskID: 3, Name: "report",
+				DateFrom: "2024-01-01T00:00:00+00:00", DateTo: "2024-02-01T00:00:00+00:00"},
+			out: "dateFrom=2024-01-01T00%3A00%3A00%2B00%3A00&dateTo=2024-02-01T00%3A00%3A00%2B00%3A00" +
+				"&name=report&taskId=3&userId=2",
+		},
 	}
 
 	for _, tt := range tests {
@@ -80,6 +87,38 @@ func TestReportGenerateRequestValidate(t *testing.T) {
 			req: &ReportGenerateRequest{
 				Name:   ReportCostsEstimationPostEditing,
 				Schema: &CostsEstimationPostEditingSchema{Unit: ReportUnitWords},
+			},
+			valid: true,
+		},
+		{
+			name: "valid schema (TimeSpentSchema)",
+			req: &ReportGenerateRequest{
+				Name:   ReportTimeSpent,
+				Schema: &TimeSpentSchema{Format: ReportFormatJSON},
+			},
+			valid: true,
+		},
+		{
+			name: "required format (TaskUsageSchema)",
+			req: &ReportGenerateRequest{
+				Name:   ReportTaskUsage,
+				Schema: &TaskUsageSchema{},
+			},
+			err: "format is required",
+		},
+		{
+			name: "required type (TaskUsageSchema)",
+			req: &ReportGenerateRequest{
+				Name:   ReportTaskUsage,
+				Schema: &TaskUsageSchema{Format: ReportFormatXLSX},
+			},
+			err: "type is required",
+		},
+		{
+			name: "valid schema (TaskUsageSchema)",
+			req: &ReportGenerateRequest{
+				Name:   ReportTaskUsage,
+				Schema: &TaskUsageSchema{Format: ReportFormatXLSX, Type: "workload"},
 			},
 			valid: true,
 		},
@@ -354,6 +393,25 @@ func TestReportSettingsTemplateAddRequestValidate(t *testing.T) {
 			req: &ReportSettingsTemplateAddRequest{Name: "Default template", Currency: "USD",
 				Unit: ReportUnitWords, Config: &ReportSettingsTemplateConfig{}},
 			err: "config fields are required",
+		},
+		{
+			name: "required netRateSchemes for non-hourly template",
+			req: &ReportSettingsTemplateAddRequest{Name: "Default template", Currency: "USD",
+				Unit: ReportUnitWords, Config: &ReportSettingsTemplateConfig{
+					BaseRates:       &ReportBaseRates{FullTranslation: 0.1, Proofread: 0.2},
+					IndividualRates: []*ReportIndividualRates{{UserIDs: []int{1}, FullTranslation: 0.1}},
+				}},
+			err: "config fields are required",
+		},
+		{
+			name: "valid hourly request",
+			req: &ReportSettingsTemplateAddRequest{Name: "Hourly template", Currency: "USD", Unit: ReportUnitHours,
+				Config: &ReportSettingsTemplateConfig{
+					BaseRates:       &ReportBaseRates{Hourly: 10},
+					IndividualRates: []*ReportIndividualRates{{LanguageIDs: []string{"uk"}, UserIDs: []int{1}, Hourly: 12}},
+				},
+			},
+			valid: true,
 		},
 		{
 			name: "valid request",

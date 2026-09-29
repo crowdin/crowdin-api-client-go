@@ -21,6 +21,7 @@ type (
 		Roles          []*TranslatorRole `json:"roles"`
 		IsManager      *bool             `json:"isManager,omitempty"`
 		IsDeveloper    *bool             `json:"isDeveloper,omitempty"`
+		IsAdmin        *bool             `json:"isAdmin,omitempty"`
 		ManagerOfGroup *struct {
 			ID   int    `json:"id"`
 			Name string `json:"name"`
@@ -154,10 +155,11 @@ const (
 	RoleLanguageCoordinator Role = "language_coordinator"
 )
 
-// ProjectMemberDeleteResponse defines the structure of the response
+// ProjectMemberAddResponse defines the structure of the response
 // when adding a new member to a project.
 type ProjectMemberAddResponse struct {
 	Skipped []*ProjectMemberResponse `json:"skipped"`
+	Updated []*ProjectMemberResponse `json:"updated,omitempty"`
 	Added   []*ProjectMemberResponse `json:"added"`
 }
 
@@ -180,6 +182,8 @@ type ProjectMemberAddRequest struct {
 	// Note: `managerAccess`, `developerAccess` and `roles` parameters
 	// are mutually exclusive.
 	Roles []*TranslatorRole `json:"roles,omitempty"`
+	// Custom message added to the invitation email (Crowdin only).
+	Message string `json:"message,omitempty"`
 }
 
 // Validate checks if the request is valid.
@@ -220,20 +224,41 @@ func (r *ProjectMemberReplaceRequest) Validate() error {
 
 // User represents a user in the system.
 type User struct {
-	ID        int     `json:"id"`
-	Username  string  `json:"username"`
-	Email     string  `json:"email"`
-	FirstName *string `json:"firstName,omitempty"`
-	LastName  *string `json:"lastName,omitempty"`
-	FullName  *string `json:"fullName,omitempty"`
-	Status    *string `json:"status,omitempty"` // Enum: active, pending, blocked
-	AvatarURL string  `json:"avatarUrl"`
-	CreatedAt string  `json:"createdAt"`
-	LastSeen  string  `json:"lastSeen,omitempty"`
-	TwoFactor string  `json:"twoFactor"` // Enum: enabled, disabled
-	IsAdmin   *bool   `json:"isAdmin,omitempty"`
-	Timezone  string  `json:"timezone,omitempty"`
-	Fields    any     `json:"fields,omitempty"`
+	ID            int     `json:"id"`
+	Username      string  `json:"username"`
+	Email         string  `json:"email"`
+	EmailVerified *bool   `json:"emailVerified,omitempty"`
+	FirstName     *string `json:"firstName,omitempty"`
+	LastName      *string `json:"lastName,omitempty"`
+	FullName      *string `json:"fullName,omitempty"`
+	Status        *string `json:"status,omitempty"` // Enum: active, pending, blocked
+	AvatarURL     string  `json:"avatarUrl"`
+	CreatedAt     string  `json:"createdAt"`
+	LastSeen      string  `json:"lastSeen,omitempty"`
+	TwoFactor     string  `json:"twoFactor"` // Enum: enabled, disabled
+	IsAdmin       *bool   `json:"isAdmin,omitempty"`
+	Timezone      string  `json:"timezone,omitempty"`
+	Fields        any     `json:"fields,omitempty"`
+	// Details about how the user joined the organization (Enterprise only).
+	JoinDetails *UserJoinDetails `json:"joinDetails,omitempty"`
+	// Device verification status. Enum: enabled, disabled (Enterprise only).
+	DeviceVerification string `json:"deviceVerification,omitempty"`
+	// Number of trusted devices (Enterprise only).
+	TrustedDevicesCount int `json:"trustedDevicesCount,omitempty"`
+	// Number of API tokens (Enterprise only).
+	APITokensCount int `json:"apiTokensCount,omitempty"`
+	// Login methods used by the user (Enterprise only).
+	LoginMethods []string `json:"loginMethods,omitempty"`
+	// Multi-factor authentication methods (Enterprise only).
+	MFAMethods []string `json:"mfaMethods,omitempty"`
+}
+
+// UserJoinDetails represents details about how the user joined the organization.
+type UserJoinDetails struct {
+	// Join type. Example: privateInvitation.
+	Type string `json:"type"`
+	// The user who invited this user.
+	InvitedBy *ShortUser `json:"invitedBy,omitempty"`
 }
 
 // ShortUser is a simplified version of the User model.
@@ -388,6 +413,56 @@ func (r *InviteUserRequest) Validate() error {
 	}
 
 	return nil
+}
+
+// UserProjectPermissions represents a user's permissions in a project
+// (Enterprise only).
+type UserProjectPermissions struct {
+	ID      int               `json:"id"`
+	Roles   []*TranslatorRole `json:"roles"`
+	Project *Project          `json:"project"`
+	Teams   []*Team           `json:"teams"`
+}
+
+// UserProjectPermissionsResponse defines the structure of the response
+// when getting a user's project permissions.
+type UserProjectPermissionsResponse struct {
+	Data *UserProjectPermissions `json:"data"`
+}
+
+// UserProjectPermissionsListResponse defines the structure of the response
+// when getting a list of user's project permissions.
+type UserProjectPermissionsListResponse struct {
+	Data []*UserProjectPermissionsResponse `json:"data"`
+}
+
+// UserProjectContribution represents a user's contributions in a project
+// (Enterprise only).
+type UserProjectContribution struct {
+	ID         int                `json:"id"`
+	Translated *ContributionStats `json:"translated"`
+	Approved   *ContributionStats `json:"approved"`
+	Voted      *ContributionStats `json:"voted"`
+	Commented  *ContributionStats `json:"commented"`
+	Project    *Project           `json:"project"`
+}
+
+// ContributionStats represents contribution statistics.
+type ContributionStats struct {
+	Strings int `json:"strings"`
+	Words   int `json:"words,omitempty"`
+}
+
+// UserProjectContributionResponse defines the structure of the response
+// when getting a user's project contribution.
+type UserProjectContributionResponse struct {
+	Data *UserProjectContribution `json:"data"`
+}
+
+// UserProjectContributionsListResponse defines the structure of the response
+// when getting a list of user's project contributions.
+type UserProjectContributionsListResponse struct {
+	Data []*UserProjectContributionResponse `json:"data"`
 }
 
 // UserID represents a user identifier.

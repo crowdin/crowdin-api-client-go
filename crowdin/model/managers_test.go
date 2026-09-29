@@ -30,6 +30,11 @@ func TestManagerListOptionsValues(t *testing.T) {
 			opts: &ManagerListOptions{TeamIDs: []int{1, 2, 3}, OrderBy: "asc"},
 			out:  "orderBy=asc&teamIds=1%2C2%2C3",
 		},
+		{
+			name: "with pagination",
+			opts: &ManagerListOptions{TeamIDs: []int{1}, ListOptions: ListOptions{Limit: 10, Offset: 5}},
+			out:  "limit=10&offset=5&teamIds=1",
+		},
 	}
 
 	for _, tt := range tests {
