@@ -31,6 +31,7 @@ type Client struct {
 	GraphQL *GraphQL
 
 	AI                        *AIService
+	Advisors                  *AdvisorsService
 	Applications              *ApplicationsService
 	Branches                  *BranchesService
 	Bundles                   *BundlesService
@@ -52,7 +53,9 @@ type Client struct {
 	SourceStrings             *SourceStringsService
 	Storages                  *StorageService
 	StringComments            *StringCommentsService
+	StringCorrections         *StringCorrectionsService
 	StringTranslations        *StringTranslationsService
+	StyleGuides               *StyleGuidesService
 	Tasks                     *TasksService
 	Teams                     *TeamsService
 	TranslationMemory         *TranslationMemoryService
@@ -98,6 +101,7 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 
 	// Initialize services.
 	c.AI = &AIService{client: c}
+	c.Advisors = &AdvisorsService{client: c}
 	c.Applications = &ApplicationsService{client: c}
 	c.Branches = &BranchesService{client: c}
 	c.Bundles = &BundlesService{client: c}
@@ -119,7 +123,9 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.SourceStrings = &SourceStringsService{client: c}
 	c.Storages = &StorageService{client: c}
 	c.StringComments = &StringCommentsService{client: c}
+	c.StringCorrections = &StringCorrectionsService{client: c}
 	c.StringTranslations = &StringTranslationsService{client: c}
+	c.StyleGuides = &StyleGuidesService{client: c}
 	c.Tasks = &TasksService{client: c}
 	c.Teams = &TeamsService{client: c}
 	c.TranslationMemory = &TranslationMemoryService{client: c}
