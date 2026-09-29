@@ -35,12 +35,20 @@ type (
 		WebURL               string      `json:"webUrl"`
 		Fields               any         `json:"fields,omitempty"`
 
+		ExternalProjectID               *int   `json:"externalProjectId,omitempty"`
+		ExternalOrganizationID          *int   `json:"externalOrganizationId,omitempty"`
+		PublicURL                       string `json:"publicUrl,omitempty"`
+		SavingsReportSettingsTemplateID int    `json:"savingsReportSettingsTemplateId,omitempty"`
+
+		// Deprecated: use GlossaryAccessOption instead.
+		GlossaryAccess                  bool                       `json:"glossaryAccess,omitempty"`
 		ClientOrganizationID            int                        `json:"clientOrganizationId,omitempty"`
 		TranslateDuplicates             int                        `json:"translateDuplicates,omitempty"`
 		TagsDetection                   int                        `json:"tagsDetection,omitempty"`
-		GlossaryAccess                  bool                       `json:"glossaryAccess,omitempty"`
+		GlossaryAccessOption            string                     `json:"glossaryAccessOption,omitempty"`
 		IsMTAllowed                     bool                       `json:"isMtAllowed,omitempty"`
 		TaskBasedAccessControl          bool                       `json:"taskBasedAccessControl,omitempty"`
+		TaskReviewerIDs                 []int                      `json:"taskReviewerIds,omitempty"`
 		HiddenStringsProofreadersAccess bool                       `json:"hiddenStringsProofreadersAccess,omitempty"`
 		AutoSubstitution                bool                       `json:"autoSubstitution,omitempty"`
 		ExportTranslatedOnly            bool                       `json:"exportTranslatedOnly,omitempty"`
@@ -58,18 +66,25 @@ type (
 		QAApprovalsCount                int                        `json:"qaApprovalsCount,omitempty"`
 		QACheckCategories               map[string]bool            `json:"qaCheckCategories,omitempty"`
 		QAChecksIgnorableCategories     map[string]bool            `json:"qaChecksIgnorableCategories,omitempty"`
-		CustomQACheckIDs                []int                      `json:"customQACheckIds,omitempty"`
+		CustomQACheckIDs                []int                      `json:"customQaCheckIds,omitempty"`
+		ExternalQACheckIDs              []int                      `json:"externalQaCheckIds,omitempty"`
 		LanguageMapping                 map[string]LanguageMapping `json:"languageMapping,omitempty"`
-		DelayedWorkflowStart            bool                       `json:"delayedTranslations,omitempty"`
+		DelayedWorkflowStart            bool                       `json:"delayedWorkflowStart,omitempty"`
 		NotificationSettings            *NotificationSettings      `json:"notificationSettings,omitempty"`
 		DefaultTMID                     int                        `json:"defaultTmId,omitempty"`
 		DefaultGlossaryID               int                        `json:"defaultGlossaryId,omitempty"`
 		AssignedTMs                     map[int]map[string]int     `json:"assignedTms,omitempty"`
 		AssignedGlossaries              []int                      `json:"assignedGlossaries,omitempty"`
+		AssignedStyleGuides             []int                      `json:"assignedStyleGuides,omitempty"`
 		TMPenalties                     any                        `json:"tmPenalties,omitempty"`
 		NormalizePlaceholder            bool                       `json:"normalizePlaceholder,omitempty"`
 		TMPreTranslate                  *ProjectTMPreTranslate     `json:"tmPreTranslate,omitempty"`
 		MTPreTranslate                  *ProjectMTPreTranslate     `json:"mtPreTranslate,omitempty"`
+		AiPreTranslate                  *ProjectAiPreTranslate     `json:"aiPreTranslate,omitempty"`
+		EditorSuggestionAiPromptID      *int                       `json:"editorSuggestionAiPromptId,omitempty"`
+		AlignmentActionAiPromptID       *int                       `json:"alignmentActionAiPromptId,omitempty"`
+		QACheckActionAiPromptID         *int                       `json:"qaCheckActionAiPromptId,omitempty"`
+		ContextReviewAiPromptID         *int                       `json:"contextReviewAiPromptId,omitempty"`
 		SaveMetaInfoInSource            bool                       `json:"saveMetaInfoInSource,omitempty"`
 		SkipUntranslatedFiles           bool                       `json:"skipUntranslatedFiles,omitempty"`
 		InContext                       bool                       `json:"inContext,omitempty"`
@@ -144,6 +159,11 @@ type ProjectsListOptions struct {
 	HasManagerAccess *int `json:"hasManagerAccess,omitempty"`
 	// Set type to 0 to get all file based projects. Enum: 0, 1.
 	Type *int `json:"type,omitempty"`
+	// Filter projects by name.
+	Filter string `json:"filter,omitempty"`
+	// Group Identifier (Enterprise only).
+	// Note: Set 0 to see items of root group.
+	GroupID *int `json:"groupId,omitempty"`
 }
 
 // Values returns the url.Values representation of ProjectsListOptions.
@@ -166,6 +186,12 @@ func (o *ProjectsListOptions) Values() (url.Values, bool) {
 	}
 	if o.Type != nil && (*o.Type == 0 || *o.Type == 1) {
 		v.Add("type", fmt.Sprintf("%d", *o.Type))
+	}
+	if o.Filter != "" {
+		v.Add("filter", o.Filter)
+	}
+	if o.GroupID != nil {
+		v.Add("groupId", fmt.Sprintf("%d", *o.GroupID))
 	}
 	return v, len(v) > 0
 }
@@ -238,16 +264,23 @@ type ProjectsAddRequest struct {
 	// If true - QA checks are active. Default: true.
 	QACheckIsActive *bool `json:"qaCheckIsActive,omitempty"`
 	// Acceptable categories are: empty, size, tags, spaces, variables, punctuation, symbolRegister,
-	// specialSymbols, wrongTranslation, spellcheck, icu, terms, duplicate, ftl, android
+	// specialSymbols, wrongTranslation, spellcheck, icu, terms, duplicate, ftl, android, numbers,
+	// ai, outdated, mdx, unifiedPlaceholders.
 	QACheckCategories map[string]bool `json:"qaCheckCategories,omitempty"`
 	// Acceptable categories are: empty, size, tags, spaces, variables, punctuation, symbolRegister,
-	// specialSymbols, wrongTranslation, spellcheck, icu, terms, duplicate, ftl, android
+	// specialSymbols, wrongTranslation, spellcheck, icu, terms, duplicate, ftl, android, numbers,
+	// ai, outdated, mdx, unifiedPlaceholders.
 	QAChecksIgnorableCategories map[string]bool `json:"qaChecksIgnorableCategories,omitempty"`
 	// Language Mapping.
 	LanguageMapping map[string]LanguageMapping `json:"languageMapping,omitempty"`
 	// Allow project members to manage glossary terms.
 	// The project owner and managers always can add and edit terms. Default: false.
+	//
+	// Deprecated: use GlossaryAccessOption instead.
 	GlossaryAccess *bool `json:"glossaryAccess,omitempty"`
+	// Defines the glossary access level for project members.
+	// Enum: readOnly, fullAccess, manageDrafts. Default: readOnly.
+	GlossaryAccessOption string `json:"glossaryAccessOption,omitempty"`
 	// Enable the transformation of the placeholders to the unified format to improve the work with TM suggestions.
 	NormalizePlaceholder *bool `json:"normalizePlaceholder,omitempty"`
 	// Notification Settings.
@@ -260,8 +293,22 @@ type ProjectsAddRequest struct {
 	TMPreTranslate *ProjectTMPreTranslate `json:"tmPreTranslate,omitempty"`
 	MTPreTranslate *ProjectMTPreTranslate `json:"mtPreTranslate,omitempty"`
 	AiPreTranslate *ProjectAiPreTranslate `json:"aiPreTranslate,omitempty"`
-	// AI Prompt ID to be used as prompt for Assist action
+	// AI Prompt ID to be used as prompt for Assist action.
+	//
+	// Deprecated: the Assist AI prompt action was removed from the API.
 	AssistActionAiPromptID int `json:"assistActionAiPromptId,omitempty"`
+	// AI Prompt ID to be used as prompt for Editor Suggestion action.
+	EditorSuggestionAiPromptID int `json:"editorSuggestionAiPromptId,omitempty"`
+	// AI Prompt ID to be used as prompt for Alignment action (Enterprise only).
+	AlignmentActionAiPromptID int `json:"alignmentActionAiPromptId,omitempty"`
+	// AI Prompt ID to be used as prompt for QA Check action.
+	QACheckActionAiPromptID int `json:"qaCheckActionAiPromptId,omitempty"`
+	// AI Prompt ID to be used as prompt for Context Review action.
+	ContextReviewAiPromptID int `json:"contextReviewAiPromptId,omitempty"`
+	// Savings Report Settings Template Identifier.
+	SavingsReportSettingsTemplateID int `json:"savingsReportSettingsTemplateId,omitempty"`
+	// Style Guide identifiers to assign to the project.
+	AssignedStyleGuides []int `json:"assignedStyleGuides,omitempty"`
 	// Translation Memory ID.
 	// Default: null
 	DefaultTMID int `json:"defaultTmId,omitempty"`
@@ -311,7 +358,7 @@ type ProjectsAddRequest struct {
 	//      between versions branches
 	TranslateDuplicates *int `json:"translateDuplicates,omitempty"`
 	// Delay workflow start after project creation. Default: false.
-	DelayedWorkflowStart *bool `json:"delayedTranslations,omitempty"`
+	DelayedWorkflowStart *bool `json:"delayedWorkflowStart,omitempty"`
 	// Defines whether to export only approved strings.
 	// Note: value greater than 0 can't be used with `exportStringsThatPassedWorkflow=true`
 	//       in same request.
@@ -323,7 +370,11 @@ type ProjectsAddRequest struct {
 	// Clear QA checks for translations with specific number of approvals. Default: 1.
 	QAApprovalsCount *int `json:"qaApprovalsCount,omitempty"`
 	// Custom QA checks identifiers.
-	CustomQACheckIDs []int `json:"customQACheckIds,omitempty"`
+	CustomQACheckIDs []int `json:"customQaCheckIds,omitempty"`
+	// External QA checks identifiers (Enterprise only).
+	ExternalQACheckIDs []int `json:"externalQaCheckIds,omitempty"`
+	// Task reviewer identifiers (Enterprise only).
+	TaskReviewerIDs []int `json:"taskReviewerIds,omitempty"`
 	// MT Engine Identifier.
 	MTID int `json:"mtId,omitempty"`
 	// Fields.
@@ -456,12 +507,16 @@ type (
 		// File format export pattern. Defines file name and path in resulting translations bundle.
 		// Default: null. Note: Can't contain : * ? " < > | symbols.
 		ExportPattern *string `json:"exportPattern,omitempty"`
+		// Specify the inline tags.
+		InlineTags []string `json:"inlineTags,omitempty"`
 	}
 
 	HTMLFileFormatSettings struct {
 		CommonFileFormatSettings
-		// Specify CSS selectors for elements that should not be imported
+		// Specify CSS selectors for elements that should not be imported.
 		ExcludedElements []string `json:"excludedElements,omitempty"`
+		// Specify the inline tags.
+		InlineTags []string `json:"inlineTags,omitempty"`
 	}
 
 	AdocFileFormatSettings struct {
@@ -478,6 +533,15 @@ type (
 		ExcludeCodeBlocks *bool `json:"excludeCodeBlocks,omitempty"`
 		// Default: "mdx_v1". Enum: "mdx_v1", "mdx_v2"
 		Type string `json:"type,omitempty"`
+		// Defines the marker used for bold text. Enum: "asterisk", "underscore". Default: "asterisk".
+		StrongMarker string `json:"strongMarker,omitempty"`
+		// Defines the marker used for italic text. Enum: "asterisk", "underscore". Default: "underscore".
+		EmphasisMarker string `json:"emphasisMarker,omitempty"`
+		// Defines the bullet used for unordered lists. Enum: "asterisks", "plus", "dash". Default: "dash".
+		UnorderedListBullet string `json:"unorderedListBullet,omitempty"`
+		// Defines the table column width. Enum: "consolidate", "evenly_distribute_cells".
+		// Default: "evenly_distribute_cells".
+		TableColumnWidth string `json:"tableColumnWidth,omitempty"`
 	}
 
 	MDXV2FileFormatSettings struct {
@@ -486,6 +550,69 @@ type (
 		ExcludedFrontMatterElements []string `json:"excludedFrontMatterElements,omitempty"`
 		// Defines whether to import code blocks. Default: false.
 		ExcludeCodeBlocks *bool `json:"excludeCodeBlocks,omitempty"`
+		// Defines the marker used for bold text. Enum: "asterisk", "underscore". Default: "asterisk".
+		StrongMarker string `json:"strongMarker,omitempty"`
+		// Defines the marker used for italic text. Enum: "asterisk", "underscore". Default: "underscore".
+		EmphasisMarker string `json:"emphasisMarker,omitempty"`
+		// Defines the bullet used for unordered lists. Enum: "asterisks", "plus", "dash". Default: "dash".
+		UnorderedListBullet string `json:"unorderedListBullet,omitempty"`
+		// Defines the table column width. Enum: "consolidate", "evenly_distribute_cells".
+		// Default: "evenly_distribute_cells".
+		TableColumnWidth string `json:"tableColumnWidth,omitempty"`
+	}
+
+	// MDFileFormatSettings defines the Markdown file format settings.
+	MDFileFormatSettings struct {
+		CommonFileFormatSettings
+		// Specify the inline tags.
+		InlineTags []string `json:"inlineTags,omitempty"`
+		// Defines the marker used for bold text. Enum: "asterisk", "underscore". Default: "asterisk".
+		StrongMarker string `json:"strongMarker,omitempty"`
+		// Defines the marker used for italic text. Enum: "asterisk", "underscore". Default: "underscore".
+		EmphasisMarker string `json:"emphasisMarker,omitempty"`
+		// Defines the bullet used for unordered lists. Enum: "asterisks", "plus", "dash". Default: "dash".
+		UnorderedListBullet string `json:"unorderedListBullet,omitempty"`
+		// Defines the table column width. Enum: "consolidate", "evenly_distribute_cells".
+		// Default: "evenly_distribute_cells".
+		TableColumnWidth string `json:"tableColumnWidth,omitempty"`
+		// Defines the quotes used in front matter. Enum: "auto", "single", "double". Default: "auto".
+		FrontMatterQuotes string `json:"frontMatterQuotes,omitempty"`
+	}
+
+	// FMHTMLFileFormatSettings defines the Front Matter HTML file format settings.
+	FMHTMLFileFormatSettings struct {
+		CommonFileFormatSettings
+		// Specify the inline tags.
+		InlineTags []string `json:"inlineTags,omitempty"`
+		// Specify CSS selectors for elements that should not be imported.
+		ExcludedElements []string `json:"excludedElements,omitempty"`
+		// Specify front matter elements that should not be imported.
+		ExcludedFrontMatterElements []string `json:"excludedFrontMatterElements,omitempty"`
+	}
+
+	// WebXMLFileFormatSettings defines the Web XML file format settings.
+	WebXMLFileFormatSettings struct {
+		CommonFileFormatSettings
+		// Specify the inline tags.
+		InlineTags []string `json:"inlineTags,omitempty"`
+	}
+
+	// IDMLFileFormatSettings defines the IDML file format settings.
+	IDMLFileFormatSettings struct {
+		CommonFileFormatSettings
+		// Defines whether to inline hyperlink text. Default: false.
+		InlineHyperlinkText *bool `json:"inlineHyperlinkText,omitempty"`
+	}
+
+	// VDFFileFormatSettings defines the VDF file format settings.
+	VDFFileFormatSettings struct {
+		// Defines whether to convert ICU messages. Default: true.
+		ConvertICU *bool `json:"convertIcu,omitempty"`
+		// Defines whether to add the gender argument. Default: false.
+		AddGenderArgument *bool `json:"addGenderArgument,omitempty"`
+		// File format export pattern. Defines file name and path in resulting translations bundle.
+		// Default: null. Can't contain : * ? " < > | symbols.
+		ExportPattern *string `json:"exportPattern,omitempty"`
 	}
 
 	DocxFileFormatSettings struct {
@@ -510,6 +637,62 @@ type (
 		// When checked, exposes hidden slides for translation. Default: false.
 		// Note: Works only for files with the following extensions: *.pptx, *.potx, *.ppsx, *.pptm, *.potm, *.ppsm.
 		ImportHiddenSlides *bool `json:"importHiddenSlides,omitempty"`
+		// Defines whether to translate document properties. Default: false.
+		TranslateDocProperties *bool `json:"translateDocProperties,omitempty"`
+		// Defines whether to translate comments. Default: true.
+		TranslateComments *bool `json:"translateComments,omitempty"`
+		// Defines whether to ignore whitespace styles. Default: false.
+		IgnoreWhitespaceStyles *bool `json:"ignoreWhitespaceStyles,omitempty"`
+		// Defines whether to add tab as a character. Default: false.
+		AddTabAsCharacter *bool `json:"addTabAsCharacter,omitempty"`
+		// Defines whether to add line separator as a character. Default: false.
+		AddLineSeparatorAsCharacter *bool `json:"addLineSeparatorAsCharacter,omitempty"`
+		// Defines the line separator replacement. Default: a newline character.
+		LineSeparatorReplacement *string `json:"lineSeparatorReplacement,omitempty"`
+		// Defines whether to replace the no-break hyphen tag. Default: false.
+		ReplaceNoBreakHyphenTag *bool `json:"replaceNoBreakHyphenTag,omitempty"`
+		// Defines whether to ignore the soft hyphen tag. Default: false.
+		IgnoreSoftHyphenTag *bool `json:"ignoreSoftHyphenTag,omitempty"`
+		// Complex field definitions to extract. Default: [].
+		ComplexFieldDefinitionsToExtract []string `json:"complexFieldDefinitionsToExtract,omitempty"`
+		// Defines whether to translate Word headers and footers. Default: true.
+		TranslateWordHeadersFooters *bool `json:"translateWordHeadersFooters,omitempty"`
+		// Defines whether to translate Word graphic names. Default: true.
+		TranslateWordGraphicName *bool `json:"translateWordGraphicName,omitempty"`
+		// Defines whether to translate Word graphic descriptions. Default: false.
+		TranslateWordGraphicDescription *bool `json:"translateWordGraphicDescription,omitempty"`
+		// Defines whether to ignore Word font colors. Default: false.
+		IgnoreWordFontColors *bool `json:"ignoreWordFontColors,omitempty"`
+		// Minimum Word font color ignorance threshold. Default: "".
+		WordFontColorsMinIgnoranceThreshold *string `json:"wordFontColorsMinIgnoranceThreshold,omitempty"`
+		// Maximum Word font color ignorance threshold. Default: "".
+		WordFontColorsMaxIgnoranceThreshold *string `json:"wordFontColorsMaxIgnoranceThreshold,omitempty"`
+		// Word styles to exclude. Default: [].
+		ExcludeWordStyles []string `json:"excludeWordStyles,omitempty"`
+		// Defines whether to translate Word content in exclude style mode. Default: true.
+		TranslateWordInExcludeStyleMode *bool `json:"translateWordInExcludeStyleMode,omitempty"`
+		// Word highlight colors. Default: [].
+		WordHighlightColors []string `json:"wordHighlightColors,omitempty"`
+		// Defines whether to translate Word content in exclude highlight mode. Default: true.
+		TranslateWordInExcludeHighlightMode *bool `json:"translateWordInExcludeHighlightMode,omitempty"`
+		// Defines whether to translate Word excluded colors. Default: false.
+		TranslateWordExcludeColors *bool `json:"translateWordExcludeColors,omitempty"`
+		// Word excluded colors. Default: [].
+		WordExcludedColors []string `json:"wordExcludedColors,omitempty"`
+		// Defines whether to translate copied Excel cells. Default: true.
+		TranslateExcelCellsCopied *bool `json:"translateExcelCellsCopied,omitempty"`
+		// Defines whether to translate Excel sheet names. Default: false.
+		TranslateExcelSheetNames *bool `json:"translateExcelSheetNames,omitempty"`
+		// Excel excluded colors. Default: [].
+		ExcelExcludedColors []string `json:"excelExcludedColors,omitempty"`
+		// Defines whether to translate Excel diagram data. Default: false.
+		TranslateExcelDiagramData *bool `json:"translateExcelDiagramData,omitempty"`
+		// Defines whether to translate Excel drawings. Default: false.
+		TranslateExcelDrawings *bool `json:"translateExcelDrawings,omitempty"`
+		// Defines whether to allow Word style optimization. Default: true.
+		AllowWordStyleOptimization *bool `json:"allowWordStyleOptimization,omitempty"`
+		// Defines whether to translate Excel excluded colors. Default: false.
+		TranslateExcelExcludeColors *bool `json:"translateExcelExcludeColors,omitempty"`
 	}
 
 	MediaWikiFileFormatSettings struct {
@@ -548,8 +731,10 @@ type (
 
 	StringCatalogFileFormatSettings struct {
 		// Determines whether to import the key as source string if it does not exist.
-		// Default: false.
+		// Default: true.
 		ImportKeyAsSource *bool `json:"importKeyAsSource,omitempty"`
+		// Determines whether to import existing translations from the file. Default: false.
+		ImportTranslations *bool `json:"importTranslations,omitempty"`
 		// File format export pattern. Defines file name and path in resulting translations bundle.
 		// Default: null. Can't contain : * ? " < > | symbols.
 		ExportPattern *string `json:"exportPattern,omitempty"`
@@ -561,13 +746,9 @@ type (
 		ExportPattern *string `json:"exportPattern,omitempty"`
 	}
 
-	WebXMLFileFormatSettings      struct{ CommonFileFormatSettings }
 	AndroidFileFormatSettings     struct{ CommonFileFormatSettings }
-	MDFileFormatSettings          struct{ CommonFileFormatSettings }
 	FMMDFileFormatSettings        struct{ CommonFileFormatSettings }
-	FMHTMLFileFormatSettings      struct{ CommonFileFormatSettings }
 	MadCapFLSNPFileFormatSettings struct{ CommonFileFormatSettings }
-	IDMLFileFormatSettings        struct{ CommonFileFormatSettings }
 	MIFFileFormatSettings         struct{ CommonFileFormatSettings }
 	DitaFileFormatSettings        struct{ CommonFileFormatSettings }
 	ARBFileFormatSettings         struct{ CommonFileFormatSettings }
@@ -577,6 +758,7 @@ type (
 	CSVFileFormatSettings         struct{ CommonFileFormatSettings }
 	XLSXFileFormatSettings        struct{ CommonFileFormatSettings }
 	ReactIntlFileFormatSettings   struct{ CommonFileFormatSettings }
+	XLIFFFileFormatSettings       struct{ CommonFileFormatSettings }
 )
 
 // Validate checks if the add project file format settings request is valid.
@@ -602,6 +784,7 @@ func (p *TXTFileFormatSettings) ValidateSettings() error           { return nil 
 func (p *JavaScriptFileFormatSettings) ValidateSettings() error    { return nil }
 func (p *StringCatalogFileFormatSettings) ValidateSettings() error { return nil }
 func (p *OtherFileFormatSettings) ValidateSettings() error         { return nil }
+func (p *VDFFileFormatSettings) ValidateSettings() error           { return nil }
 
 // ProjectsStringsExporterSettings represents a Crowdin project strings
 // exporter settings.
@@ -639,9 +822,24 @@ type StringsExporterSettings struct {
 	// Convert placeholders to MacOSX format. Default: false.
 	// Note: Only for Android and MacOSX formats.
 	ConvertPlaceholders *bool `json:"convertPlaceholders,omitempty"`
+	// Convert line breaks. Default: false.
+	// Note: Only for Android and MacOSX formats.
+	ConvertLineBreaks *bool `json:"convertLineBreaks,omitempty"`
+	// Use CDATA for strings with tags. Default: false.
+	// Note: Only for Android format.
+	UseCdataForStringsWithTags *bool `json:"useCdataForStringsWithTags,omitempty"`
+	// Export context. Default: true.
+	// Note: Only for MacOSX format.
+	ExportContext *bool `json:"exportContext,omitempty"`
 	// Defines language pair mapping the target language for the specified source language.
 	// Note: Only for XLIFF format.
 	LanguagePairMapping map[string]string `json:"languagePairMapping,omitempty"`
+	// Copy source to empty target. Default: true.
+	// Note: Only for XLIFF format.
+	CopySourceToEmptyTarget *bool `json:"copySourceToEmptyTarget,omitempty"`
+	// Export translators comment. Default: true.
+	// Note: Only for XLIFF format.
+	ExportTranslatorsComment *bool `json:"exportTranslatorsComment,omitempty"`
 }
 
 // Validate checks if the update request is valid.
@@ -653,7 +851,10 @@ func (r *ProjectsStringsExporterSettingsRequest) Validate() error {
 	if r.Format == "" {
 		return errors.New("format is required")
 	}
-	if r.Settings.ConvertPlaceholders == nil && len(r.Settings.LanguagePairMapping) == 0 {
+	st := r.Settings
+	if st.ConvertPlaceholders == nil && st.ConvertLineBreaks == nil && st.UseCdataForStringsWithTags == nil &&
+		st.ExportContext == nil && len(st.LanguagePairMapping) == 0 && st.CopySourceToEmptyTarget == nil &&
+		st.ExportTranslatorsComment == nil {
 		return errors.New("settings is required")
 	}
 	return nil

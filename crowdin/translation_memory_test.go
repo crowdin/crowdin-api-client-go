@@ -978,3 +978,336 @@ func TestTranslationMemoryService_DeleteTMSegment(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
+
+func TestTranslationMemoryService_ConcordanceSearchAll(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/tms/concordance"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"sourceLanguageId": "en",
+			"targetLanguageId": "uk",
+			"autoSubstitution": true,
+			"minRelevant": 60,
+			"expressions": ["Welcome!"],
+			"userId": 7
+		}`)
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"tm": {
+							"id": 4,
+							"name": "Knowledge Base's TM"
+						},
+						"recordId": 34,
+						"source": "Welcome!",
+						"target": "Ласкаво просимо!",
+						"relevant": 100,
+						"substituted": null,
+						"updatedAt": null
+					}
+				}
+			],
+			"pagination": {
+				"offset": 0,
+				"limit": 25
+			}
+		}`)
+	})
+
+	req := &model.TMConcordanceSearchAllRequest{
+		TMConcordanceSearchRequest: model.TMConcordanceSearchRequest{
+			SourceLanguageID: "en",
+			TargetLanguageID: "uk",
+			AutoSubstitution: ToPtr(true),
+			MinRelevant:      60,
+			Expressions:      []string{"Welcome!"},
+		},
+		UserID: 7,
+	}
+	tmList, resp, err := client.TranslationMemory.ConcordanceSearchAll(context.Background(), req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	require.Len(t, tmList, 1)
+	assert.Equal(t, 4, tmList[0].TM.ID)
+	assert.Equal(t, "Knowledge Base's TM", tmList[0].TM.Name)
+	assert.Equal(t, 34, tmList[0].RecordID)
+	assert.Equal(t, "Welcome!", tmList[0].Source)
+	assert.Equal(t, "Ласкаво просимо!", tmList[0].Target)
+	assert.Equal(t, 100, tmList[0].Relevant)
+	assert.Empty(t, tmList[0].Substituted)
+	assert.Equal(t, 25, resp.Pagination.Limit)
+}
+
+func TestTranslationMemoryService_ConcordanceSearchAll_withoutUserID(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/tms/concordance"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testBody(t, r, `{"sourceLanguageId":"en","targetLanguageId":"uk","autoSubstitution":false,"minRelevant":80,"expressions":["View"]}`+"\n")
+
+		fmt.Fprint(w, `{"data": []}`)
+	})
+
+	req := &model.TMConcordanceSearchAllRequest{
+		TMConcordanceSearchRequest: model.TMConcordanceSearchRequest{
+			SourceLanguageID: "en",
+			TargetLanguageID: "uk",
+			AutoSubstitution: ToPtr(false),
+			MinRelevant:      80,
+			Expressions:      []string{"View"},
+		},
+	}
+	tmList, resp, err := client.TranslationMemory.ConcordanceSearchAll(context.Background(), req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Empty(t, tmList)
+}
+
+func TestTranslationMemoryService_ConcordanceSearchAll_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/tms/concordance", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	req := &model.TMConcordanceSearchAllRequest{
+		TMConcordanceSearchRequest: model.TMConcordanceSearchRequest{
+			SourceLanguageID: "en",
+			TargetLanguageID: "uk",
+			AutoSubstitution: ToPtr(true),
+			MinRelevant:      60,
+			Expressions:      []string{"View"},
+		},
+	}
+	res, _, err := client.TranslationMemory.ConcordanceSearchAll(context.Background(), req)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestTranslationMemoryService_ConcordanceSearchAll_invalidRequest(t *testing.T) {
+	client, _, teardown := setupClient()
+	defer teardown()
+
+	res, _, err := client.TranslationMemory.ConcordanceSearchAll(context.Background(), &model.TMConcordanceSearchAllRequest{})
+	require.EqualError(t, err, "sourceLanguageId is required")
+	assert.Nil(t, res)
+}
+
+func TestTranslationMemoryService_TMSegmentBatchOperations(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/tms/4/segments"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPatch)
+		testURL(t, r, path)
+		testJSONBodyAny(t, r, `[
+			{"op": "add", "path": "/-", "value": {"records": [{"languageId": "uk", "text": "Перекладений текст"}]}},
+			{"op": "add", "path": "/2/records/-", "value": {"languageId": "it", "text": "Ciao, mondo!"}},
+			{"op": "replace", "path": "/2/records/3/text", "value": "Testo tradotto"},
+			{"op": "remove", "path": "/2/records/5"},
+			{"op": "remove", "path": "/6"}
+		]`)
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 2,
+						"records": [
+							{
+								"id": 3,
+								"languageId": "it",
+								"text": "Testo tradotto",
+								"usageCount": 13,
+								"createdBy": 1,
+								"updatedBy": 1,
+								"createdAt": "2023-09-16T13:48:04+00:00",
+								"updatedAt": null
+							}
+						]
+					}
+				},
+				{
+					"data": {
+						"id": 7,
+						"records": [
+							{
+								"id": 8,
+								"languageId": "uk",
+								"text": "Перекладений текст",
+								"usageCount": 0,
+								"createdBy": 1,
+								"updatedBy": 1,
+								"createdAt": "2023-09-16T13:48:04+00:00",
+								"updatedAt": "2023-09-16T13:48:04+00:00"
+							}
+						]
+					}
+				}
+			]
+		}`)
+	})
+
+	req := []*model.UpdateRequest{
+		{
+			Op:    model.OpAdd,
+			Path:  "/-",
+			Value: map[string]any{"records": []map[string]string{{"languageId": "uk", "text": "Перекладений текст"}}},
+		},
+		{
+			Op:    model.OpAdd,
+			Path:  "/2/records/-",
+			Value: map[string]string{"languageId": "it", "text": "Ciao, mondo!"},
+		},
+		{
+			Op:    model.OpReplace,
+			Path:  "/2/records/3/text",
+			Value: "Testo tradotto",
+		},
+		{
+			Op:   model.OpRemove,
+			Path: "/2/records/5",
+		},
+		{
+			Op:   model.OpRemove,
+			Path: "/6",
+		},
+	}
+	segments, resp, err := client.TranslationMemory.TMSegmentBatchOperations(context.Background(), 4, req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := []*model.TMSegment{
+		{
+			ID: 2,
+			Records: []*model.TMSegmentRecord{
+				{
+					ID:         3,
+					LanguageID: "it",
+					Text:       "Testo tradotto",
+					UsageCount: 13,
+					CreatedBy:  1,
+					UpdatedBy:  1,
+					CreatedAt:  "2023-09-16T13:48:04+00:00",
+				},
+			},
+		},
+		{
+			ID: 7,
+			Records: []*model.TMSegmentRecord{
+				{
+					ID:         8,
+					LanguageID: "uk",
+					Text:       "Перекладений текст",
+					UsageCount: 0,
+					CreatedBy:  1,
+					UpdatedBy:  1,
+					CreatedAt:  "2023-09-16T13:48:04+00:00",
+					UpdatedAt:  "2023-09-16T13:48:04+00:00",
+				},
+			},
+		},
+	}
+	assert.Equal(t, expected, segments)
+}
+
+func TestTranslationMemoryService_TMSegmentBatchOperations_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/tms/4/segments", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	req := []*model.UpdateRequest{{Op: model.OpRemove, Path: "/6"}}
+	res, _, err := client.TranslationMemory.TMSegmentBatchOperations(context.Background(), 4, req)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestTranslationMemoryService_AddTM_withGroupIDAndIsShared(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/tms"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testBody(t, r, `{"name":"Knowledge Base's TM","languageId":"el","groupId":3,"isShared":true}`+"\n")
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 4,
+				"groupId": 3,
+				"userId": 2,
+				"name": "Knowledge Base's TM",
+				"languageId": "el",
+				"languageIds": ["el"],
+				"segmentsCount": 0,
+				"defaultProjectIds": [],
+				"projectIds": [],
+				"isShared": true,
+				"webUrl": "https://example.crowdin.com/u/resources/translation-memories/4",
+				"createdAt": "2023-09-16T13:42:04+00:00"
+			}
+		}`)
+	})
+
+	req := &model.TranslationMemoryAddRequest{
+		Name:       "Knowledge Base's TM",
+		LanguageID: "el",
+		GroupID:    ToPtr(3),
+		IsShared:   ToPtr(true),
+	}
+	tm, resp, err := client.TranslationMemory.AddTM(context.Background(), req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := &model.TranslationMemory{
+		ID:                4,
+		GroupID:           ToPtr(3),
+		UserID:            2,
+		Name:              "Knowledge Base's TM",
+		LanguageID:        "el",
+		LanguageIDs:       []string{"el"},
+		SegmentsCount:     0,
+		DefaultProjectIDs: []int{},
+		ProjectIDs:        []int{},
+		IsShared:          true,
+		WebURL:            "https://example.crowdin.com/u/resources/translation-memories/4",
+		CreatedAt:         "2023-09-16T13:42:04+00:00",
+	}
+	assert.Equal(t, expected, tm)
+}
+
+func TestTranslationMemoryService_ListTMs_withFilterAndGroupID(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/tms"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?filter=Knowledge&groupId=0")
+
+		fmt.Fprint(w, `{"data": [{"data": {"id": 4, "groupId": null, "name": "Knowledge Base's TM", "isShared": false}}]}`)
+	})
+
+	opts := &model.TranslationMemoriesListOptions{Filter: "Knowledge", GroupID: ToPtr(0)}
+	tms, _, err := client.TranslationMemory.ListTMs(context.Background(), opts)
+	require.NoError(t, err)
+
+	expected := []*model.TranslationMemory{{ID: 4, Name: "Knowledge Base's TM"}}
+	assert.Equal(t, expected, tms)
+}

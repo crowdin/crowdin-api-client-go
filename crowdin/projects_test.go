@@ -276,7 +276,6 @@ func TestProjectsService_Get(t *testing.T) {
 		WebURL:                          "https://crowdin.com/project/some-project",
 		TranslateDuplicates:             2,
 		TagsDetection:                   0,
-		GlossaryAccess:                  false,
 		IsMTAllowed:                     false,
 		TaskBasedAccessControl:          false,
 		HiddenStringsProofreadersAccess: true,
@@ -672,7 +671,6 @@ func TestProjectsService_Get_Enterprise(t *testing.T) {
 		ClientOrganizationID:            52760,
 		TranslateDuplicates:             1,
 		TagsDetection:                   0,
-		GlossaryAccess:                  false,
 		IsMTAllowed:                     false,
 		TaskBasedAccessControl:          false,
 		HiddenStringsProofreadersAccess: true,
@@ -944,6 +942,28 @@ func TestProjectsService_List_CheckQueryParams(t *testing.T) {
 			},
 			expect: url + "?hasManagerAccess=0&limit=10&offset=20&orderBy=createdAt+desc%2Cname%2Cid&userId=1",
 		},
+		{
+			name: "Filter",
+			opt: &model.ProjectsListOptions{
+				Filter: "Knowledge Base",
+			},
+			expect: url + "?filter=Knowledge+Base",
+		},
+		{
+			name: "Group ID (root group)",
+			opt: &model.ProjectsListOptions{
+				GroupID: ToPtr(0),
+			},
+			expect: url + "?groupId=0",
+		},
+		{
+			name: "Filter and group ID",
+			opt: &model.ProjectsListOptions{
+				Filter:  "app",
+				GroupID: ToPtr(4),
+			},
+			expect: url + "?filter=app&groupId=4",
+		},
 	}
 
 	for _, tt := range cases {
@@ -1038,7 +1058,7 @@ func TestProjectsService_Add(t *testing.T) {
 				OSXLocale:            "ua",
 			},
 		},
-		GlossaryAccess:       ToPtr(false),
+		GlossaryAccessOption: "readOnly",
 		NormalizePlaceholder: ToPtr(false),
 		NotificationSettings: &model.NotificationSettings{
 			TranslatorNewStrings:     ToPtr(false),
@@ -1068,7 +1088,7 @@ func TestProjectsService_Add(t *testing.T) {
 				},
 			},
 		},
-		AssistActionAiPromptID:        1,
+		EditorSuggestionAiPromptID:    1,
 		DefaultTMID:                   1,
 		DefaultGlossaryID:             1,
 		SaveMetaInfoInSource:          ToPtr(true),
@@ -1160,7 +1180,7 @@ func TestProjectsService_Add(t *testing.T) {
 				"two_letters_code": "ua"
 			  }
 			},
-			"glossaryAccess": false,
+			"glossaryAccessOption": "readOnly",
 			"normalizePlaceholder": false,
 			"notificationSettings": {
 			  "translatorNewStrings": false,
@@ -1195,7 +1215,7 @@ func TestProjectsService_Add(t *testing.T) {
 			    } 
 			  ]
 			},
-			"assistActionAiPromptId": 1,
+			"editorSuggestionAiPromptId": 1,
 			"defaultTmId": 1,
 			"defaultGlossaryId": 1,
 			"saveMetaInfoInSource": true,
@@ -1664,6 +1684,151 @@ func TestProjectsService_AddFileFormatSettings_WithBodyParams(t *testing.T) {
 			},
 			expectedReqBody: `{"format":"android","settings":{}}` + "\n",
 		},
+		{
+			name: "XML file format settings with inline tags",
+			req: &model.ProjectsAddFileFormatSettingsRequest{
+				Format: "xml",
+				Settings: &model.XMLFileFormatSettings{
+					InlineTags: []string{"b", "i"},
+				},
+			},
+			expectedReqBody: `{"format":"xml","settings":{"inlineTags":["b","i"]}}` + "\n",
+		},
+		{
+			name: "Web XML file format settings with inline tags",
+			req: &model.ProjectsAddFileFormatSettingsRequest{
+				Format: "webxml",
+				Settings: &model.WebXMLFileFormatSettings{
+					CommonFileFormatSettings: model.CommonFileFormatSettings{ContentSegmentation: ToPtr(false)},
+					InlineTags:               []string{"b"},
+				},
+			},
+			expectedReqBody: `{"format":"webxml","settings":{"contentSegmentation":false,"inlineTags":["b"]}}` + "\n",
+		},
+		{
+			name: "HTML file format settings with inline tags",
+			req: &model.ProjectsAddFileFormatSettingsRequest{
+				Format: "html",
+				Settings: &model.HTMLFileFormatSettings{
+					ExcludedElements: []string{"#main"},
+					InlineTags:       []string{"span"},
+				},
+			},
+			expectedReqBody: `{"format":"html","settings":{"excludedElements":["#main"],"inlineTags":["span"]}}` + "\n",
+		},
+		{
+			name: "MD file format settings",
+			req: &model.ProjectsAddFileFormatSettingsRequest{
+				Format: "md",
+				Settings: &model.MDFileFormatSettings{
+					InlineTags:          []string{"kbd"},
+					StrongMarker:        "underscore",
+					EmphasisMarker:      "asterisk",
+					UnorderedListBullet: "plus",
+					TableColumnWidth:    "consolidate",
+					FrontMatterQuotes:   "double",
+				},
+			},
+			expectedReqBody: `{"format":"md","settings":{"inlineTags":["kbd"],"strongMarker":"underscore","emphasisMarker":"asterisk","unorderedListBullet":"plus","tableColumnWidth":"consolidate","frontMatterQuotes":"double"}}` + "\n",
+		},
+		{
+			name: "MDX v2 file format settings",
+			req: &model.ProjectsAddFileFormatSettingsRequest{
+				Format: "mdx_v2",
+				Settings: &model.MDXV2FileFormatSettings{
+					ExcludeCodeBlocks: ToPtr(true),
+					StrongMarker:      "asterisk",
+					TableColumnWidth:  "evenly_distribute_cells",
+				},
+			},
+			expectedReqBody: `{"format":"mdx_v2","settings":{"excludeCodeBlocks":true,"strongMarker":"asterisk","tableColumnWidth":"evenly_distribute_cells"}}` + "\n",
+		},
+		{
+			name: "MDX v1 file format settings",
+			req: &model.ProjectsAddFileFormatSettingsRequest{
+				Format: "mdx_v1",
+				Settings: &model.MDXV1FileFormatSettings{
+					Type:                "mdx_v1",
+					EmphasisMarker:      "underscore",
+					UnorderedListBullet: "dash",
+				},
+			},
+			expectedReqBody: `{"format":"mdx_v1","settings":{"type":"mdx_v1","emphasisMarker":"underscore","unorderedListBullet":"dash"}}` + "\n",
+		},
+		{
+			name: "FM HTML file format settings",
+			req: &model.ProjectsAddFileFormatSettingsRequest{
+				Format: "fm_html",
+				Settings: &model.FMHTMLFileFormatSettings{
+					InlineTags:                  []string{"span"},
+					ExcludedElements:            []string{"#main"},
+					ExcludedFrontMatterElements: []string{"title"},
+				},
+			},
+			expectedReqBody: `{"format":"fm_html","settings":{"inlineTags":["span"],"excludedElements":["#main"],"excludedFrontMatterElements":["title"]}}` + "\n",
+		},
+		{
+			name: "Docx file format settings",
+			req: &model.ProjectsAddFileFormatSettingsRequest{
+				Format: "docx",
+				Settings: &model.DocxFileFormatSettings{
+					TranslateDocProperties:              ToPtr(true),
+					TranslateComments:                   ToPtr(false),
+					LineSeparatorReplacement:            ToPtr(" "),
+					ComplexFieldDefinitionsToExtract:    []string{"HYPERLINK"},
+					WordFontColorsMinIgnoranceThreshold: ToPtr("000000"),
+					ExcludeWordStyles:                   []string{"Code"},
+					WordHighlightColors:                 []string{"yellow"},
+					ExcelExcludedColors:                 []string{"FF0000"},
+					TranslateExcelDrawings:              ToPtr(true),
+					AllowWordStyleOptimization:          ToPtr(false),
+				},
+			},
+			expectedReqBody: `{"format":"docx","settings":{"translateDocProperties":true,"translateComments":false,"lineSeparatorReplacement":" ","complexFieldDefinitionsToExtract":["HYPERLINK"],"wordFontColorsMinIgnoranceThreshold":"000000","excludeWordStyles":["Code"],"wordHighlightColors":["yellow"],"excelExcludedColors":["FF0000"],"translateExcelDrawings":true,"allowWordStyleOptimization":false}}` + "\n",
+		},
+		{
+			name: "IDML file format settings",
+			req: &model.ProjectsAddFileFormatSettingsRequest{
+				Format: "idml",
+				Settings: &model.IDMLFileFormatSettings{
+					InlineHyperlinkText: ToPtr(true),
+				},
+			},
+			expectedReqBody: `{"format":"idml","settings":{"inlineHyperlinkText":true}}` + "\n",
+		},
+		{
+			name: "String Catalog file format settings with import translations",
+			req: &model.ProjectsAddFileFormatSettingsRequest{
+				Format: "xcstrings",
+				Settings: &model.StringCatalogFileFormatSettings{
+					ImportKeyAsSource:  ToPtr(true),
+					ImportTranslations: ToPtr(true),
+				},
+			},
+			expectedReqBody: `{"format":"xcstrings","settings":{"importKeyAsSource":true,"importTranslations":true}}` + "\n",
+		},
+		{
+			name: "VDF file format settings",
+			req: &model.ProjectsAddFileFormatSettingsRequest{
+				Format: "vdf",
+				Settings: &model.VDFFileFormatSettings{
+					ConvertICU:        ToPtr(false),
+					AddGenderArgument: ToPtr(true),
+					ExportPattern:     ToPtr("pattern"),
+				},
+			},
+			expectedReqBody: `{"format":"vdf","settings":{"convertIcu":false,"addGenderArgument":true,"exportPattern":"pattern"}}` + "\n",
+		},
+		{
+			name: "XLIFF file format settings",
+			req: &model.ProjectsAddFileFormatSettingsRequest{
+				Format: "xliff",
+				Settings: &model.XLIFFFileFormatSettings{
+					CommonFileFormatSettings: model.CommonFileFormatSettings{ContentSegmentation: ToPtr(false)},
+				},
+			},
+			expectedReqBody: `{"format":"xliff","settings":{"contentSegmentation":false}}` + "\n",
+		},
 	}
 
 	for idx, tt := range cases {
@@ -1952,6 +2117,41 @@ func TestProjectsService_AddStringsExporterSettings_WithRequiredFields(t *testin
 			},
 			expectedReqBody: `{"format":"xliff","settings":{"languagePairMapping":{"de":"en","uk":"es"}}}` + "\n",
 		},
+		{
+			name: "With android settings",
+			req: &model.ProjectsStringsExporterSettingsRequest{
+				Format: "android",
+				Settings: model.StringsExporterSettings{
+					ConvertPlaceholders:        ToPtr(true),
+					ConvertLineBreaks:          ToPtr(false),
+					UseCdataForStringsWithTags: ToPtr(true),
+				},
+			},
+			expectedReqBody: `{"format":"android","settings":{"convertPlaceholders":true,"convertLineBreaks":false,"useCdataForStringsWithTags":true}}` + "\n",
+		},
+		{
+			name: "With macosx settings",
+			req: &model.ProjectsStringsExporterSettingsRequest{
+				Format: "macosx",
+				Settings: model.StringsExporterSettings{
+					ConvertLineBreaks: ToPtr(true),
+					ExportContext:     ToPtr(false),
+				},
+			},
+			expectedReqBody: `{"format":"macosx","settings":{"convertLineBreaks":true,"exportContext":false}}` + "\n",
+		},
+		{
+			name: "With xliff settings",
+			req: &model.ProjectsStringsExporterSettingsRequest{
+				Format: "xliff",
+				Settings: model.StringsExporterSettings{
+					LanguagePairMapping:      map[string]string{"uk": "es"},
+					CopySourceToEmptyTarget:  ToPtr(false),
+					ExportTranslatorsComment: ToPtr(true),
+				},
+			},
+			expectedReqBody: `{"format":"xliff","settings":{"languagePairMapping":{"uk":"es"},"copySourceToEmptyTarget":false,"exportTranslatorsComment":true}}` + "\n",
+		},
 	}
 
 	for idx, tt := range cases {
@@ -2053,4 +2253,111 @@ func TestProjectsService_DeleteStringsExporterSettings(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}
+
+func TestProjectsService_Add_withNewFields(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"name": "Knowledge Base",
+			"sourceLanguageId": "en",
+			"glossaryAccessOption": "manageDrafts",
+			"editorSuggestionAiPromptId": 1,
+			"alignmentActionAiPromptId": 2,
+			"qaCheckActionAiPromptId": 3,
+			"contextReviewAiPromptId": 4,
+			"savingsReportSettingsTemplateId": 5,
+			"assignedStyleGuides": [6, 7],
+			"delayedWorkflowStart": true,
+			"customQaCheckIds": [8],
+			"externalQaCheckIds": [9],
+			"taskReviewerIds": [10, 11],
+			"qaCheckCategories": {"numbers": true, "ai": false, "outdated": true, "mdx": true, "unifiedPlaceholders": false}
+		}`)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 8,
+				"groupId": 4,
+				"name": "Knowledge Base",
+				"sourceLanguageId": "en",
+				"sourceLanguage": {"id": "en", "name": "English", "bcp47Code": "en-US"},
+				"publicUrl": "https://example.crowdin.com/project/knowledge-base",
+				"externalProjectId": null,
+				"externalOrganizationId": 12,
+				"savingsReportSettingsTemplateId": 5,
+				"glossaryAccessOption": "manageDrafts",
+				"taskReviewerIds": [10, 11],
+				"customQaCheckIds": [8],
+				"externalQaCheckIds": [9],
+				"delayedWorkflowStart": true,
+				"assignedStyleGuides": [6, 7],
+				"aiPreTranslate": {
+					"enabled": true,
+					"aiPrompts": [{"aiPromptId": 13, "languageIds": ["uk"]}]
+				},
+				"preTranslationAiPromptId": null,
+				"editorSuggestionAiPromptId": 1,
+				"alignmentActionAiPromptId": 2,
+				"qaCheckActionAiPromptId": 3,
+				"contextReviewAiPromptId": null
+			}
+		}`)
+	})
+
+	req := &model.ProjectsAddRequest{
+		Name:                            "Knowledge Base",
+		SourceLanguageID:                "en",
+		GlossaryAccessOption:            "manageDrafts",
+		EditorSuggestionAiPromptID:      1,
+		AlignmentActionAiPromptID:       2,
+		QACheckActionAiPromptID:         3,
+		ContextReviewAiPromptID:         4,
+		SavingsReportSettingsTemplateID: 5,
+		AssignedStyleGuides:             []int{6, 7},
+		DelayedWorkflowStart:            ToPtr(true),
+		CustomQACheckIDs:                []int{8},
+		ExternalQACheckIDs:              []int{9},
+		TaskReviewerIDs:                 []int{10, 11},
+		QACheckCategories: map[string]bool{
+			"numbers":             true,
+			"ai":                  false,
+			"outdated":            true,
+			"mdx":                 true,
+			"unifiedPlaceholders": false,
+		},
+	}
+	project, resp, err := client.Projects.Add(context.Background(), req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := &model.Project{
+		ID:                              8,
+		GroupID:                         4,
+		Name:                            "Knowledge Base",
+		SourceLanguageID:                "en",
+		SourceLanguage:                  &model.Language{ID: "en", Name: "English", BCP47Code: "en-US"},
+		PublicURL:                       "https://example.crowdin.com/project/knowledge-base",
+		ExternalOrganizationID:          ToPtr(12),
+		SavingsReportSettingsTemplateID: 5,
+		GlossaryAccessOption:            "manageDrafts",
+		TaskReviewerIDs:                 []int{10, 11},
+		CustomQACheckIDs:                []int{8},
+		ExternalQACheckIDs:              []int{9},
+		DelayedWorkflowStart:            true,
+		AssignedStyleGuides:             []int{6, 7},
+		AiPreTranslate: &model.ProjectAiPreTranslate{
+			Enabled:   ToPtr(true),
+			AiPrompts: []model.ProjectAiPrompt{{AiPromptID: 13, LanguageIDs: []string{"uk"}}},
+		},
+		EditorSuggestionAiPromptID: ToPtr(1),
+		AlignmentActionAiPromptID:  ToPtr(2),
+		QACheckActionAiPromptID:    ToPtr(3),
+	}
+	assert.Equal(t, expected, project)
 }

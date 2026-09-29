@@ -1374,3 +1374,487 @@ func TestGlossariesService_DeleteTerm(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
+
+func TestGlossariesService_ConcordanceSearchAll(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/glossaries/concordance"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"sourceLanguageId": "en",
+			"targetLanguageId": "de",
+			"expressions": ["Welcome!", "View"],
+			"userId": 12
+		}`)
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"glossary": {
+							"id": 2,
+							"name": "Be My Eyes iOS's Glossary"
+						},
+						"concept": {
+							"id": 3,
+							"subject": "general",
+							"definition": "Some definition",
+							"translatable": true,
+							"note": "Some note",
+							"url": "https://example.com/base-url",
+							"figure": "https://example.com/figure-url"
+						},
+						"sourceTerms": [
+							{
+								"id": 4,
+								"userId": 6,
+								"glossaryId": 2,
+								"languageId": "en",
+								"text": "View",
+								"conceptId": 3,
+								"lemma": "view",
+								"createdAt": "2023-09-23T07:19:47+00:00",
+								"updatedAt": "2023-09-23T07:19:47+00:00",
+								"fields": {"some-field-1": "some value 1"}
+							}
+						],
+						"targetTerms": [
+							{
+								"id": 5,
+								"userId": 6,
+								"glossaryId": 2,
+								"languageId": "de",
+								"text": "Ansicht",
+								"conceptId": 3,
+								"lemma": "ansicht",
+								"createdAt": "2023-09-23T07:19:47+00:00",
+								"updatedAt": "2023-09-23T07:19:47+00:00"
+							}
+						]
+					}
+				}
+			],
+			"pagination": {
+				"offset": 0,
+				"limit": 25
+			}
+		}`)
+	})
+
+	req := &model.GlossaryConcordanceSearchAllRequest{
+		GlossaryConcordanceSearchRequest: model.GlossaryConcordanceSearchRequest{
+			SourceLanguageID: "en",
+			TargetLanguageID: "de",
+			Expressions:      []string{"Welcome!", "View"},
+		},
+		UserID: 12,
+	}
+	searches, resp, err := client.Glossaries.ConcordanceSearchAll(context.Background(), req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := []*model.ConcordanceSearch{
+		{
+			Glossary: &model.ConcordanceSearchGlossary{
+				ID:   2,
+				Name: "Be My Eyes iOS's Glossary",
+			},
+			Concept: &model.ConcordanceSearchConcept{
+				ID:           3,
+				Subject:      "general",
+				Definition:   "Some definition",
+				Translatable: true,
+				Note:         "Some note",
+				URL:          "https://example.com/base-url",
+				Figure:       "https://example.com/figure-url",
+			},
+			SourceTerms: []*model.Term{
+				{
+					ID:         4,
+					UserID:     6,
+					GlossaryID: 2,
+					LanguageID: "en",
+					Text:       "View",
+					ConceptID:  3,
+					Lemma:      "view",
+					CreatedAt:  "2023-09-23T07:19:47+00:00",
+					UpdatedAt:  "2023-09-23T07:19:47+00:00",
+					Fields:     map[string]any{"some-field-1": "some value 1"},
+				},
+			},
+			TargetTerms: []*model.Term{
+				{
+					ID:         5,
+					UserID:     6,
+					GlossaryID: 2,
+					LanguageID: "de",
+					Text:       "Ansicht",
+					ConceptID:  3,
+					Lemma:      "ansicht",
+					CreatedAt:  "2023-09-23T07:19:47+00:00",
+					UpdatedAt:  "2023-09-23T07:19:47+00:00",
+				},
+			},
+		},
+	}
+	assert.Equal(t, expected, searches)
+	assert.Equal(t, 25, resp.Pagination.Limit)
+}
+
+func TestGlossariesService_ConcordanceSearchAll_withoutUserID(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/glossaries/concordance"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testBody(t, r, `{"sourceLanguageId":"en","targetLanguageId":"de","expressions":["View"]}`+"\n")
+
+		fmt.Fprint(w, `{"data": []}`)
+	})
+
+	req := &model.GlossaryConcordanceSearchAllRequest{
+		GlossaryConcordanceSearchRequest: model.GlossaryConcordanceSearchRequest{
+			SourceLanguageID: "en",
+			TargetLanguageID: "de",
+			Expressions:      []string{"View"},
+		},
+	}
+	searches, resp, err := client.Glossaries.ConcordanceSearchAll(context.Background(), req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Empty(t, searches)
+}
+
+func TestGlossariesService_ConcordanceSearchAll_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/glossaries/concordance", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	req := &model.GlossaryConcordanceSearchAllRequest{
+		GlossaryConcordanceSearchRequest: model.GlossaryConcordanceSearchRequest{
+			SourceLanguageID: "en",
+			TargetLanguageID: "de",
+			Expressions:      []string{"View"},
+		},
+	}
+	res, _, err := client.Glossaries.ConcordanceSearchAll(context.Background(), req)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestGlossariesService_ConcordanceSearchAll_invalidRequest(t *testing.T) {
+	client, _, teardown := setupClient()
+	defer teardown()
+
+	res, _, err := client.Glossaries.ConcordanceSearchAll(context.Background(), &model.GlossaryConcordanceSearchAllRequest{})
+	require.EqualError(t, err, "sourceLanguageId is required")
+	assert.Nil(t, res)
+}
+
+func TestGlossariesService_ExportGlossary_withFilters(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/glossaries/1/exports"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"format": "csv",
+			"exportFields": ["term", "description"],
+			"exportType": "terms",
+			"text": "value",
+			"caseSensitive": false,
+			"searchStrict": true,
+			"searchFullMatch": true,
+			"statuses": ["PREFERRED", "ADMITTED"],
+			"partsOfSpeech": ["NOUN", "VERB"],
+			"types": ["ACRONYM", "ABBREVIATION"],
+			"genders": ["MASCULINE", "FEMININE"],
+			"authorIds": [12, 34],
+			"languageIds": ["uk", "de"],
+			"dateFrom": "2024-01-23T07:00:14+00:00",
+			"dateTo": "2024-09-27T07:00:14+00:00"
+		}`)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"identifier": "5ed2ce93-6d47-4402-9e66-516ca835cb20",
+				"status": "created",
+				"progress": 0,
+				"attributes": {
+					"format": "csv",
+					"exportFields": ["term", "description"],
+					"text": "value",
+					"caseSensitive": false,
+					"searchFullMatch": true,
+					"searchStrict": true,
+					"dateFrom": "2024-01-23T07:00:14+00:00",
+					"dateTo": "2024-09-27T07:00:14+00:00"
+				},
+				"createdAt": "2023-09-23T07:06:43+00:00",
+				"updatedAt": "2023-09-23T07:06:43+00:00",
+				"startedAt": null,
+				"finishedAt": null
+			}
+		}`)
+	})
+
+	exportReq := &model.GlossaryExportRequest{
+		Format:          "csv",
+		ExportFields:    []string{"term", "description"},
+		ExportType:      "terms",
+		Text:            "value",
+		CaseSensitive:   ToPtr(false),
+		SearchStrict:    ToPtr(true),
+		SearchFullMatch: ToPtr(true),
+		Statuses:        []string{"PREFERRED", "ADMITTED"},
+		PartsOfSpeech:   []string{"NOUN", "VERB"},
+		Types:           []string{"ACRONYM", "ABBREVIATION"},
+		Genders:         []string{"MASCULINE", "FEMININE"},
+		AuthorIDs:       []int{12, 34},
+		LanguageIDs:     []string{"uk", "de"},
+		DateFrom:        "2024-01-23T07:00:14+00:00",
+		DateTo:          "2024-09-27T07:00:14+00:00",
+	}
+	exportData, resp, err := client.Glossaries.ExportGlossary(context.Background(), 1, exportReq)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	assert.Equal(t, "5ed2ce93-6d47-4402-9e66-516ca835cb20", exportData.Identifier)
+	assert.Equal(t, "csv", exportData.Attributes.Format)
+	assert.Equal(t, []string{"term", "description"}, exportData.Attributes.ExportFields)
+}
+
+func TestGlossariesService_ExportGlossary_invalidExportType(t *testing.T) {
+	client, _, teardown := setupClient()
+	defer teardown()
+
+	res, _, err := client.Glossaries.ExportGlossary(context.Background(), 1, &model.GlossaryExportRequest{ExportType: "all"})
+	require.EqualError(t, err, `invalid exportType: "all", must be one of concepts, terms`)
+	assert.Nil(t, res)
+}
+
+func TestGlossariesService_AddGlossary_withIsShared(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/glossaries"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testBody(t, r, `{"name":"Be My Eyes iOS's Glossary","languageId":"fr","groupId":0,"isShared":false}`+"\n")
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2,
+				"name": "Be My Eyes iOS's Glossary",
+				"groupId": 0,
+				"userId": 2,
+				"terms": 0,
+				"languageId": "fr",
+				"languageIds": ["fr"],
+				"defaultProjectIds": [],
+				"projectIds": [],
+				"isShared": false,
+				"webUrl": "https://example.crowdin.com/u/glossaries/2",
+				"createdAt": "2023-09-16T13:42:04+00:00"
+			}
+		}`)
+	})
+
+	req := &model.GlossaryAddRequest{
+		Name:       "Be My Eyes iOS's Glossary",
+		LanguageID: "fr",
+		GroupID:    ToPtr(0),
+		IsShared:   ToPtr(false),
+	}
+	glossary, resp, err := client.Glossaries.AddGlossary(context.Background(), req)
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	expected := &model.Glossary{
+		ID:                2,
+		Name:              "Be My Eyes iOS's Glossary",
+		GroupID:           0,
+		UserID:            2,
+		Terms:             0,
+		LanguageID:        "fr",
+		LanguageIDs:       []string{"fr"},
+		DefaultProjectIDs: []int{},
+		ProjectIDs:        []int{},
+		IsShared:          false,
+		WebURL:            "https://example.crowdin.com/u/glossaries/2",
+		CreatedAt:         "2023-09-16T13:42:04+00:00",
+	}
+	assert.Equal(t, expected, glossary)
+}
+
+func TestGlossariesService_GetGlossary_isShared(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/glossaries/2"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{"data": {"id": 2, "name": "Glossary", "isShared": true}}`)
+	})
+
+	glossary, _, err := client.Glossaries.GetGlossary(context.Background(), 2)
+	require.NoError(t, err)
+	assert.Equal(t, 2, glossary.ID)
+	assert.True(t, glossary.IsShared)
+}
+
+func TestGlossariesService_ListGlossaries_withFilter(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/glossaries"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?filter=iOS&groupId=0&limit=10")
+
+		fmt.Fprint(w, `{"data": [{"data": {"id": 2, "name": "Be My Eyes iOS's Glossary", "isShared": true}}]}`)
+	})
+
+	opts := &model.GlossariesListOptions{
+		Filter:      "iOS",
+		GroupID:     ToPtr(0),
+		ListOptions: model.ListOptions{Limit: 10},
+	}
+	glossaries, _, err := client.Glossaries.ListGlossaries(context.Background(), opts)
+	require.NoError(t, err)
+
+	expected := []*model.Glossary{{ID: 2, Name: "Be My Eyes iOS's Glossary", IsShared: true}}
+	assert.Equal(t, expected, glossaries)
+}
+
+func TestGlossariesService_ListTerms_withTranslationOfTermID(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/glossaries/1/terms"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?languageId=de&translationOfTermId=4")
+
+		fmt.Fprint(w, `{"data": [{"data": {"id": 5, "glossaryId": 1, "languageId": "de", "text": "Ansicht", "fields": []}}]}`)
+	})
+
+	opts := &model.TermsListOptions{LanguageID: "de", TranslationOfTermID: 4}
+	terms, _, err := client.Glossaries.ListTerms(context.Background(), 1, opts)
+	require.NoError(t, err)
+
+	expected := []*model.Term{{ID: 5, GlossaryID: 1, LanguageID: "de", Text: "Ansicht", Fields: []any{}}}
+	assert.Equal(t, expected, terms)
+}
+
+func TestGlossariesService_AddTerm_withFields(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/glossaries/1/terms"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"languageId": "en",
+			"text": "View",
+			"fields": {"some-field-1": "some value 1", "some-field-2": 12}
+		}`)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2,
+				"glossaryId": 1,
+				"languageId": "en",
+				"text": "View",
+				"fields": {"some-field-1": "some value 1", "some-field-2": 12}
+			}
+		}`)
+	})
+
+	req := &model.TermAddRequest{
+		LanguageID: "en",
+		Text:       "View",
+		Fields:     map[string]any{"some-field-1": "some value 1", "some-field-2": 12},
+	}
+	term, _, err := client.Glossaries.AddTerm(context.Background(), 1, req)
+	require.NoError(t, err)
+
+	expected := &model.Term{
+		ID:         2,
+		GlossaryID: 1,
+		LanguageID: "en",
+		Text:       "View",
+		Fields:     map[string]any{"some-field-1": "some value 1", "some-field-2": float64(12)},
+	}
+	assert.Equal(t, expected, term)
+}
+
+func TestGlossariesService_UpdateConcept_withFields(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/glossaries/1/concepts/2"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPut)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"subject": "general",
+			"fields": {"some-field-3": true}
+		}`)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2,
+				"glossaryId": 1,
+				"subject": "general",
+				"fields": {"some-field-3": true}
+			}
+		}`)
+	})
+
+	req := &model.ConceptUpdateRequest{
+		Subject: "general",
+		Fields:  map[string]any{"some-field-3": true},
+	}
+	concept, _, err := client.Glossaries.UpdateConcept(context.Background(), 1, 2, req)
+	require.NoError(t, err)
+
+	expected := &model.Concept{
+		ID:         2,
+		GlossaryID: 1,
+		Subject:    "general",
+		Fields:     map[string]any{"some-field-3": true},
+	}
+	assert.Equal(t, expected, concept)
+}
+
+func TestGlossariesService_ClearGlossary_withTranslationOfTermID(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	path := "/api/v2/glossaries/1/terms"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodDelete)
+		testURL(t, r, path+"?translationOfTermId=4")
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	resp, err := client.Glossaries.ClearGlossary(context.Background(), 1, &model.ClearGlossaryOptions{TranslationOfTermID: 4})
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}

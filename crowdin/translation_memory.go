@@ -165,6 +165,29 @@ func (s *TranslationMemoryService) ConcordanceSearch(ctx context.Context, projec
 	return list, resp, err
 }
 
+// ConcordanceSearchAll searches for concordance in all translation memories available
+// to the user (organization-level search, not limited to a single project).
+//
+// Note: The `userId` request field is supported only in Crowdin.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.tms.concordance.post
+func (s *TranslationMemoryService) ConcordanceSearchAll(ctx context.Context, req *model.TMConcordanceSearchAllRequest) (
+	[]*model.TMConcordanceSearch, *Response, error,
+) {
+	res := new(model.TMConcordanceSearchResponse)
+	resp, err := s.client.Post(ctx, "/api/v2/tms/concordance", req, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.TMConcordanceSearch, 0, len(res.Data))
+	for _, tm := range res.Data {
+		list = append(list, tm.Data)
+	}
+
+	return list, resp, err
+}
+
 // GetTMSegment returns a specific translation memory segment by its identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.tms.segments.get
@@ -235,6 +258,38 @@ func (s *TranslationMemoryService) EditTMSegment(ctx context.Context, tmID, segm
 	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/tms/%d/segments/%d", tmID, segmentID), req, res)
 
 	return res.Data, resp, err
+}
+
+// TMSegmentBatchOperations performs batch operations on translation memory segments
+// and returns the updated segments.
+//
+// Request body (array of JSON Patch operations):
+//
+//   - op: "add", path: "/-", value: {"records": [{"languageId": "uk", "text": "..."}]} –
+//     create a new segment.
+//   - op: "add", path: "/{segmentId}/records/-", value: {"languageId": "it", "text": "..."} –
+//     append a record to an existing segment.
+//   - op: "remove", path: "/{segmentId}" – delete a segment.
+//   - op: "remove", path: "/{segmentId}/records/{recordId}" – delete a single record.
+//   - op: "replace", path: "/{segmentId}/records/{recordId}/text", value: "..." –
+//     update record text.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.tms.segments.patchBatch
+func (s *TranslationMemoryService) TMSegmentBatchOperations(ctx context.Context, tmID int, req []*model.UpdateRequest) (
+	[]*model.TMSegment, *Response, error,
+) {
+	res := new(model.TMSegmentsListResponse)
+	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/tms/%d/segments", tmID), req, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.TMSegment, 0, len(res.Data))
+	for _, segment := range res.Data {
+		list = append(list, segment.Data)
+	}
+
+	return list, resp, nil
 }
 
 // DeleteTMSegment removes a specific translation memory segment by its identifier.

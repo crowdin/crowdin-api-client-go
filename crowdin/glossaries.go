@@ -212,6 +212,29 @@ func (s *GlossariesService) ConcordanceSearch(ctx context.Context, projectID int
 	return list, resp, err
 }
 
+// ConcordanceSearchAll searches for concordance in all glossaries available to the user
+// (organization-level search, not limited to a single project).
+//
+// Note: The `userId` request field is supported only in Crowdin.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.glossaries.concordance.post
+func (s *GlossariesService) ConcordanceSearchAll(ctx context.Context, req *model.GlossaryConcordanceSearchAllRequest) (
+	[]*model.ConcordanceSearch, *Response, error,
+) {
+	res := new(model.GlossaryConcordanceSearchResponse)
+	resp, err := s.client.Post(ctx, "/api/v2/glossaries/concordance", req, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.ConcordanceSearch, 0, len(res.Data))
+	for _, search := range res.Data {
+		list = append(list, search.Data)
+	}
+
+	return list, resp, err
+}
+
 // GetTerm returns a specific term from a glossary by its identifier.
 //
 // https://developer.crowdin.com/api/v2/#operation/api.glossaries.terms.get

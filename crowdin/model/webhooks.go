@@ -23,12 +23,18 @@ const (
 	FileTranslated Event = "file.translated"
 	// Project file is fully reviewed.
 	FileApproved Event = "file.approved"
+	// QA check for project file is finished.
+	FileQAFinished Event = "file.qa.finished"
 	// All strings in project are translated.
 	ProjectTranslated Event = "project.translated"
 	// All strings in project are approved.
 	ProjectApproved Event = "project.approved"
+	// QA check for project is finished.
+	ProjectQAFinished Event = "project.qa.finished"
 	// Project are successfully built.
 	ProjectBuilt Event = "project.built"
+	// Pre-translation is completed.
+	PreTranslationCompleted Event = "preTranslation.completed"
 	// Final translation of string is updated (using Replace in suggestions feature).
 	TranslationUpdated Event = "translation.updated"
 	// Source string is added.
@@ -59,6 +65,8 @@ const (
 	TaskAdded Event = "task.added"
 	// Task status was changed.
 	TaskStatusChanged Event = "task.statusChanged"
+	// Task is updated.
+	TaskUpdated Event = "task.updated"
 	// Task is deleted.
 	TaskDeleted Event = "task.deleted"
 
@@ -67,6 +75,10 @@ const (
 	ProjectCreated Event = "project.created"
 	// Project is deleted.
 	ProjectDeleted Event = "project.deleted"
+	// Group is created (Enterprise only).
+	GroupCreated Event = "group.created"
+	// Group is deleted (Enterprise only).
+	GroupDeleted Event = "group.deleted"
 )
 
 // ContentType is a type that represents the content type of a webhook.

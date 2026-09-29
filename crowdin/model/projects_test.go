@@ -36,6 +36,21 @@ func TestProjectsListOptionsValues(t *testing.T) {
 				Type: toPtr(1), ListOptions: ListOptions{Offset: 1, Limit: 10}},
 			out: "hasManagerAccess=1&limit=10&offset=1&orderBy=createdAt+desc%2Cname%2Cid&type=1&userId=1",
 		},
+		{
+			name: "with filter",
+			opts: &ProjectsListOptions{Filter: "My Project"},
+			out:  "filter=My+Project",
+		},
+		{
+			name: "with groupId = 0",
+			opts: &ProjectsListOptions{GroupID: toPtr(0)},
+			out:  "groupId=0",
+		},
+		{
+			name: "with filter and groupId",
+			opts: &ProjectsListOptions{Filter: "app", GroupID: toPtr(3), HasManagerAccess: toPtr(1)},
+			out:  "filter=app&groupId=3&hasManagerAccess=1",
+		},
 	}
 
 	for _, tt := range tests {
@@ -183,6 +198,44 @@ func TestProjectsAddFileFormatSettingsRequestValidate(t *testing.T) {
 				Settings: &OtherFileFormatSettings{ExportPattern: toPtr("pattern")}},
 			valid: true,
 		},
+		{
+			name: "Valid request (vdf file format settings)",
+			req: &ProjectsAddFileFormatSettingsRequest{Format: "vdf",
+				Settings: &VDFFileFormatSettings{ConvertICU: toPtr(false), AddGenderArgument: toPtr(true)}},
+			valid: true,
+		},
+		{
+			name: "Valid request (md file format settings)",
+			req: &ProjectsAddFileFormatSettingsRequest{Format: "md",
+				Settings: &MDFileFormatSettings{StrongMarker: "underscore", InlineTags: []string{"span"}}},
+			valid: true,
+		},
+		{
+			name: "Valid request (fm html file format settings)",
+			req: &ProjectsAddFileFormatSettingsRequest{Format: "fm_html",
+				Settings: &FMHTMLFileFormatSettings{ExcludedFrontMatterElements: []string{"title"}}},
+			valid: true,
+		},
+		{
+			name: "Valid request (web xml file format settings)",
+			req: &ProjectsAddFileFormatSettingsRequest{Format: "webxml",
+				Settings: &WebXMLFileFormatSettings{InlineTags: []string{"b"}}},
+			valid: true,
+		},
+		{
+			name: "Valid request (idml file format settings)",
+			req: &ProjectsAddFileFormatSettingsRequest{Format: "idml",
+				Settings: &IDMLFileFormatSettings{InlineHyperlinkText: toPtr(true)}},
+			valid: true,
+		},
+		{
+			name: "Valid request (xliff file format settings)",
+			req: &ProjectsAddFileFormatSettingsRequest{Format: "xliff",
+				Settings: &XLIFFFileFormatSettings{
+					CommonFileFormatSettings: CommonFileFormatSettings{ContentSegmentation: toPtr(false)},
+				}},
+			valid: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -238,6 +291,36 @@ func TestProjectsStringsExporterSettingsRequestValidate(t *testing.T) {
 			name: "valid request",
 			req: &ProjectsStringsExporterSettingsRequest{Format: "xliff",
 				Settings: StringsExporterSettings{ConvertPlaceholders: toPtr(false), LanguagePairMapping: map[string]string{"en": "fr"}}},
+			valid: true,
+		},
+		{
+			name: "valid request (convertLineBreaks only)",
+			req: &ProjectsStringsExporterSettingsRequest{Format: "android",
+				Settings: StringsExporterSettings{ConvertLineBreaks: toPtr(true)}},
+			valid: true,
+		},
+		{
+			name: "valid request (useCdataForStringsWithTags only)",
+			req: &ProjectsStringsExporterSettingsRequest{Format: "android",
+				Settings: StringsExporterSettings{UseCdataForStringsWithTags: toPtr(true)}},
+			valid: true,
+		},
+		{
+			name: "valid request (exportContext only)",
+			req: &ProjectsStringsExporterSettingsRequest{Format: "macosx",
+				Settings: StringsExporterSettings{ExportContext: toPtr(false)}},
+			valid: true,
+		},
+		{
+			name: "valid request (copySourceToEmptyTarget only)",
+			req: &ProjectsStringsExporterSettingsRequest{Format: "xliff",
+				Settings: StringsExporterSettings{CopySourceToEmptyTarget: toPtr(false)}},
+			valid: true,
+		},
+		{
+			name: "valid request (exportTranslatorsComment only)",
+			req: &ProjectsStringsExporterSettingsRequest{Format: "xliff",
+				Settings: StringsExporterSettings{ExportTranslatorsComment: toPtr(true)}},
 			valid: true,
 		},
 	}
