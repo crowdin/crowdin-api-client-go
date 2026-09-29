@@ -35,8 +35,12 @@ type Client struct {
 	Applications              *ApplicationsService
 	Branches                  *BranchesService
 	Bundles                   *BundlesService
+	Clients                   *ClientsService
+	CustomPlaceholders        *CustomPlaceholdersService
+	CustomSpellcheckers       *CustomSpellcheckersService
 	Dictionaries              *DictionariesService
 	Distributions             *DistributionsService
+	ExternalQAChecks          *ExternalQAChecksService
 	Fields                    *FieldsService
 	Groups                    *GroupsService
 	Glossaries                *GlossariesService
@@ -44,7 +48,9 @@ type Client struct {
 	Languages                 *LanguagesService
 	MachineTranslationEngines *MachineTranslationEnginesService
 	Notifications             *NotificationsService
+	Organization              *OrganizationService
 	OrganizationWebhooks      *OrganizationWebhooksService
+	ProjectPlaceholders       *ProjectPlaceholdersService
 	Projects                  *ProjectsService
 	Reports                   *ReportsService
 	Screenshots               *ScreenshotsService
@@ -105,8 +111,12 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.Applications = &ApplicationsService{client: c}
 	c.Branches = &BranchesService{client: c}
 	c.Bundles = &BundlesService{client: c}
+	c.Clients = &ClientsService{client: c}
+	c.CustomPlaceholders = &CustomPlaceholdersService{client: c}
+	c.CustomSpellcheckers = &CustomSpellcheckersService{client: c}
 	c.Dictionaries = &DictionariesService{client: c}
 	c.Distributions = &DistributionsService{client: c}
+	c.ExternalQAChecks = &ExternalQAChecksService{client: c}
 	c.Fields = &FieldsService{client: c}
 	c.Groups = &GroupsService{client: c}
 	c.Glossaries = &GlossariesService{client: c}
@@ -114,7 +124,9 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.Languages = &LanguagesService{client: c}
 	c.MachineTranslationEngines = &MachineTranslationEnginesService{client: c}
 	c.Notifications = &NotificationsService{client: c}
+	c.Organization = &OrganizationService{client: c}
 	c.OrganizationWebhooks = &OrganizationWebhooksService{client: c}
+	c.ProjectPlaceholders = &ProjectPlaceholdersService{client: c}
 	c.Projects = &ProjectsService{client: c}
 	c.Reports = &ReportsService{client: c}
 	c.Screenshots = &ScreenshotsService{client: c}
