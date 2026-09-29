@@ -32,7 +32,7 @@ func TestTranslationsService_PreTranslationStatus(t *testing.T) {
 					"autoApproveOption": "all",
 					"duplicateTranslations": true,
 					"skipApprovedTranslations": true,
-					"translateUntranslatedOnly": true,
+					"scope": "untranslated",
 					"translateWithPerfectMatchOnly": true
 				},
 				"createdAt": "2023-09-20T14:05:50+00:00",
@@ -57,7 +57,7 @@ func TestTranslationsService_PreTranslationStatus(t *testing.T) {
 			AutoApproveOption:             ToPtr("all"),
 			DuplicateTranslations:         ToPtr(true),
 			SkipApprovedTranslations:      ToPtr(true),
-			TranslateUntranslatedOnly:     ToPtr(true),
+			Scope:                         ToPtr("untranslated"),
 			TranslateWithPerfectMatchOnly: ToPtr(true),
 		},
 		CreatedAt:  "2023-09-20T14:05:50+00:00",
@@ -195,7 +195,7 @@ func TestTranslationsService_ListPreTranslations(t *testing.T) {
 								"fallbackLanguages": null,
 								"duplicateTranslations": null,
 								"skipApprovedTranslations": null,
-								"translateUntranslatedOnly": null,
+								"scope": null,
 								"translateWithPerfectMatchOnly": null
 							},
 							"createdAt": "2024-11-10T19:14:37+00:00",
@@ -228,7 +228,7 @@ func TestTranslationsService_ListPreTranslations(t *testing.T) {
 					AutoApproveOption:             nil,
 					DuplicateTranslations:         nil,
 					SkipApprovedTranslations:      nil,
-					TranslateUntranslatedOnly:     nil,
+					Scope:                         nil,
 					TranslateWithPerfectMatchOnly: nil,
 				},
 				CreatedAt:  "2024-11-10T19:14:37+00:00",
@@ -267,7 +267,7 @@ func TestTranslationsService_EditPreTranslations(t *testing.T) {
 					"autoApproveOption": "all",
 					"duplicateTranslations": true,
 					"skipApprovedTranslations": true,
-					"translateUntranslatedOnly": true,
+					"scope": "untranslated",
 					"translateWithPerfectMatchOnly": true
 				},
 				"createdAt": "2023-09-20T14:05:50+00:00",
@@ -300,7 +300,7 @@ func TestTranslationsService_EditPreTranslations(t *testing.T) {
 			AutoApproveOption:             ToPtr("all"),
 			DuplicateTranslations:         ToPtr(true),
 			SkipApprovedTranslations:      ToPtr(true),
-			TranslateUntranslatedOnly:     ToPtr(true),
+			Scope:                         ToPtr("untranslated"),
 			TranslateWithPerfectMatchOnly: ToPtr(true),
 		},
 		CreatedAt:  "2023-09-20T14:05:50+00:00",
@@ -329,7 +329,7 @@ func TestTranslationsService_ApplyPreTranslation(t *testing.T) {
 			"autoApproveOption": "all",
 			"duplicateTranslations": true,
 			"skipApprovedTranslations": true,
-			"translateUntranslatedOnly": false,
+			"scope": "all",
 			"translateWithPerfectMatchOnly": true,
 			"fallbackLanguages": {
 			  	"languageId": ["uk"]
@@ -352,7 +352,7 @@ func TestTranslationsService_ApplyPreTranslation(t *testing.T) {
 					"autoApproveOption": "all",
 					"duplicateTranslations": true,
 					"skipApprovedTranslations": true,
-					"translateUntranslatedOnly": false,
+					"scope": "all",
 					"translateWithPerfectMatchOnly": true
 				},
 				"createdAt": "2023-09-20T14:05:50+00:00",
@@ -372,7 +372,7 @@ func TestTranslationsService_ApplyPreTranslation(t *testing.T) {
 		AutoApproveOption:             "all",
 		DuplicateTranslations:         ToPtr(true),
 		SkipApprovedTranslations:      ToPtr(true),
-		TranslateUntranslatedOnly:     ToPtr(false),
+		Scope:                         model.PreTranslationScopeAll,
 		TranslateWithPerfectMatchOnly: ToPtr(true),
 		FallbackLanguages: map[string][]string{
 			"languageId": {"uk"},
@@ -394,7 +394,7 @@ func TestTranslationsService_ApplyPreTranslation(t *testing.T) {
 			AutoApproveOption:             ToPtr("all"),
 			DuplicateTranslations:         ToPtr(true),
 			SkipApprovedTranslations:      ToPtr(true),
-			TranslateUntranslatedOnly:     ToPtr(false),
+			Scope:                         ToPtr("all"),
 			TranslateWithPerfectMatchOnly: ToPtr(true),
 		},
 		CreatedAt:  "2023-09-20T14:05:50+00:00",
@@ -1058,7 +1058,7 @@ func TestTranslationsService_BatchPreTranslation(t *testing.T) {
 							"autoApproveOption": "all",
 							"duplicateTranslations": true,
 							"skipApprovedTranslations": true,
-							"translateUntranslatedOnly": true,
+							"scope": "untranslated",
 							"translateWithPerfectMatchOnly": true,
 							"priority": "normal"
 						},
@@ -1094,7 +1094,7 @@ func TestTranslationsService_BatchPreTranslation(t *testing.T) {
 	autoApprove := "all"
 	duplicate := true
 	skipApproved := true
-	untranslatedOnly := true
+	scope := "untranslated"
 	perfectMatchOnly := true
 	priority := "normal"
 
@@ -1109,7 +1109,7 @@ func TestTranslationsService_BatchPreTranslation(t *testing.T) {
 			AutoApproveOption:             &autoApprove,
 			DuplicateTranslations:         &duplicate,
 			SkipApprovedTranslations:      &skipApproved,
-			TranslateUntranslatedOnly:     &untranslatedOnly,
+			Scope:                         &scope,
 			TranslateWithPerfectMatchOnly: &perfectMatchOnly,
 			Priority:                      &priority,
 		},
@@ -1121,4 +1121,584 @@ func TestTranslationsService_BatchPreTranslation(t *testing.T) {
 
 	assert.Equal(t, expected, result[0])
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestTranslationsService_ApplyPreTranslation_WithRetranslationOptions(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/pre-translations"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"languageIds": ["uk"],
+			"directoryIds": [12],
+			"branchIds": [18],
+			"method": "ai",
+			"aiPromptId": 3,
+			"scope": "translated",
+			"translationModifiedBefore": "2026-02-01T00:00:00+00:00",
+			"translationModifiedAfter": "2026-01-01T00:00:00+00:00",
+			"replaceTranslationsOption": "autoTranslated",
+			"resetApprovalStatus": true,
+			"notifyOnCompletion": true,
+			"minimumMatchRatio": 90,
+			"priority": "high",
+			"sourceLanguageId": "en",
+			"customInstruction": "Use formal tone"
+		}`)
+
+		w.WriteHeader(http.StatusAccepted)
+		fmt.Fprint(w, `{
+			"data": {
+				"identifier": "9e7de270-4f83-41cb-b606-2f90631f26e2",
+				"status": "created",
+				"progress": 0,
+				"attributes": {
+					"languageIds": ["uk"],
+					"directoryIds": [12],
+					"branchIds": [18],
+					"method": "ai",
+					"scope": "translated",
+					"translationModifiedBefore": "2026-02-01T00:00:00+00:00",
+					"translationModifiedAfter": "2026-01-01T00:00:00+00:00",
+					"replaceTranslationsOption": "autoTranslated",
+					"resetApprovalStatus": true,
+					"minimumMatchRatio": 90,
+					"priority": "high",
+					"notifyOnCompletion": true
+				},
+				"createdAt": "2026-01-20T14:05:50+00:00",
+				"updatedAt": "2026-01-20T14:05:50+00:00"
+			}
+		}`)
+	})
+
+	req := &model.PreTranslationRequest{
+		LanguageIDs:               []string{"uk"},
+		DirectoryIDs:              []int{12},
+		BranchIDs:                 []int{18},
+		Method:                    "ai",
+		AIPromptID:                3,
+		Scope:                     model.PreTranslationScopeTranslated,
+		TranslationModifiedBefore: "2026-02-01T00:00:00+00:00",
+		TranslationModifiedAfter:  "2026-01-01T00:00:00+00:00",
+		ReplaceTranslationsOption: model.ReplaceTranslationsOptionAutoTranslated,
+		ResetApprovalStatus:       ToPtr(true),
+		NotifyOnCompletion:        ToPtr(true),
+		MinimumMatchRatio:         90,
+		Priority:                  "high",
+		SourceLanguageID:          "en",
+		CustomInstruction:         "Use formal tone",
+	}
+	preTranslation, resp, err := client.Translations.ApplyPreTranslation(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+
+	expected := &model.PreTranslation{
+		Identifier: "9e7de270-4f83-41cb-b606-2f90631f26e2",
+		Status:     "created",
+		Progress:   0,
+		Attributes: &model.PreTranslationAttributes{
+			LanguageIDs:               []string{"uk"},
+			DirectoryIDs:              []int{12},
+			BranchIDs:                 []int{18},
+			Method:                    ToPtr("ai"),
+			Scope:                     ToPtr("translated"),
+			TranslationModifiedBefore: ToPtr("2026-02-01T00:00:00+00:00"),
+			TranslationModifiedAfter:  ToPtr("2026-01-01T00:00:00+00:00"),
+			ReplaceTranslationsOption: ToPtr("autoTranslated"),
+			ResetApprovalStatus:       ToPtr(true),
+			MinimumMatchRatio:         ToPtr(90),
+			Priority:                  ToPtr("high"),
+			NotifyOnCompletion:        ToPtr(true),
+		},
+		CreatedAt: "2026-01-20T14:05:50+00:00",
+		UpdatedAt: "2026-01-20T14:05:50+00:00",
+	}
+	assert.Equal(t, expected, preTranslation)
+}
+
+func TestTranslationsService_ApplyPreTranslation_ByTask(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/pre-translations"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testBody(t, r, `{"taskId":5,"method":"tm"}`+"\n")
+
+		w.WriteHeader(http.StatusAccepted)
+		fmt.Fprint(w, `{
+			"data": {
+				"identifier": "9e7de270-4f83-41cb-b606-2f90631f26e2",
+				"status": "created",
+				"progress": 0,
+				"attributes": {
+					"languageIds": ["uk"],
+					"taskId": 5,
+					"method": "tm"
+				},
+				"createdAt": "2026-01-20T14:05:50+00:00",
+				"updatedAt": "2026-01-20T14:05:50+00:00"
+			}
+		}`)
+	})
+
+	req := &model.PreTranslationRequest{TaskID: 5, Method: "tm"}
+	preTranslation, _, err := client.Translations.ApplyPreTranslation(context.Background(), 1, req)
+	require.NoError(t, err)
+
+	expected := &model.PreTranslationAttributes{
+		LanguageIDs: []string{"uk"},
+		TaskID:      ToPtr(5),
+		Method:      ToPtr("tm"),
+	}
+	assert.Equal(t, expected, preTranslation.Attributes)
+}
+
+func TestTranslationsService_ApplyPreTranslation_ValidationError(t *testing.T) {
+	client, _, teardown := setupClient()
+	defer teardown()
+
+	req := &model.PreTranslationRequest{
+		LanguageIDs:               []string{"uk"},
+		Scope:                     model.PreTranslationScopeUntranslated,
+		ReplaceTranslationsOption: model.ReplaceTranslationsOptionAll,
+	}
+	_, _, err := client.Translations.ApplyPreTranslation(context.Background(), 1, req)
+	require.EqualError(t, err, "replaceTranslationsOption requires scope to be translated or all")
+}
+
+func TestTranslationsService_ListPreTranslationsWithOptions(t *testing.T) {
+	tests := []struct {
+		name          string
+		opts          *model.PreTranslationsListOptions
+		expectedQuery string
+	}{
+		{
+			name:          "nil options",
+			opts:          nil,
+			expectedQuery: "",
+		},
+		{
+			name:          "empty options",
+			opts:          &model.PreTranslationsListOptions{},
+			expectedQuery: "",
+		},
+		{
+			name: "with options",
+			opts: &model.PreTranslationsListOptions{
+				OrderBy:     "createdAt desc",
+				ListOptions: model.ListOptions{Limit: 25, Offset: 10},
+			},
+			expectedQuery: "?limit=25&offset=10&orderBy=createdAt+desc",
+		},
+	}
+
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	for projectID, tt := range tests {
+		path := fmt.Sprintf("/api/v2/projects/%d/pre-translations", projectID)
+		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+			testMethod(t, r, http.MethodGet)
+			testURL(t, r, path+tt.expectedQuery)
+
+			fmt.Fprint(w, `{
+				"data": [
+					{
+						"data": {
+							"identifier": "9e7de270-4f83-41cb-b606-603627bfac41",
+							"status": "finished",
+							"progress": 100,
+							"attributes": {
+								"languageIds": ["uk"],
+								"scope": "all",
+								"notifyOnCompletion": false
+							},
+							"createdAt": "2024-11-10T19:14:37+00:00",
+							"updatedAt": "2024-11-10T19:14:45+00:00"
+						}
+					}
+				],
+				"pagination": {"offset": 10, "limit": 25}
+			}`)
+		})
+
+		preTranslations, resp, err := client.Translations.ListPreTranslationsWithOptions(context.Background(), projectID, tt.opts)
+		require.NoError(t, err)
+
+		expected := []*model.PreTranslation{
+			{
+				Identifier: "9e7de270-4f83-41cb-b606-603627bfac41",
+				Status:     "finished",
+				Progress:   100,
+				Attributes: &model.PreTranslationAttributes{
+					LanguageIDs:        []string{"uk"},
+					Scope:              ToPtr("all"),
+					NotifyOnCompletion: ToPtr(false),
+				},
+				CreatedAt: "2024-11-10T19:14:37+00:00",
+				UpdatedAt: "2024-11-10T19:14:45+00:00",
+			},
+		}
+		assert.Equal(t, expected, preTranslations)
+		assert.Equal(t, 10, resp.Pagination.Offset)
+		assert.Equal(t, 25, resp.Pagination.Limit)
+	}
+}
+
+func TestTranslationsService_ListPreTranslationsWithOptions_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/pre-translations", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	res, _, err := client.Translations.ListPreTranslationsWithOptions(context.Background(), 1, nil)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestTranslationsService_CheckBuildStatus_Failed(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/translations/builds/2"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2,
+				"projectId": 1,
+				"status": "failed",
+				"progress": 50,
+				"createdAt": "2023-09-19T15:10:43+00:00",
+				"updatedAt": "2023-09-19T15:10:46+00:00",
+				"finishedAt": null,
+				"error": {
+					"message": "Export failed: the exported file contains invalid data."
+				}
+			}
+		}`)
+	})
+
+	build, _, err := client.Translations.CheckBuildStatus(context.Background(), 1, 2)
+	require.NoError(t, err)
+
+	expected := &model.TranslationsProjectBuild{
+		ID:        2,
+		ProjectID: 1,
+		Status:    "failed",
+		Progress:  50,
+		CreatedAt: "2023-09-19T15:10:43+00:00",
+		UpdatedAt: "2023-09-19T15:10:46+00:00",
+		Error: &model.BuildError{
+			Message: "Export failed: the exported file contains invalid data.",
+		},
+	}
+	assert.Equal(t, expected, build)
+}
+
+func TestTranslationsService_ImportTranslations(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/translations/imports"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"storageId": 13,
+			"languageIds": ["uk", "de"],
+			"fileId": 2,
+			"importEqSuggestions": true,
+			"autoApproveImported": false,
+			"translateHidden": false,
+			"addToTm": false
+		}`)
+
+		w.WriteHeader(http.StatusAccepted)
+		fmt.Fprint(w, `{
+			"data": {
+				"identifier": "b5215a34-1305-4b21-8054-fc2eb252842f",
+				"status": "created",
+				"progress": 0,
+				"attributes": {
+					"storageId": 13,
+					"fileId": 2,
+					"importEqSuggestions": true,
+					"autoApproveImported": false,
+					"translateHidden": false,
+					"addToTm": false,
+					"languageIds": ["uk", "de"]
+				},
+				"createdAt": "2025-09-23T11:51:08+00:00",
+				"updatedAt": "2025-09-23T11:51:08+00:00",
+				"startedAt": null,
+				"finishedAt": null
+			}
+		}`)
+	})
+
+	req := &model.TranslationImportRequest{
+		StorageID:           13,
+		LanguageIDs:         []string{"uk", "de"},
+		FileID:              2,
+		ImportEqSuggestions: ToPtr(true),
+		AutoApproveImported: ToPtr(false),
+		TranslateHidden:     ToPtr(false),
+		AddToTM:             ToPtr(false),
+	}
+	importRes, resp, err := client.Translations.ImportTranslations(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+
+	expected := &model.TranslationImport{
+		Identifier: "b5215a34-1305-4b21-8054-fc2eb252842f",
+		Status:     "created",
+		Progress:   0,
+		Attributes: &model.TranslationImportAttributes{
+			StorageID:           13,
+			FileID:              2,
+			LanguageIDs:         []string{"uk", "de"},
+			ImportEqSuggestions: true,
+		},
+		CreatedAt: "2025-09-23T11:51:08+00:00",
+		UpdatedAt: "2025-09-23T11:51:08+00:00",
+	}
+	assert.Equal(t, expected, importRes)
+}
+
+func TestTranslationsService_ImportTranslations_StringBased(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/translations/imports"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testJSONBody(t, r, `{
+			"storageId": 13,
+			"branchId": 34,
+			"importOptions": {
+				"scheme": {"identifier": 0, "sourceOrTranslation": 1, "de": 2}
+			}
+		}`)
+
+		w.WriteHeader(http.StatusAccepted)
+		fmt.Fprint(w, `{
+			"data": {
+				"identifier": "b5215a34-1305-4b21-8054-fc2eb252842f",
+				"status": "created",
+				"progress": 0,
+				"attributes": {
+					"storageId": 13,
+					"branchId": 34,
+					"importEqSuggestions": false,
+					"autoApproveImported": false,
+					"translateHidden": false,
+					"addToTm": true,
+					"languageIds": []
+				},
+				"createdAt": "2025-09-23T11:51:08+00:00",
+				"updatedAt": "2025-09-23T11:51:08+00:00",
+				"startedAt": null,
+				"finishedAt": null
+			}
+		}`)
+	})
+
+	req := &model.TranslationImportRequest{
+		StorageID: 13,
+		BranchID:  34,
+		ImportOptions: &model.TranslationImportOptions{
+			Scheme: map[string]int{"identifier": 0, "sourceOrTranslation": 1, "de": 2},
+		},
+	}
+	importRes, _, err := client.Translations.ImportTranslations(context.Background(), 1, req)
+	require.NoError(t, err)
+
+	expected := &model.TranslationImportAttributes{
+		StorageID:   13,
+		BranchID:    34,
+		LanguageIDs: []string{},
+		AddToTM:     true,
+	}
+	assert.Equal(t, expected, importRes.Attributes)
+}
+
+func TestTranslationsService_ImportTranslations_ValidationError(t *testing.T) {
+	client, _, teardown := setupClient()
+	defer teardown()
+
+	_, _, err := client.Translations.ImportTranslations(context.Background(), 1, &model.TranslationImportRequest{})
+	require.EqualError(t, err, "storageId is required")
+
+	_, _, err = client.Translations.ImportTranslations(context.Background(), 1, nil)
+	require.ErrorIs(t, err, model.ErrNilRequest)
+}
+
+func TestTranslationsService_ImportTranslationsStatus(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/translations/imports/b5215a34-1305-4b21-8054-fc2eb252842f"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"identifier": "b5215a34-1305-4b21-8054-fc2eb252842f",
+				"status": "finished",
+				"progress": 100,
+				"attributes": {
+					"storageId": 13,
+					"fileId": 2,
+					"importEqSuggestions": true,
+					"autoApproveImported": true,
+					"translateHidden": true,
+					"addToTm": true,
+					"languageIds": ["uk"]
+				},
+				"createdAt": "2025-09-23T11:51:08+00:00",
+				"updatedAt": "2025-09-23T11:52:08+00:00",
+				"startedAt": "2025-09-23T11:51:10+00:00",
+				"finishedAt": "2025-09-23T11:52:08+00:00"
+			}
+		}`)
+	})
+
+	status, resp, err := client.Translations.ImportTranslationsStatus(context.Background(), 1, "b5215a34-1305-4b21-8054-fc2eb252842f")
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	expected := &model.TranslationImport{
+		Identifier: "b5215a34-1305-4b21-8054-fc2eb252842f",
+		Status:     "finished",
+		Progress:   100,
+		Attributes: &model.TranslationImportAttributes{
+			StorageID:           13,
+			FileID:              2,
+			LanguageIDs:         []string{"uk"},
+			ImportEqSuggestions: true,
+			AutoApproveImported: true,
+			TranslateHidden:     true,
+			AddToTM:             true,
+		},
+		CreatedAt:  "2025-09-23T11:51:08+00:00",
+		UpdatedAt:  "2025-09-23T11:52:08+00:00",
+		StartedAt:  ToPtr("2025-09-23T11:51:10+00:00"),
+		FinishedAt: ToPtr("2025-09-23T11:52:08+00:00"),
+	}
+	assert.Equal(t, expected, status)
+}
+
+func TestTranslationsService_ImportTranslationsStatus_NotFound(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/translations/imports/unknown"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprint(w, `{"error": {"code": 404, "message": "Import Not Found"}}`)
+	})
+
+	status, resp, err := client.Translations.ImportTranslationsStatus(context.Background(), 1, "unknown")
+	require.Error(t, err)
+
+	var errResponse *model.ErrorResponse
+	assert.ErrorAs(t, err, &errResponse)
+	assert.Equal(t, "404 Import Not Found", errResponse.Error())
+
+	assert.Nil(t, status)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+}
+
+func TestTranslationsService_ImportTranslationsReport(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/translations/imports/b5215a34-1305-4b21-8054-fc2eb252842f/report"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"languages": [
+					{
+						"id": "fr",
+						"files": [
+							{
+								"id": "10191",
+								"statistics": {"phrases": 6, "words": 45}
+							}
+						],
+						"skipped": {
+							"translationEqSource": 1,
+							"hiddenStrings": 2,
+							"qaCheck": 647
+						},
+						"skippedQaCheckCategories": {
+							"size": 1,
+							"duplicate": 648
+						}
+					},
+					{
+						"id": "de",
+						"branches": [
+							{
+								"id": "34",
+								"statistics": {"phrases": 3, "words": 12}
+							}
+						],
+						"skipped": {
+							"translationEqSource": 0,
+							"hiddenStrings": 0,
+							"qaCheck": 0
+						},
+						"skippedQaCheckCategories": null
+					}
+				]
+			}
+		}`)
+	})
+
+	report, resp, err := client.Translations.ImportTranslationsReport(context.Background(), 1, "b5215a34-1305-4b21-8054-fc2eb252842f")
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	expected := &model.TranslationImportReport{
+		Languages: []*model.TranslationImportReportLanguage{
+			{
+				ID: "fr",
+				Files: []*model.TranslationImportReportItem{
+					{ID: "10191", Statistics: &model.LanguageReportStatistics{Phrases: 6, Words: 45}},
+				},
+				Skipped: &model.TranslationImportReportSkipped{
+					TranslationEqSource: 1,
+					HiddenStrings:       2,
+					QACheck:             647,
+				},
+				SkippedQACheckCategories: map[string]int{"size": 1, "duplicate": 648},
+			},
+			{
+				ID: "de",
+				Branches: []*model.TranslationImportReportItem{
+					{ID: "34", Statistics: &model.LanguageReportStatistics{Phrases: 3, Words: 12}},
+				},
+				Skipped: &model.TranslationImportReportSkipped{},
+			},
+		},
+	}
+	assert.Equal(t, expected, report)
 }

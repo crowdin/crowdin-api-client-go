@@ -42,8 +42,12 @@ type DistributionAddRequest struct {
 	Name string `json:"name"`
 	// Export mode.
 	// Enum: default, bundle. Default: default.
+	//
+	// Deprecated: use BundleIDs instead. The `exportMode` parameter is deprecated in the API.
 	ExportMode ExportMode `json:"exportMode,omitempty"`
 	// Files ids. Required for `default` export mode.
+	//
+	// Deprecated: use BundleIDs instead. The `fileIds` parameter is deprecated in the API.
 	FileIDs []int `json:"fileIds,omitempty"`
 	// Bundles ids. Required for `bundle` export mode.
 	BundleIDs []int `json:"bundleIds,omitempty"`
@@ -75,6 +79,15 @@ type DistributionRelease struct {
 	CurrentLanguageID string `json:"currentLanguageId"`
 	Date              string `json:"date"`
 	CurrentFileID     int    `json:"currentFileId"`
+	// Current Branch Identifier (string-based projects).
+	CurrentBranchID *int `json:"currentBranchId,omitempty"`
+	// Error is present only when the release status is "failed".
+	Error *DistributionReleaseError `json:"error,omitempty"`
+}
+
+// DistributionReleaseError represents the error details of a failed distribution release.
+type DistributionReleaseError struct {
+	Message string `json:"message"`
 }
 
 // DistributionReleaseResponse defines the structure of the response when

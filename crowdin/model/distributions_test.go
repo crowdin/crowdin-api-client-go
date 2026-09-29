@@ -50,6 +50,14 @@ func TestDistributionAddRequestValidate(t *testing.T) {
 			},
 			valid: true,
 		},
+		{
+			name: "valid request without deprecated fields",
+			req: &DistributionAddRequest{
+				Name:      "Export Bundle",
+				BundleIDs: []int{45, 62},
+			},
+			valid: true,
+		},
 	}
 
 	for _, tt := range tests {

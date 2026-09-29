@@ -14,6 +14,12 @@ type Approval struct {
 	StringID      int        `json:"stringId"`
 	LanguageID    string     `json:"languageId"`
 	CreatedAt     string     `json:"createdAt"`
+	// File Identifier. Present for asset approvals.
+	FileID int `json:"fileId,omitempty"`
+	// Correction Identifier. Present for correction approvals (Crowdin Enterprise only).
+	CorrectionID int `json:"correctionId,omitempty"`
+	// Workflow Step Identifier (Crowdin Enterprise only).
+	WorkflowStepID int `json:"workflowStepId,omitempty"`
 }
 
 // ApprovalsGetResponse defines the structure of the response when
@@ -52,6 +58,10 @@ type ApprovalsListOptions struct {
 	// Translation Identifier.
 	// Note: If specified, `fileId`, `stringId` and `languageId` are ignored.
 	TranslationID int `json:"translationId,omitempty"`
+	// Correction Identifier.
+	// Note: Can't be used with `translationId`, `languageId`, `stringId` or `fileId`.
+	// Available only for Crowdin Enterprise projects with advanced workflow.
+	CorrectionID int `json:"correctionId,omitempty"`
 
 	ListOptions
 }
@@ -85,6 +95,9 @@ func (o *ApprovalsListOptions) Values() (url.Values, bool) {
 	}
 	if o.TranslationID > 0 {
 		v.Add("translationId", fmt.Sprintf("%d", o.TranslationID))
+	}
+	if o.CorrectionID > 0 {
+		v.Add("correctionId", fmt.Sprintf("%d", o.CorrectionID))
 	}
 
 	return v, len(v) > 0
@@ -149,12 +162,21 @@ func (r *TranslationAlignmentRequest) Validate() error {
 // LanguageTranslation represents a language translation.
 // Contains the plain, plural, or ICU translation.
 type LanguageTranslation struct {
-	StringID      int        `json:"stringId"`
-	ContentType   string     `json:"contentType"`
-	TranslationID *int       `json:"translationId,omitempty"`
-	Text          *string    `json:"text,omitempty"`
-	User          *ShortUser `json:"user,omitempty"`
-	CreatedAt     *string    `json:"createdAt,omitempty"`
+	StringID        int        `json:"stringId"`
+	ContentType     string     `json:"contentType"`
+	TranslationID   *int       `json:"translationId,omitempty"`
+	Text            *string    `json:"text,omitempty"`
+	User            *ShortUser `json:"user,omitempty"`
+	CreatedAt       *string    `json:"createdAt,omitempty"`
+	Provider        *string    `json:"provider,omitempty"`
+	ProviderID      *int       `json:"providerId,omitempty"`
+	IsPreTranslated *bool      `json:"isPreTranslated,omitempty"`
+	MatchRate       *int       `json:"matchRate,omitempty"`
+	MatchType       *string    `json:"matchType,omitempty"`
+	// QA Issues Status. Enum: inProgress, failed, passed.
+	QAIssuesStatus *string `json:"qaIssuesStatus,omitempty"`
+	// Asset URL. Present for asset translations.
+	URL *string `json:"url,omitempty"`
 
 	Plurals []*LanguageTranslationPlural `json:"plurals,omitempty"`
 }
@@ -162,11 +184,16 @@ type LanguageTranslation struct {
 // LanguageTranslationPlural represents a plural language translation
 // and is part of the LanguageTranslation.
 type LanguageTranslationPlural struct {
-	TranslationID int        `json:"translationId"`
-	Text          string     `json:"text"`
-	PluralForm    string     `json:"pluralForm"`
-	User          *ShortUser `json:"user"`
-	CreatedAt     string     `json:"createdAt"`
+	TranslationID   int        `json:"translationId"`
+	Text            string     `json:"text"`
+	PluralForm      string     `json:"pluralForm"`
+	User            *ShortUser `json:"user"`
+	CreatedAt       string     `json:"createdAt"`
+	Provider        *string    `json:"provider,omitempty"`
+	ProviderID      *int       `json:"providerId,omitempty"`
+	IsPreTranslated *bool      `json:"isPreTranslated,omitempty"`
+	MatchRate       *int       `json:"matchRate,omitempty"`
+	MatchType       *string    `json:"matchType,omitempty"`
 }
 
 // LanguageTranslationsGetResponse defines the structure of the response when
@@ -206,6 +233,17 @@ type LanguageTranslationsListOptions struct {
 	// Enable denormalize placeholders.
 	// Enum: 0, 1. Default: 0.
 	DenormalizePlaceholders *int `json:"denormalizePlaceholders,omitempty"`
+	// Only approved translations. Enum: 0, 1.
+	// Note: Can't be used with `croql` in the same request. Available only for Crowdin.
+	ApprovedOnly *int `json:"approvedOnly,omitempty"`
+	// Only translations that passed workflow. Enum: 0, 1.
+	// Note: Can't be used with `minApprovalCount` in the same request.
+	// Available only for Crowdin Enterprise.
+	PassedWorkflow *int `json:"passedWorkflow,omitempty"`
+	// Minimum approval count.
+	// Note: Can't be used with `passedWorkflow` in the same request.
+	// Available only for Crowdin Enterprise.
+	MinApprovalCount int `json:"minApprovalCount,omitempty"`
 
 	ListOptions
 }
@@ -244,6 +282,15 @@ func (o *LanguageTranslationsListOptions) Values() (url.Values, bool) {
 		(*o.DenormalizePlaceholders == 0 || *o.DenormalizePlaceholders == 1) {
 		v.Add("denormalizePlaceholders", fmt.Sprintf("%d", *o.DenormalizePlaceholders))
 	}
+	if o.ApprovedOnly != nil && (*o.ApprovedOnly == 0 || *o.ApprovedOnly == 1) {
+		v.Add("approvedOnly", fmt.Sprintf("%d", *o.ApprovedOnly))
+	}
+	if o.PassedWorkflow != nil && (*o.PassedWorkflow == 0 || *o.PassedWorkflow == 1) {
+		v.Add("passedWorkflow", fmt.Sprintf("%d", *o.PassedWorkflow))
+	}
+	if o.MinApprovalCount > 0 {
+		v.Add("minApprovalCount", fmt.Sprintf("%d", o.MinApprovalCount))
+	}
 
 	return v, len(v) > 0
 }
@@ -258,6 +305,101 @@ type Translation struct {
 	Provider           *string    `json:"provider,omitempty"`
 	IsPreTranslated    bool       `json:"isPreTranslated"`
 	CreatedAt          string     `json:"createdAt"`
+	// Provider specific identifier: a TM for `tm`, an AI Prompt for `ai`,
+	// an MT engine for machine translation providers.
+	ProviderID *int `json:"providerId,omitempty"`
+	// Translation Memory match rate in percent (40-100).
+	MatchRate *int `json:"matchRate,omitempty"`
+	// Translation Memory match type. Enum: perfect, exact, fuzzy.
+	MatchType *string `json:"matchType,omitempty"`
+	// Asset URL. Present for asset translations.
+	URL string `json:"url,omitempty"`
+	// Workflow Step Identifier (Crowdin Enterprise only).
+	WorkflowStepID int `json:"workflowStepId,omitempty"`
+}
+
+// SearchTranslation represents a translation found by the search.
+type SearchTranslation struct {
+	Translation
+
+	// Project Identifier.
+	ProjectID int `json:"projectId"`
+	// Source String Identifier.
+	StringID int `json:"stringId"`
+	// Target Language Identifier.
+	LanguageID string `json:"languageId"`
+}
+
+// SearchTranslationResponse defines the structure of the response when
+// getting a single found translation.
+type SearchTranslationResponse struct {
+	Data *SearchTranslation `json:"data"`
+}
+
+// SearchTranslationsListResponse defines the structure of the response when
+// searching translations.
+type SearchTranslationsListResponse struct {
+	Data []*SearchTranslationResponse `json:"data"`
+}
+
+// SearchTranslationsListOptions specifies the parameters to the
+// StringTranslationsService.SearchTranslations method.
+type SearchTranslationsListOptions struct {
+	// Search translations by text. Required.
+	Filter string `json:"filter"`
+	// Project identifiers to search across (max 50).
+	// Omit to search all accessible projects.
+	ProjectIDs []int `json:"projectIds,omitempty"`
+	// Owner (user) whose projects to search when `projectIds` is omitted.
+	// Note: Available only for Crowdin.
+	UserID int `json:"userId,omitempty"`
+	// Filter by target language identifiers.
+	LanguageIDs []string `json:"languageIds,omitempty"`
+	// Enable denormalize placeholders.
+	// Enum: 0, 1. Default: 0.
+	DenormalizePlaceholders *int `json:"denormalizePlaceholders,omitempty"`
+
+	ListOptions
+}
+
+// Values returns the url.Values representation of the SearchTranslationsListOptions.
+// It implements the crowdin.ListOptionsProvider interface.
+func (o *SearchTranslationsListOptions) Values() (url.Values, bool) {
+	if o == nil {
+		return nil, false
+	}
+
+	v, _ := o.ListOptions.Values()
+	if o.Filter != "" {
+		v.Add("filter", o.Filter)
+	}
+	if len(o.ProjectIDs) > 0 {
+		v.Add("projectIds", JoinSlice(o.ProjectIDs))
+	}
+	if o.UserID > 0 {
+		v.Add("userId", fmt.Sprintf("%d", o.UserID))
+	}
+	if len(o.LanguageIDs) > 0 {
+		v.Add("languageIds", JoinSlice(o.LanguageIDs))
+	}
+	if o.DenormalizePlaceholders != nil &&
+		(*o.DenormalizePlaceholders == 0 || *o.DenormalizePlaceholders == 1) {
+		v.Add("denormalizePlaceholders", fmt.Sprintf("%d", *o.DenormalizePlaceholders))
+	}
+
+	return v, len(v) > 0
+}
+
+// Validate checks if the SearchTranslationsListOptions are valid.
+func (o *SearchTranslationsListOptions) Validate() error {
+	if o == nil || o.Filter == "" {
+		return errors.New("filter is required")
+	}
+	if len(o.ProjectIDs) > 50 {
+		return errors.New("projectIds must not contain more than 50 items")
+	}
+
+	return nil
 }
 
 // TranslationGetResponse defines the structure of the response when
@@ -346,18 +488,33 @@ func (o *StringTranslationsListOptions) Values() (url.Values, bool) {
 type TranslationAddRequest struct {
 	// String Identifier.
 	// Note: Must be used together with `languageId`.
-	StringID int `json:"stringId"`
+	StringID int `json:"stringId,omitempty"`
 	// Language Identifier.
 	// Note: Must be used together with `stringId`.
 	LanguageID string `json:"languageId"`
 	// Translation text.
-	Text string `json:"text"`
+	Text string `json:"text,omitempty"`
 	// Plural form. Enum: zero, one, two, few, many, and other.
 	// Note: Will be saved only if the source string has plurals and `pluralCategoryName`
 	// is equal to the one available for the language you add translations to.
 	PluralCategoryName string `json:"pluralCategoryName,omitempty"`
 	// Defines whether to add translation to TM. Default: true.
 	AddToTM *bool `json:"addToTm,omitempty"`
+	// Translation provider type. Required when `providerId` or `isPreTranslated` is specified.
+	// Enum: tm, global_tm, google, microsoft, crowdin, deepl, amazon, google_automl,
+	// modernmt, custom_mt, ai.
+	// Note: `global_tm` value can't be used with `providerId` in the same request.
+	Provider string `json:"provider,omitempty"`
+	// Provider specific identifier (TM, AI Prompt or MT engine identifier).
+	// Note: Can't be used if `provider` value is `global_tm`.
+	ProviderID int `json:"providerId,omitempty"`
+	// Defines whether this is an auto-translated translation. Default: false.
+	IsPreTranslated *bool `json:"isPreTranslated,omitempty"`
+
+	// File Identifier. Used to add an asset translation together with `storageId`.
+	FileID int `json:"fileId,omitempty"`
+	// Storage Identifier. Used to add an asset translation together with `fileId`.
+	StorageID int `json:"storageId,omitempty"`
 }
 
 // Validate checks if the TranslationAddRequest is valid.
@@ -366,6 +523,21 @@ func (r *TranslationAddRequest) Validate() error {
 	if r == nil {
 		return errors.New("request cannot be nil")
 	}
+
+	// Asset translation.
+	if r.StorageID > 0 || r.FileID > 0 {
+		if r.FileID == 0 {
+			return errors.New("file ID is required")
+		}
+		if r.LanguageID == "" {
+			return errors.New("language ID is required")
+		}
+		if r.StorageID == 0 {
+			return errors.New("storage ID is required")
+		}
+		return nil
+	}
+
 	if r.StringID == 0 {
 		return errors.New("string ID is required")
 	}
@@ -374,6 +546,12 @@ func (r *TranslationAddRequest) Validate() error {
 	}
 	if r.Text == "" {
 		return errors.New("text is required")
+	}
+	if r.Provider == "" && (r.ProviderID > 0 || r.IsPreTranslated != nil) {
+		return errors.New("provider is required when providerId or isPreTranslated is specified")
+	}
+	if r.Provider == "global_tm" && r.ProviderID > 0 {
+		return errors.New("providerId can't be used with the global_tm provider")
 	}
 	return nil
 }
