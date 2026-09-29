@@ -64,22 +64,38 @@ func (s *TasksService) Add(ctx context.Context, projectID int, req model.TaskAdd
 //   - op (string): Operation to perform. Enum: replace, test.
 //   - path (string <json-pointer>): JSON path to the field to be updated. Enum: "/status", "/title",
 //     "/description", "/deadline", "/startedAt", "/resolvedAt", "/splitFiles", "/splitContent",
-//     "/fileIds", "/stringIds", "/assignees", "/dateFrom", "/dateTo", "/labelIds", "/excludeLabelIds".
+//     "/fileIds", "/directoryIds", "/branchIds", "/stringIds", "/assignees", "/dateFrom", "/dateTo",
+//     "/translationsUpdatedDateFrom", "/translationsUpdatedDateTo", "/labelIds", "/labelMatchRule",
+//     "/excludeLabelIds", "/excludeLabelMatchRule", "/skipAssignedStrings", "/resetScope",
+//     "/generateCostEstimate", "/generateTranslationCost", "/reportSettingsTemplateId", "/batchId".
+//     Enterprise also supports: "/assignedTeams", "/skipAssignedStringsScope", "/fields",
+//     "/fields/{fieldSlug}".
 //   - value (any): Value to be set. Enum: string, bool, array of integers, array of objects.
 //
 // 2. VendorTaskOperation
 //   - op (string): Operation to perform. Enum: replace, test.
 //   - path (string <json-pointer>): JSON path to the field to be updated.
-//     Enum: "/title", "/description", "/sttaus".
+//     Enum: "/title", "/description", "/status".
+//     Enterprise: "/title", "/description", "/fileIds", "/stringIds", "/dateFrom", "/dateTo",
+//     "/translationsUpdatedDateFrom", "/translationsUpdatedDateTo", "/deadline", "/startedAt",
+//     "/resolvedAt", "/labelIds", "/labelMatchRule", "/excludeLabelIds", "/excludeLabelMatchRule",
+//     "/generateCostEstimate", "/generateTranslationCost", "/reportSettingsTemplateId".
 //   - value (any): Value to be set. Enum: string, bool, array of integers, array of objects.
 //
-// 3. PendingTaskOperation
+// 3. InterOrganizationTaskOperation (Enterprise only)
 //   - op (string): Operation to perform. Enum: replace, test.
 //   - path (string <json-pointer>): JSON path to the field to be updated.
-//     Enum: "/title", "/description", "/assignees", "/deadline".
+//     Enum: "/assignee", "/assignedTeams", "/splitFiles", "/splitContent", "/status",
+//     "/generateCostEstimate", "/generateTranslationCost", "/reportSettingsTemplateId".
 //   - value (any): Value to be set. Enum: string, bool, array of integers, array of objects.
 //
-// 4. VendorPendingTaskOperation
+// 4. PendingTaskOperation
+//   - op (string): Operation to perform. Enum: replace, test.
+//   - path (string <json-pointer>): JSON path to the field to be updated.
+//     Enum: "/title", "/description", "/assignees", "/deadline". Enterprise also supports "/assignedTeams".
+//   - value (any): Value to be set. Enum: string, bool, array of integers, array of objects.
+//
+// 5. VendorPendingTaskOperation (Crowdin only)
 //   - op (string): Operation to perform. Enum: replace, test.
 //   - path (string <json-pointer>): JSON path to the field to be updated. Enum: "/title", "/description".
 //   - value (any): Value to be set. Enum: string, bool, array of integers, array of objects.
@@ -105,6 +121,35 @@ func (s *TasksService) Delete(ctx context.Context, projectID, taskID int) (*Resp
 func (s *TasksService) ListUserTasks(ctx context.Context, opts *model.UserTasksListOptions) ([]*model.Task, *Response, error) {
 	res := new(model.TasksListResponse)
 	resp, err := s.client.Get(ctx, "/api/v2/user/tasks", opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.Task, 0, len(res.Data))
+	for _, task := range res.Data {
+		list = append(list, task.Data)
+	}
+
+	return list, resp, err
+}
+
+// ListAll returns a list of tasks across projects.
+//
+// For the Crowdin client, it lists all of the user's project tasks
+// (GET /users/{userId}/tasks). For the Enterprise client, set the userID
+// to 0 to list all organization tasks (GET /tasks).
+//
+// https://support.crowdin.com/developer/api/v2/#operation/api.users.tasks.getMany
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.tasks.getMany
+func (s *TasksService) ListAll(ctx context.Context, userID int, opts *model.AllTasksListOptions) ([]*model.Task, *Response, error) {
+	path := fmt.Sprintf("/api/v2/users/%d/tasks", userID)
+	if userID == 0 && s.client.organization != "" {
+		path = "/api/v2/tasks"
+	}
+
+	res := new(model.TasksListResponse)
+	resp, err := s.client.Get(ctx, path, opts, res)
 	if err != nil {
 		return nil, resp, err
 	}

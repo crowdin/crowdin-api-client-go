@@ -1082,7 +1082,7 @@ func TestReportsService_GenerateOrganizationReport(t *testing.T) {
 							}
 						]
 					},
-					"excludeApprovalsForEditedTranslations":false,
+					"useTmEditDistance":false,
 					"groupBy":"user",
 					"dateFrom":"2023-09-23T11:26:54+00:00",
 					"dateTo":"2023-09-23T11:26:54+00:00",
@@ -1118,11 +1118,11 @@ func TestReportsService_GenerateOrganizationReport(t *testing.T) {
 					MTMatch:         []model.ReportNetRateSchemeMatch{{MatchType: "100", Price: 0.1}},
 					SuggestionMatch: []model.ReportNetRateSchemeMatch{{MatchType: "100", Price: 0.1}},
 				},
-				ExcludeApprovalsForEditedTranslations: ToPtr(false),
-				GroupBy:                               "user",
-				DateFrom:                              "2023-09-23T11:26:54+00:00",
-				DateTo:                                "2023-09-23T11:26:54+00:00",
-				UserIDs:                               []int{1, 2},
+				UseTmEditDistance: ToPtr(false),
+				GroupBy:           "user",
+				DateFrom:          "2023-09-23T11:26:54+00:00",
+				DateTo:            "2023-09-23T11:26:54+00:00",
+				UserIDs:           []int{1, 2},
 			},
 		}
 
@@ -1342,6 +1342,7 @@ func TestReportsService_GetUserSettingsTemplate(t *testing.T) {
 			NetRateSchemes: &model.ReportNetRateSchemes{
 				TMMatch:         []model.ReportNetRateSchemeMatch{{MatchType: "perfect", Price: 0.1}},
 				MTMatch:         []model.ReportNetRateSchemeMatch{{MatchType: "100", Price: 0.1}},
+				AIMatch:         []model.ReportNetRateSchemeMatch{{MatchType: "100", Price: 0.1}},
 				SuggestionMatch: []model.ReportNetRateSchemeMatch{{MatchType: "100", Price: 0.1}},
 			},
 		},
@@ -1572,4 +1573,405 @@ func TestReportsService_DeleteUserSettingsTemplate(t *testing.T) {
 	resp, err := client.Reports.DeleteUserSettingsTemplate(context.Background(), 1, 2)
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}
+
+func TestReportsService_Generate_newSchemaFields(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *model.ReportGenerateRequest
+		body string
+	}{
+		{
+			name: "time spent",
+			req: &model.ReportGenerateRequest{
+				Name: model.ReportTimeSpent,
+				Schema: &model.TimeSpentSchema{
+					Format:    model.ReportFormatJSON,
+					GroupBy:   "task",
+					BaseRates: &model.ReportBaseRates{Hourly: 10},
+					IndividualRates: []*model.ReportIndividualRates{
+						{LanguageIDs: []string{"uk"}, UserIDs: []int{1}, Hourly: 12.5},
+					},
+					TypeTasks:      ToPtr(0),
+					TaskIDs:        []int{3, 4},
+					WorkflowStepID: 313,
+					SkipArchiving:  ToPtr(true),
+				},
+			},
+			body: `{
+				"name": "time-spent",
+				"schema": {
+					"format": "json",
+					"groupBy": "task",
+					"baseRates": {"hourly": 10},
+					"individualRates": [{"languageIds": ["uk"], "userIds": [1], "hourly": 12.5}],
+					"typeTasks": 0,
+					"taskIds": [3, 4],
+					"workflowStepId": 313,
+					"skipArchiving": true
+				}
+			}`,
+		},
+		{
+			name: "translation costs with new options",
+			req: &model.ReportGenerateRequest{
+				Name: model.ReportTransactionCostsPostEditing,
+				Schema: &model.TransactionCostsPostEditingSchema{
+					BaseRates: &model.ReportBaseRates{FullTranslation: 0.1},
+					NetRateSchemes: &model.ReportNetRateSchemes{
+						TMMatch: []model.ReportNetRateSchemeMatch{{MatchType: "100", Price: 0.1}},
+						AIMatch: []model.ReportNetRateSchemeMatch{{MatchType: "99-82", Price: 0.2}},
+					},
+					UseCategoryBasedProofreadRates: ToPtr(true),
+					UseTmEditDistance:              ToPtr(false),
+					TaskIDs:                        []int{7},
+				},
+			},
+			body: `{
+				"name": "translation-costs-pe",
+				"schema": {
+					"baseRates": {"fullTranslation": 0.1},
+					"netRateSchemes": {
+						"tmMatch": [{"matchType": "100", "price": 0.1}],
+						"aiMatch": [{"matchType": "99-82", "price": 0.2}]
+					},
+					"useCategoryBasedProofreadRates": true,
+					"useTmEditDistance": false,
+					"taskIds": [7]
+				}
+			}`,
+		},
+		{
+			name: "pre-translate accuracy with match score categories",
+			req: &model.ReportGenerateRequest{
+				Name: model.ReportPreTranslateAccuracy,
+				Schema: &model.PreTranslateAccuracySchema{
+					MatchScoreCategories: []string{"100-90", "89-80"},
+					LabelIDs:             []int{1},
+					LabelIncludeType:     "strings_with_label",
+				},
+			},
+			body: `{
+				"name": "pre-translate-accuracy",
+				"schema": {
+					"matchScoreCategories": ["100-90", "89-80"],
+					"labelIds": [1],
+					"labelIncludeType": "strings_with_label"
+				}
+			}`,
+		},
+		{
+			name: "contribution raw data with ai prompts",
+			req: &model.ReportGenerateRequest{
+				Name: model.ReportContributionRawData,
+				Schema: &model.ContributionRawDataSchema{
+					Mode:        model.ReportModeTranslations,
+					AIPromptIDs: []int{5},
+				},
+			},
+			body: `{
+				"name": "contribution-raw-data",
+				"schema": {
+					"mode": "translations",
+					"aiPromptIds": [5]
+				}
+			}`,
+		},
+		{
+			name: "task usage",
+			req: &model.ReportGenerateRequest{
+				Name: model.ReportTaskUsage,
+				Schema: &model.TaskUsageSchema{
+					Format:   model.ReportFormatXLSX,
+					Type:     "cost",
+					Statuses: []string{"done", "closed"},
+				},
+			},
+			body: `{
+				"name": "task-usage",
+				"schema": {
+					"format": "xlsx",
+					"type": "cost",
+					"statuses": ["done", "closed"]
+				}
+			}`,
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client, mux, teardown := setupClient()
+			defer teardown()
+
+			path := fmt.Sprintf("/api/v2/projects/%d/reports", i+1)
+			mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+				testMethod(t, r, http.MethodPost)
+				testURL(t, r, path)
+				testJSONBody(t, r, tt.body)
+
+				fmt.Fprint(w, `{"data": {"identifier": "50fb3506-4127-4ba8-8296-f97dc7e3e0c3", "status": "created"}}`)
+			})
+
+			status, _, err := client.Reports.Generate(context.Background(), i+1, tt.req)
+			require.NoError(t, err)
+			assert.Equal(t, "50fb3506-4127-4ba8-8296-f97dc7e3e0c3", status.Identifier)
+		})
+	}
+}
+
+func TestReportsService_GenerateGroupReport_newSchemas(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *model.GroupReportGenerateRequest
+		body string
+	}{
+		{
+			name: "group time spent",
+			req: &model.GroupReportGenerateRequest{
+				Name: model.ReportGroupTimeSpent,
+				Schema: &model.GroupTimeSpentSchema{
+					Format:     model.ReportFormatCSV,
+					GroupBy:    "project",
+					BaseRates:  &model.ReportBaseRates{Hourly: 20},
+					ProjectIDs: []int{1, 2},
+				},
+			},
+			body: `{
+				"name": "group-time-spent",
+				"schema": {
+					"format": "csv",
+					"groupBy": "project",
+					"baseRates": {"hourly": 20},
+					"projectIds": [1, 2]
+				}
+			}`,
+		},
+		{
+			name: "group saving activity",
+			req: &model.GroupReportGenerateRequest{
+				Name: model.ReportGroupSavingActivity,
+				Schema: &model.GroupSavingActivitySchema{
+					Unit:       model.ReportUnitWords,
+					ProjectIDs: []int{1},
+					Mode:       "currency",
+				},
+			},
+			body: `{
+				"name": "group-saving-activity",
+				"schema": {
+					"unit": "words",
+					"projectIds": [1],
+					"mode": "currency"
+				}
+			}`,
+		},
+		{
+			name: "group translator accuracy",
+			req: &model.GroupReportGenerateRequest{
+				Name: model.ReportGroupTranslatorAccuracy,
+				Schema: &model.GroupTranslatorAccuracySchema{
+					MatchScoreCategories: []string{"100-50"},
+					UserIDs:              []int{3},
+					SkipArchiving:        ToPtr(false),
+				},
+			},
+			body: `{
+				"name": "group-translator-accuracy",
+				"schema": {
+					"matchScoreCategories": ["100-50"],
+					"userIds": [3],
+					"skipArchiving": false
+				}
+			}`,
+		},
+		{
+			name: "group pre-translate accuracy",
+			req: &model.GroupReportGenerateRequest{
+				Name: model.ReportGroupPreTranslateAccuracy,
+				Schema: &model.GroupPreTranslateAccuracySchema{
+					TaskIDs: []int{8},
+				},
+			},
+			body: `{
+				"name": "group-pre-translate-accuracy",
+				"schema": {"taskIds": [8]}
+			}`,
+		},
+		{
+			name: "group source content updates",
+			req: &model.GroupReportGenerateRequest{
+				Name: model.ReportGroupSourceContentUpdates,
+				Schema: &model.GroupSourceContentUpdatesSchema{
+					Unit:       model.ReportUnitStrings,
+					ProjectIDs: []int{4},
+				},
+			},
+			body: `{
+				"name": "group-source-content-updates",
+				"schema": {"unit": "strings", "projectIds": [4]}
+			}`,
+		},
+		{
+			name: "group task usage with statuses",
+			req: &model.GroupReportGenerateRequest{
+				Name: model.ReportGroupTaskUsage,
+				Schema: &model.GroupTaskUsageSchema{
+					Format:         model.ReportFormatJSON,
+					Type:           "time",
+					WordsCountFrom: 1,
+					WordsCountTo:   100,
+				},
+			},
+			body: `{
+				"name": "group-task-usage",
+				"schema": {"format": "json", "type": "time", "wordsCountFrom": 1, "wordsCountTo": 100}
+			}`,
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client, mux, teardown := setupClient()
+			defer teardown()
+
+			path := fmt.Sprintf("/api/v2/groups/%d/reports", i+1)
+			mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+				testMethod(t, r, http.MethodPost)
+				testURL(t, r, path)
+				testJSONBody(t, r, tt.body)
+
+				fmt.Fprint(w, `{"data": {"identifier": "50fb3506-4127-4ba8-8296-f97dc7e3e0c3", "status": "created"}}`)
+			})
+
+			status, _, err := client.Reports.GenerateGroupReport(context.Background(), i+1, tt.req)
+			require.NoError(t, err)
+			assert.Equal(t, "50fb3506-4127-4ba8-8296-f97dc7e3e0c3", status.Identifier)
+		})
+	}
+}
+
+func TestReportsService_ListArchives_withFilters(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/reports/archives"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?name=weekly&taskId=5&userId=3")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 12,
+						"scopeType": "project",
+						"scopeId": 35,
+						"userId": 3,
+						"name": "weekly",
+						"webUrl": "https://example.crowdin.com/u/reports/archives/12",
+						"scheme": {},
+						"status": "finished",
+						"progress": 100,
+						"createdAt": "2019-09-23T11:26:54+00:00"
+					}
+				}
+			]
+		}`)
+	})
+
+	opts := &model.ReportArchivesListOptions{UserID: 3, TaskID: 5, Name: "weekly"}
+	archives, _, err := client.Reports.ListArchives(context.Background(), 0, opts)
+	require.NoError(t, err)
+
+	expected := []*model.ReportArchive{
+		{
+			ID:        12,
+			ScopeType: "project",
+			ScopeID:   35,
+			UserID:    3,
+			Name:      "weekly",
+			WebURL:    "https://example.crowdin.com/u/reports/archives/12",
+			Scheme:    map[string]any{},
+			Status:    "finished",
+			Progress:  100,
+			CreatedAt: "2019-09-23T11:26:54+00:00",
+		},
+	}
+	assert.Equal(t, expected, archives)
+}
+
+func TestReportsService_AddSettingsTemplate_hourly(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/reports/settings-templates"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"name": "Hourly template",
+			"currency": "USD",
+			"unit": "hours",
+			"config": {
+				"baseRates": {"hourly": 10},
+				"individualRates": [{"languageIds": ["uk"], "userIds": [1], "hourly": 12}]
+			},
+			"groupId": 2
+		}`)
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 1,
+				"name": "Hourly template",
+				"currency": "USD",
+				"unit": "hours",
+				"config": {
+					"baseRates": {"hourly": 10},
+					"individualRates": [{"languageIds": ["uk"], "userIds": [1], "hourly": 12}],
+					"useCategoryBasedProofreadRates": false,
+					"useTmEditDistance": true
+				},
+				"groupId": 2,
+				"createdAt": "2019-09-23T11:26:54+00:00",
+				"updatedAt": null,
+				"isPublic": true
+			}
+		}`)
+	})
+
+	req := &model.ReportSettingsTemplateAddRequest{
+		Name:     "Hourly template",
+		Currency: "USD",
+		Unit:     model.ReportUnitHours,
+		Config: &model.ReportSettingsTemplateConfig{
+			BaseRates: &model.ReportBaseRates{Hourly: 10},
+			IndividualRates: []*model.ReportIndividualRates{
+				{LanguageIDs: []string{"uk"}, UserIDs: []int{1}, Hourly: 12},
+			},
+		},
+		GroupID: 2,
+	}
+	template, resp, err := client.Reports.AddSettingsTemplate(context.Background(), 0, req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	expected := &model.ReportSettingsTemplate{
+		ID:       1,
+		Name:     "Hourly template",
+		Currency: "USD",
+		Unit:     "hours",
+		Config: model.ReportSettingsTemplateConfig{
+			BaseRates: &model.ReportBaseRates{Hourly: 10},
+			IndividualRates: []*model.ReportIndividualRates{
+				{LanguageIDs: []string{"uk"}, UserIDs: []int{1}, Hourly: 12},
+			},
+			UseCategoryBasedProofreadRates: ToPtr(false),
+			UseTmEditDistance:              ToPtr(true),
+		},
+		GroupID:   2,
+		CreatedAt: "2019-09-23T11:26:54+00:00",
+		IsPublic:  true,
+	}
+	assert.Equal(t, expected, template)
 }

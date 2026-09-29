@@ -199,7 +199,27 @@ func (r *ProjectTeamAddRequest) Validate() error {
 // adding a team to the project.
 type ProjectTeamAddResponse struct {
 	Skipped *ProjectTeam `json:"skipped,omitempty"`
+	Updated *ProjectTeam `json:"updated,omitempty"`
 	Added   *ProjectTeam `json:"added,omitempty"`
+}
+
+// TeamProjectPermissions represents a team's permissions in a project.
+type TeamProjectPermissions struct {
+	ID      int               `json:"id"`
+	Roles   []*TranslatorRole `json:"roles"`
+	Project *Project          `json:"project"`
+}
+
+// TeamProjectPermissionsResponse defines the structure of the response
+// when getting a team's project permissions.
+type TeamProjectPermissionsResponse struct {
+	Data *TeamProjectPermissions `json:"data"`
+}
+
+// TeamProjectPermissionsListResponse defines the structure of the response
+// when getting a list of team's project permissions.
+type TeamProjectPermissionsListResponse struct {
+	Data []*TeamProjectPermissionsResponse `json:"data"`
 }
 
 // GroupsTeamsData defines the structure of the response when

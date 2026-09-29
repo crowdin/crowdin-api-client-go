@@ -21,6 +21,8 @@ type (
 		LanguagesDetails []*ConceptLanguagesDetails `json:"languagesDetails"`
 		CreatedAt        string                     `json:"createdAt"`
 		UpdatedAt        string                     `json:"updatedAt"`
+		// Custom fields (Enterprise only).
+		Fields any `json:"fields,omitempty"`
 	}
 
 	// ConceptLanguagesDetails represents the language details of a concept.
@@ -91,6 +93,9 @@ type (
 		Figure string `json:"figure,omitempty"`
 		// Concept languages details.
 		LanguagesDetails []*LanguagesDetails `json:"languagesDetails,omitempty"`
+		// Custom fields. Keys can be retrieved via the FieldsService.List method.
+		// Note: Enterprise only.
+		Fields map[string]any `json:"fields,omitempty"`
 	}
 
 	LanguagesDetails struct {
@@ -124,6 +129,7 @@ type Glossary struct {
 	LanguageIDs       []string `json:"languageIds"`
 	DefaultProjectIDs []int    `json:"defaultProjectIds"`
 	ProjectIDs        []int    `json:"projectIds"`
+	IsShared          bool     `json:"isShared"`
 	WebURL            string   `json:"webUrl"`
 	CreatedAt         string   `json:"createdAt"`
 }
@@ -152,6 +158,8 @@ type GlossariesListOptions struct {
 	GroupID *int `json:"groupId,omitempty"`
 	// List glossaries of specific user.
 	UserID int `json:"userId,omitempty"`
+	// Filter glossaries by name.
+	Filter string `json:"filter,omitempty"`
 
 	ListOptions
 }
@@ -174,6 +182,9 @@ func (o *GlossariesListOptions) Values() (url.Values, bool) {
 	if o.UserID != 0 {
 		v.Add("userId", fmt.Sprintf("%d", o.UserID))
 	}
+	if o.Filter != "" {
+		v.Add("filter", o.Filter)
+	}
 
 	return v, len(v) > 0
 }
@@ -188,6 +199,9 @@ type GlossaryAddRequest struct {
 	// If `0` – Glossary will be available for all projects and groups
 	// in your workspace. Default: 0.
 	GroupID *int `json:"groupId,omitempty"`
+	// Whether the glossary should be shared across all projects within
+	// the account (Crowdin) or the group (Crowdin Enterprise).
+	IsShared *bool `json:"isShared,omitempty"`
 }
 
 // Validate checks if the request is valid.
@@ -237,7 +251,46 @@ type GlossaryExportRequest struct {
 	// Default: ["term","description","partOfSpeech"]
 	// Enum: term, description, partOfSpeech, type, status, gender, note, url,
 	// conceptDefinition, conceptSubject, conceptNote, conceptUrl, conceptFigure.
+	// Enterprise also accepts custom fields: `field_{fieldSlug}` for a term field
+	// and `conceptField_{fieldSlug}` for a concept field.
+	// Note: Used for export CSV or XLSX format only.
 	ExportFields []string `json:"exportFields,omitempty"`
+	// Determines whether the export keeps every term of a matching concept
+	// (`concepts`) or only the terms that match the active filters (`terms`).
+	// Enum: concepts, terms. Default: concepts.
+	ExportType string `json:"exportType,omitempty"`
+	// Filter terms by text.
+	Text string `json:"text,omitempty"`
+	// Defines whether the text search is case sensitive. Default: false.
+	// Note: Must be used together with `text`.
+	CaseSensitive *bool `json:"caseSensitive,omitempty"`
+	// Defines whether to use strict text search. Default: false.
+	// Note: Must be used together with `text`.
+	SearchStrict *bool `json:"searchStrict,omitempty"`
+	// Defines whether to search for a full match of the text. Default: false.
+	// Note: Must be used together with `text`.
+	SearchFullMatch *bool `json:"searchFullMatch,omitempty"`
+	// Filter terms by one or more statuses.
+	// Enum: PREFERRED, ADMITTED, NOT_RECOMMENDED, OBSOLETE, DRAFT.
+	Statuses []string `json:"statuses,omitempty"`
+	// Filter terms by one or more parts of speech.
+	// Enum: NOUN, VERB, ADJ, PRON, PROPN, DET, ADV, ADP, CCONJ, SCONJ, NUM,
+	// INTJ, AUX, PRT, SYM, X.
+	PartsOfSpeech []string `json:"partsOfSpeech,omitempty"`
+	// Filter terms by one or more types.
+	// Enum: FULL_FORM, ACRONYM, ABBREVIATION, SHORT_FORM, PHRASE, VARIANT.
+	Types []string `json:"types,omitempty"`
+	// Filter terms by one or more genders.
+	// Enum: MASCULINE, FEMININE, NEUTER, COMMON, OTHER.
+	Genders []string `json:"genders,omitempty"`
+	// Filter terms by one or more authors. Up to 50 values.
+	AuthorIDs []int `json:"authorIds,omitempty"`
+	// Filter terms by one or more language identifiers. Up to 50 values.
+	LanguageIDs []string `json:"languageIds,omitempty"`
+	// Export date from in UTC, ISO 8601.
+	DateFrom string `json:"dateFrom,omitempty"`
+	// Export date to in UTC, ISO 8601.
+	DateTo string `json:"dateTo,omitempty"`
 }
 
 // Validate checks if the request is valid.
@@ -245,6 +298,18 @@ type GlossaryExportRequest struct {
 func (r *GlossaryExportRequest) Validate() error {
 	if r == nil {
 		return ErrNilRequest
+	}
+	if r.ExportType != "" && r.ExportType != "concepts" && r.ExportType != "terms" {
+		return fmt.Errorf("invalid exportType: %q, must be one of concepts, terms", r.ExportType)
+	}
+	if (r.CaseSensitive != nil || r.SearchStrict != nil || r.SearchFullMatch != nil) && r.Text == "" {
+		return errors.New("caseSensitive, searchStrict and searchFullMatch must be used together with text")
+	}
+	if len(r.AuthorIDs) > 50 {
+		return errors.New("authorIds cannot contain more than 50 values")
+	}
+	if len(r.LanguageIDs) > 50 {
+		return errors.New("languageIds cannot contain more than 50 values")
 	}
 
 	return nil
@@ -381,6 +446,27 @@ func (r *GlossaryConcordanceSearchRequest) Validate() error {
 	return nil
 }
 
+// GlossaryConcordanceSearchAllRequest defines the structure of a request
+// to search for concordance in all glossaries available to the user.
+type GlossaryConcordanceSearchAllRequest struct {
+	GlossaryConcordanceSearchRequest
+
+	// Owner (user) whose glossaries to search. Only glossaries you own or manage
+	// are searched. Defaults to your own account.
+	// Note: Crowdin only.
+	UserID int `json:"userId,omitempty"`
+}
+
+// Validate checks if the request is valid.
+// It implements the crowdin.RequestValidator interface.
+func (r *GlossaryConcordanceSearchAllRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
+
+	return r.GlossaryConcordanceSearchRequest.Validate()
+}
+
 // Term represents a term in a glossary.
 type Term struct {
 	ID           int    `json:"id"`
@@ -399,6 +485,8 @@ type Term struct {
 	Lemma        string `json:"lemma"`
 	CreatedAt    string `json:"createdAt"`
 	UpdatedAt    string `json:"updatedAt"`
+	// Custom fields (Enterprise only).
+	Fields any `json:"fields,omitempty"`
 }
 
 // TermResponse defines the structure of a response when
@@ -428,6 +516,9 @@ type TermsListOptions struct {
 	// Filter terms by `conceptId`.
 	// Note: Use for terms that have translations.
 	ConceptID int `json:"conceptId,omitempty"`
+	// Filter terms by `termId`.
+	// Note: Use for terms that have translations.
+	TranslationOfTermID int `json:"translationOfTermId,omitempty"`
 	// Filter strings by CroQL
 	// Note: Can be used only with orderBy, offset and limit in same request.
 	CroQL string `json:"croql,omitempty"`
@@ -455,6 +546,9 @@ func (o *TermsListOptions) Values() (url.Values, bool) {
 	}
 	if o.ConceptID != 0 {
 		v.Add("conceptId", fmt.Sprintf("%d", o.ConceptID))
+	}
+	if o.TranslationOfTermID != 0 {
+		v.Add("translationOfTermId", fmt.Sprintf("%d", o.TranslationOfTermID))
 	}
 	if o.CroQL != "" {
 		v.Add("croql", o.CroQL)
@@ -491,6 +585,9 @@ type TermAddRequest struct {
 	URL string `json:"url,omitempty"`
 	// Defines whether to add translation to the existing term.
 	ConceptID int `json:"conceptId,omitempty"`
+	// Custom fields. Keys can be retrieved via the FieldsService.List method.
+	// Note: Enterprise only.
+	Fields map[string]any `json:"fields,omitempty"`
 }
 
 // Validate checks if the request is valid.
@@ -516,6 +613,8 @@ type ClearGlossaryOptions struct {
 	LanguageID string `json:"languageId,omitempty"`
 	// Defines whether to delete specific term along with its translations.
 	ConceptID int `json:"conceptId,omitempty"`
+	// Defines whether to delete specific term along with its translations.
+	TranslationOfTermID int `json:"translationOfTermId,omitempty"`
 }
 
 // Values returns the url.Values representation of the ClearGlossaryOptions.
@@ -532,6 +631,9 @@ func (o *ClearGlossaryOptions) Values() (url.Values, bool) {
 	}
 	if o.ConceptID != 0 {
 		v.Add("conceptId", fmt.Sprintf("%d", o.ConceptID))
+	}
+	if o.TranslationOfTermID != 0 {
+		v.Add("translationOfTermId", fmt.Sprintf("%d", o.TranslationOfTermID))
 	}
 
 	return v, len(v) > 0

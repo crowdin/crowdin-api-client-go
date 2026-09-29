@@ -63,6 +63,11 @@ func TestQACheckListOptionsValues(t *testing.T) {
 				LanguageIDs: []string{"uk", "fr"}},
 			out: "category=variables%2Ctags&languageIds=uk%2Cfr&validation=spellcheck%2Cescaped_quotes_check%2Cmultiple_spaces_check",
 		},
+		{
+			name: "with taskId and fileId",
+			opts: &QACheckListOptions{TaskID: 5, FileID: 7, ListOptions: ListOptions{Limit: 10}},
+			out:  "fileId=7&limit=10&taskId=5",
+		},
 	}
 
 	for _, tt := range tests {
@@ -74,6 +79,87 @@ func TestQACheckListOptionsValues(t *testing.T) {
 			} else {
 				assert.False(t, ok)
 				assert.Empty(t, v.Encode())
+			}
+		})
+	}
+}
+
+func TestQACheckRevalidationRequestValidate(t *testing.T) {
+	tests := []struct {
+		name  string
+		req   *QACheckRevalidationRequest
+		err   string
+		valid bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name:  "empty request",
+			req:   &QACheckRevalidationRequest{},
+			valid: true,
+		},
+		{
+			name: "valid request",
+			req: &QACheckRevalidationRequest{QACheckCategories: []string{"ai"}, LanguageIDs: []string{"uk"},
+				FailedOnly: toPtr(true), ExternalQACheckIDs: []int{1}},
+			valid: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.req.Validate(); tt.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.err)
+			}
+		})
+	}
+}
+
+func TestQACheckValidateRequestValidate(t *testing.T) {
+	tests := []struct {
+		name  string
+		req   *QACheckValidateRequest
+		err   string
+		valid bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &QACheckValidateRequest{},
+			err:  "stringId is required",
+		},
+		{
+			name: "missing languageId",
+			req:  &QACheckValidateRequest{StringID: 1},
+			err:  "languageId is required",
+		},
+		{
+			name: "missing text",
+			req:  &QACheckValidateRequest{StringID: 1, LanguageID: "uk"},
+			err:  "text is required",
+		},
+		{
+			name:  "valid request",
+			req:   &QACheckValidateRequest{StringID: 1, LanguageID: "uk", Text: "Text", PluralCategoryName: "few"},
+			valid: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.req.Validate(); tt.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.err)
 			}
 		})
 	}

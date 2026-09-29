@@ -66,6 +66,9 @@ type TagListResponse struct {
 // ScreenshotListOptions specifies the optional parameters
 // to the ScreenshotsService.ListScreenshots method.
 type ScreenshotListOptions struct {
+	// Search screenshots by name, tagged strings or file names that
+	// include screenshots.
+	Search string `json:"search,omitempty"`
 	// Sort screenshots by specified field.
 	// Enum: id, name, tagsCount, createdAt, updatedAt. Default: id.
 	// Example: orderBy=createdAt desc,name,tagsCount
@@ -95,6 +98,9 @@ func (o *ScreenshotListOptions) Values() (url.Values, bool) {
 
 	v, _ := o.ListOptions.Values()
 
+	if o.Search != "" {
+		v.Add("search", o.Search)
+	}
 	if len(o.OrderBy) > 0 {
 		v.Add("orderBy", o.OrderBy)
 	}
@@ -177,6 +183,8 @@ type ScreenshotUpdateRequest struct {
 	StorageID int `json:"storageId"`
 	// Screenshot name.
 	Name string `json:"name"`
+	// Use previous tags. Default: true.
+	UsePreviousTags *bool `json:"usePreviousTags,omitempty"`
 }
 
 // Validate checks if the request is valid.

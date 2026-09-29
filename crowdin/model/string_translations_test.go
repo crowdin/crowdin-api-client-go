@@ -27,6 +27,11 @@ func TestApprovalsListOptionsValues(t *testing.T) {
 				ListOptions: ListOptions{Offset: 1, Limit: 10}},
 			out: "excludeLabelIds=3%2C4&fileId=1&labelIds=1%2C2&languageId=en&limit=10&offset=1&orderBy=createdAt+desc%2Cid&stringId=2&translationId=3",
 		},
+		{
+			name: "with correctionId",
+			opts: &ApprovalsListOptions{CorrectionID: 35},
+			out:  "correctionId=35",
+		},
 	}
 
 	for _, tt := range tests {
@@ -113,6 +118,25 @@ func TestLanguageTranslationsListOptionsValues(t *testing.T) {
 				FileID: 1, BranchID: 2, DirectoryID: 3, CroQL: "croql", DenormalizePlaceholders: toPtr(1),
 				ListOptions: ListOptions{Offset: 1, Limit: 10}},
 			out: "branchId=2&croql=croql&denormalizePlaceholders=1&directoryId=3&fileId=1&labelIds=1%2C2&limit=10&offset=1&orderBy=createdAt+desc%2Cid&stringIds=1%2C2",
+		},
+		{
+			name: "with approvedOnly",
+			opts: &LanguageTranslationsListOptions{ApprovedOnly: toPtr(1)},
+			out:  "approvedOnly=1",
+		},
+		{
+			name: "with invalid approvedOnly",
+			opts: &LanguageTranslationsListOptions{ApprovedOnly: toPtr(2)},
+		},
+		{
+			name: "with passedWorkflow",
+			opts: &LanguageTranslationsListOptions{PassedWorkflow: toPtr(0)},
+			out:  "passedWorkflow=0",
+		},
+		{
+			name: "with minApprovalCount",
+			opts: &LanguageTranslationsListOptions{MinApprovalCount: 2},
+			out:  "minApprovalCount=2",
 		},
 	}
 
@@ -244,6 +268,48 @@ func TestTranslationAddRequestValidate(t *testing.T) {
 				PluralCategoryName: "one", AddToTM: toPtr(true)},
 			valid: true,
 		},
+		{
+			name: "providerId without provider",
+			req:  &TranslationAddRequest{StringID: 123, LanguageID: "uk", Text: "Hello", ProviderID: 1},
+			err:  "provider is required when providerId or isPreTranslated is specified",
+		},
+		{
+			name: "isPreTranslated without provider",
+			req:  &TranslationAddRequest{StringID: 123, LanguageID: "uk", Text: "Hello", IsPreTranslated: toPtr(true)},
+			err:  "provider is required when providerId or isPreTranslated is specified",
+		},
+		{
+			name: "global_tm with providerId",
+			req: &TranslationAddRequest{StringID: 123, LanguageID: "uk", Text: "Hello",
+				Provider: "global_tm", ProviderID: 1},
+			err: "providerId can't be used with the global_tm provider",
+		},
+		{
+			name: "valid request with provider",
+			req: &TranslationAddRequest{StringID: 123, LanguageID: "uk", Text: "Hello",
+				Provider: "tm", ProviderID: 1, IsPreTranslated: toPtr(true)},
+			valid: true,
+		},
+		{
+			name: "asset translation without fileId",
+			req:  &TranslationAddRequest{LanguageID: "uk", StorageID: 5},
+			err:  "file ID is required",
+		},
+		{
+			name: "asset translation without languageId",
+			req:  &TranslationAddRequest{FileID: 4, StorageID: 5},
+			err:  "language ID is required",
+		},
+		{
+			name: "asset translation without storageId",
+			req:  &TranslationAddRequest{FileID: 4, LanguageID: "uk"},
+			err:  "storage ID is required",
+		},
+		{
+			name:  "valid asset translation",
+			req:   &TranslationAddRequest{FileID: 4, LanguageID: "uk", StorageID: 5},
+			valid: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -336,6 +402,93 @@ func TestVoteAddRequestValidate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.req.Validate(); tt.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.err)
+			}
+		})
+	}
+}
+
+func TestSearchTranslationsListOptionsValues(t *testing.T) {
+	tests := []struct {
+		name string
+		opts *SearchTranslationsListOptions
+		out  string
+	}{
+		{
+			name: "nil options",
+			opts: nil,
+		},
+		{
+			name: "empty options",
+			opts: &SearchTranslationsListOptions{},
+		},
+		{
+			name: "with filter",
+			opts: &SearchTranslationsListOptions{Filter: "Hello"},
+			out:  "filter=Hello",
+		},
+		{
+			name: "with all options",
+			opts: &SearchTranslationsListOptions{Filter: "Hello world", ProjectIDs: []int{1, 2}, UserID: 3,
+				LanguageIDs: []string{"uk", "de"}, DenormalizePlaceholders: toPtr(1),
+				ListOptions: ListOptions{Offset: 1, Limit: 10}},
+			out: "denormalizePlaceholders=1&filter=Hello+world&languageIds=uk%2Cde&limit=10&offset=1&projectIds=1%2C2&userId=3",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v, ok := tt.opts.Values()
+			if len(tt.out) > 0 {
+				assert.True(t, ok)
+				assert.Equal(t, tt.out, v.Encode())
+			} else {
+				assert.False(t, ok)
+				assert.Empty(t, v)
+			}
+		})
+	}
+}
+
+func TestSearchTranslationsListOptionsValidate(t *testing.T) {
+	tooManyProjects := make([]int, 51)
+	for i := range tooManyProjects {
+		tooManyProjects[i] = i + 1
+	}
+
+	tests := []struct {
+		name  string
+		opts  *SearchTranslationsListOptions
+		err   string
+		valid bool
+	}{
+		{
+			name: "nil options",
+			opts: nil,
+			err:  "filter is required",
+		},
+		{
+			name: "empty filter",
+			opts: &SearchTranslationsListOptions{ProjectIDs: []int{1}},
+			err:  "filter is required",
+		},
+		{
+			name: "too many projects",
+			opts: &SearchTranslationsListOptions{Filter: "Hello", ProjectIDs: tooManyProjects},
+			err:  "projectIds must not contain more than 50 items",
+		},
+		{
+			name:  "valid options",
+			opts:  &SearchTranslationsListOptions{Filter: "Hello", ProjectIDs: []int{1, 2}},
+			valid: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.opts.Validate(); tt.valid {
 				assert.NoError(t, err)
 			} else {
 				assert.EqualError(t, err, tt.err)

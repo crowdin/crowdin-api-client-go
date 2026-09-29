@@ -1244,3 +1244,554 @@ func TestSourceFilesService_BuildReviewedFiles(t *testing.T) {
 	assert.Equal(t, expected, build)
 	assert.NotNil(t, resp)
 }
+
+func TestSourceFilesService_DeleteDirectoryAsync(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/directories/4"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodDelete)
+		testURL(t, r, path)
+		testHeader(t, r, "Prefer", "respond-async")
+
+		w.WriteHeader(http.StatusAccepted)
+		fmt.Fprint(w, `{
+			"data": {
+				"identifier": "50fb3506-4127-4ba8-8296-f97dc7e3e0c3",
+				"status": "in_progress",
+				"progress": 10,
+				"attributes": {
+					"directoryId": 4
+				},
+				"createdAt": "2023-09-23T11:26:54+00:00",
+				"updatedAt": "2023-09-23T11:26:54+00:00",
+				"startedAt": "2023-09-23T11:26:54+00:00",
+				"finishedAt": null
+			}
+		}`)
+	})
+
+	job, resp, err := client.SourceFiles.DeleteDirectoryAsync(context.Background(), 1, 4)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+
+	expected := &model.NodeDeleteJob{
+		Identifier: "50fb3506-4127-4ba8-8296-f97dc7e3e0c3",
+		Status:     "in_progress",
+		Progress:   10,
+		Attributes: model.NodeDeleteJobAttributes{DirectoryID: ToPtr(4)},
+		CreatedAt:  "2023-09-23T11:26:54+00:00",
+		UpdatedAt:  "2023-09-23T11:26:54+00:00",
+		StartedAt:  "2023-09-23T11:26:54+00:00",
+	}
+	assert.Equal(t, expected, job)
+}
+
+func TestSourceFilesService_CheckDirectoryDeleteStatus(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/directories/4/jobs/50fb3506-4127-4ba8-8296-f97dc7e3e0c3"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"identifier": "50fb3506-4127-4ba8-8296-f97dc7e3e0c3",
+				"status": "finished",
+				"progress": 100,
+				"attributes": {
+					"directoryId": 4
+				},
+				"createdAt": "2023-09-23T11:26:54+00:00",
+				"updatedAt": "2023-09-23T11:26:54+00:00",
+				"startedAt": "2023-09-23T11:26:54+00:00",
+				"finishedAt": "2023-09-23T11:26:54+00:00"
+			}
+		}`)
+	})
+
+	job, _, err := client.SourceFiles.CheckDirectoryDeleteStatus(context.Background(), 1, 4, "50fb3506-4127-4ba8-8296-f97dc7e3e0c3")
+	require.NoError(t, err)
+
+	assert.Equal(t, "finished", job.Status)
+	assert.Equal(t, 100, job.Progress)
+	assert.Equal(t, ToPtr(4), job.Attributes.DirectoryID)
+	assert.Nil(t, job.Error)
+}
+
+func TestSourceFilesService_DeleteFileAsync(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/files/2"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodDelete)
+		testURL(t, r, path)
+		testHeader(t, r, "Prefer", "respond-async")
+
+		w.WriteHeader(http.StatusAccepted)
+		fmt.Fprint(w, `{
+			"data": {
+				"identifier": "50fb3506-4127-4ba8-8296-f97dc7e3e0c3",
+				"status": "created",
+				"progress": 0,
+				"attributes": {
+					"fileId": 2
+				},
+				"createdAt": "2023-09-23T11:26:54+00:00",
+				"updatedAt": "2023-09-23T11:26:54+00:00",
+				"startedAt": "2023-09-23T11:26:54+00:00",
+				"finishedAt": "2023-09-23T11:26:54+00:00"
+			}
+		}`)
+	})
+
+	job, resp, err := client.SourceFiles.DeleteFileAsync(context.Background(), 1, 2)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+
+	assert.Equal(t, "50fb3506-4127-4ba8-8296-f97dc7e3e0c3", job.Identifier)
+	assert.Equal(t, "created", job.Status)
+	assert.Equal(t, ToPtr(2), job.Attributes.FileID)
+	assert.Nil(t, job.Attributes.BranchID)
+	assert.Nil(t, job.Attributes.DirectoryID)
+}
+
+func TestSourceFilesService_CheckFileDeleteStatus(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/files/2/jobs/50fb3506-4127-4ba8-8296-f97dc7e3e0c3"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"identifier": "50fb3506-4127-4ba8-8296-f97dc7e3e0c3",
+				"status": "failed",
+				"progress": 0,
+				"attributes": {
+					"fileId": 2
+				},
+				"createdAt": "2023-09-23T11:26:54+00:00",
+				"updatedAt": "2023-09-23T11:26:54+00:00",
+				"startedAt": "2023-09-23T11:26:54+00:00",
+				"finishedAt": "2023-09-23T11:26:54+00:00",
+				"error": {
+					"message": "File is being processed by another process and could not be deleted."
+				}
+			}
+		}`)
+	})
+
+	job, _, err := client.SourceFiles.CheckFileDeleteStatus(context.Background(), 1, 2, "50fb3506-4127-4ba8-8296-f97dc7e3e0c3")
+	require.NoError(t, err)
+
+	assert.Equal(t, "failed", job.Status)
+	assert.Equal(t, ToPtr(2), job.Attributes.FileID)
+	assert.Equal(t, &model.NodeDeleteJobError{
+		Message: "File is being processed by another process and could not be deleted.",
+	}, job.Error)
+}
+
+func TestSourceFilesService_SearchDirectories(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/directories"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?filter=main&limit=25&projectIds=1%2C2")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 4,
+						"projectId": 1,
+						"branchId": 34,
+						"directoryId": null,
+						"name": "main",
+						"title": "<Description what's inside this directory>",
+						"exportPattern": "/localization/%locale%/file_name",
+						"path": "/main",
+						"priority": "normal",
+						"createdAt": "2023-09-16T13:48:04+00:00",
+						"updatedAt": "2023-09-19T13:25:27+00:00"
+					}
+				}
+			],
+			"pagination": {
+				"offset": 0,
+				"limit": 25
+			}
+		}`)
+	})
+
+	opts := &model.DirectoriesSearchOptions{
+		Filter:      "main",
+		ProjectIDs:  []int{1, 2},
+		ListOptions: model.ListOptions{Limit: 25},
+	}
+	dirs, resp, err := client.SourceFiles.SearchDirectories(context.Background(), opts)
+	require.NoError(t, err)
+
+	expected := []*model.Directory{
+		{
+			ID:            4,
+			ProjectID:     1,
+			BranchID:      ToPtr(34),
+			Name:          "main",
+			Title:         "<Description what's inside this directory>",
+			ExportPattern: "/localization/%locale%/file_name",
+			Path:          "/main",
+			Priority:      "normal",
+			CreatedAt:     "2023-09-16T13:48:04+00:00",
+			UpdatedAt:     "2023-09-19T13:25:27+00:00",
+		},
+	}
+	assert.Equal(t, expected, dirs)
+	assert.Equal(t, 25, resp.Pagination.Limit)
+}
+
+func TestSourceFilesService_SearchDirectories_invalidOptions(t *testing.T) {
+	client, _, teardown := setupClient()
+	defer teardown()
+
+	dirs, resp, err := client.SourceFiles.SearchDirectories(context.Background(), &model.DirectoriesSearchOptions{})
+	require.EqualError(t, err, "filter is required")
+	assert.Nil(t, dirs)
+	assert.Nil(t, resp)
+}
+
+func TestSourceFilesService_SearchFiles(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/files"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?filter=umbrella&userId=5")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 44,
+						"projectId": 2,
+						"branchId": null,
+						"directoryId": 4,
+						"name": "umbrella_app.xliff",
+						"title": "source_app_info",
+						"context": null,
+						"type": "xliff",
+						"path": "/directory1/directory2/umbrella_app.xliff",
+						"status": "active",
+						"revisionId": 1,
+						"priority": "normal",
+						"importOptions": null,
+						"exportOptions": null,
+						"excludedTargetLanguages": null,
+						"parserVersion": 1,
+						"createdAt": "2023-09-23T11:26:54+00:00",
+						"updatedAt": "2023-09-23T11:26:54+00:00"
+					}
+				}
+			],
+			"pagination": {
+				"offset": 0,
+				"limit": 25
+			}
+		}`)
+	})
+
+	files, _, err := client.SourceFiles.SearchFiles(context.Background(), &model.FilesSearchOptions{
+		Filter: "umbrella",
+		UserID: 5,
+	})
+	require.NoError(t, err)
+
+	expected := []*model.File{
+		{
+			ID:            44,
+			ProjectID:     2,
+			DirectoryID:   ToPtr(4),
+			Name:          "umbrella_app.xliff",
+			Title:         ToPtr("source_app_info"),
+			Type:          "xliff",
+			Path:          "/directory1/directory2/umbrella_app.xliff",
+			Status:        "active",
+			RevisionID:    1,
+			Priority:      "normal",
+			ParserVersion: ToPtr(1),
+			CreatedAt:     "2023-09-23T11:26:54+00:00",
+			UpdatedAt:     "2023-09-23T11:26:54+00:00",
+		},
+	}
+	assert.Equal(t, expected, files)
+}
+
+func TestSourceFilesService_SearchFiles_invalidOptions(t *testing.T) {
+	client, _, teardown := setupClient()
+	defer teardown()
+
+	files, resp, err := client.SourceFiles.SearchFiles(context.Background(), nil)
+	require.ErrorIs(t, err, model.ErrNilRequest)
+	assert.Nil(t, files)
+	assert.Nil(t, resp)
+}
+
+func TestSourceFilesService_AddFile_WithParserOptions(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/files"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"storageId": 61,
+			"name": "document.docx",
+			"importOptions": {
+				"cleanTagsAggressively": true,
+				"ignoreWhitespaceStyles": true,
+				"addLineSeparatorAsCharacter": true,
+				"lineSeparatorReplacement": "|",
+				"complexFieldDefinitionsToExtract": ["TOC"],
+				"wordHighlightColors": ["yellow"],
+				"translateExcelDrawings": false,
+				"contentSegmentation": true
+			},
+			"exportOptions": {
+				"exportPattern": "/%locale%/%file_name%.docx",
+				"allowWordStyleOptimization": false
+			}
+		}`)
+
+		fmt.Fprint(w, `{"data": {"id": 44, "projectId": 1, "name": "document.docx", "type": "docx"}}`)
+	})
+
+	req := &model.FileAddRequest{
+		StorageID: 61,
+		Name:      "document.docx",
+		ImportOptions: &model.DOCXFileImportOptions{
+			CleanTagsAggressively:            ToPtr(true),
+			IgnoreWhitespaceStyles:           ToPtr(true),
+			AddLineSeparatorAsCharacter:      ToPtr(true),
+			LineSeparatorReplacement:         "|",
+			ComplexFieldDefinitionsToExtract: []string{"TOC"},
+			WordHighlightColors:              []string{"yellow"},
+			TranslateExcelDrawings:           ToPtr(false),
+			CommonFileImportOptions: model.CommonFileImportOptions{
+				ContentSegmentation: ToPtr(true),
+			},
+		},
+		ExportOptions: &model.DOCXFileExportOptions{
+			ExportPattern:              "/%locale%/%file_name%.docx",
+			AllowWordStyleOptimization: ToPtr(false),
+		},
+	}
+	file, _, err := client.SourceFiles.AddFile(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.Equal(t, 44, file.ID)
+}
+
+func TestSourceFilesService_UpdateFile_WithMarkdownOptions(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/files/44"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPut)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"storageId": 61,
+			"importOptions": {
+				"excludeCodeBlocks": true,
+				"inlineTags": ["span"]
+			},
+			"exportOptions": {
+				"strongMarker": "underscore",
+				"frontMatterQuotes": "double"
+			}
+		}`)
+
+		fmt.Fprint(w, `{"data": {"id": 44, "projectId": 1, "name": "README.md", "type": "md"}}`)
+	})
+
+	req := &model.FileUpdateRestoreRequest{
+		StorageID: 61,
+		ImportOptions: &model.MDFileImportOptions{
+			ExcludeCodeBlocks: ToPtr(true),
+			InlineTags:        []string{"span"},
+		},
+		ExportOptions: &model.MDFileExportOptions{
+			StrongMarker:      "underscore",
+			FrontMatterQuotes: "double",
+		},
+	}
+	file, _, err := client.SourceFiles.UpdateOrRestoreFile(context.Background(), 1, 44, req)
+	require.NoError(t, err)
+	assert.Equal(t, 44, file.ID)
+}
+
+func TestSourceFilesService_ListAssetReferences(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/files/2/references"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?limit=10&offset=1")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 1,
+						"name": "design_reference.png",
+						"url": "https://example.com/design_reference.png",
+						"user": {
+							"id": 12,
+							"username": "john_smith",
+							"fullName": "John Smith",
+							"avatarUrl": ""
+						},
+						"createdAt": "2023-09-23T11:26:54+00:00",
+						"mimeType": "image/png"
+					}
+				}
+			],
+			"pagination": {
+				"offset": 1,
+				"limit": 10
+			}
+		}`)
+	})
+
+	refs, resp, err := client.SourceFiles.ListAssetReferences(context.Background(), 1, 2, &model.ListOptions{Limit: 10, Offset: 1})
+	require.NoError(t, err)
+
+	expected := []*model.AssetReference{
+		{
+			ID:   1,
+			Name: "design_reference.png",
+			URL:  "https://example.com/design_reference.png",
+			User: &model.ShortUser{
+				ID:       12,
+				Username: "john_smith",
+				FullName: "John Smith",
+			},
+			CreatedAt: "2023-09-23T11:26:54+00:00",
+			MimeType:  "image/png",
+		},
+	}
+	assert.Equal(t, expected, refs)
+	assert.Equal(t, model.Pagination{Offset: 1, Limit: 10}, resp.Pagination)
+}
+
+func TestSourceFilesService_ListAssetReferences_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/1/files/2/references", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	refs, _, err := client.SourceFiles.ListAssetReferences(context.Background(), 1, 2, nil)
+	require.Error(t, err)
+	assert.Nil(t, refs)
+}
+
+func TestSourceFilesService_GetAssetReference(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/files/2/references/3"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 3,
+				"name": "design_reference.png",
+				"url": "https://example.com/design_reference.png",
+				"user": {
+					"id": 12,
+					"username": "john_smith",
+					"fullName": "John Smith",
+					"avatarUrl": ""
+				},
+				"createdAt": "2023-09-23T11:26:54+00:00",
+				"mimeType": "image/png"
+			}
+		}`)
+	})
+
+	ref, _, err := client.SourceFiles.GetAssetReference(context.Background(), 1, 2, 3)
+	require.NoError(t, err)
+
+	assert.Equal(t, 3, ref.ID)
+	assert.Equal(t, "design_reference.png", ref.Name)
+	assert.Equal(t, "image/png", ref.MimeType)
+	assert.Equal(t, "john_smith", ref.User.Username)
+}
+
+func TestSourceFilesService_AddAssetReference(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/files/2/references"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{"storageId":67890,"name":"design_reference.png"}`)
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 3,
+				"name": "design_reference.png",
+				"url": "https://example.com/design_reference.png",
+				"createdAt": "2023-09-23T11:26:54+00:00",
+				"mimeType": "image/png"
+			}
+		}`)
+	})
+
+	req := &model.AssetReferenceAddRequest{StorageID: 67890, Name: "design_reference.png"}
+	ref, resp, err := client.SourceFiles.AddAssetReference(context.Background(), 1, 2, req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	assert.Equal(t, 3, ref.ID)
+}
+
+func TestSourceFilesService_AddAssetReference_invalidRequest(t *testing.T) {
+	client, _, teardown := setupClient()
+	defer teardown()
+
+	_, _, err := client.SourceFiles.AddAssetReference(context.Background(), 1, 2, &model.AssetReferenceAddRequest{Name: "ref.png"})
+	require.EqualError(t, err, "storageId is required")
+}
+
+func TestSourceFilesService_DeleteAssetReference(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/files/2/references/3"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodDelete)
+		testURL(t, r, path)
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	resp, err := client.SourceFiles.DeleteAssetReference(context.Background(), 1, 2, 3)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}

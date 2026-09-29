@@ -168,7 +168,7 @@ func TestDistributionsService_Add(t *testing.T) {
 	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodPost)
 		testURL(t, r, path)
-		testBody(t, r, `{"name":"Export Bundle","exportMode":"bundle","bundleIds":[45,62]}`+"\n")
+		testBody(t, r, `{"name":"Export Bundle","bundleIds":[45,62]}`+"\n")
 
 		w.WriteHeader(http.StatusCreated)
 		fmt.Fprint(w, `{
@@ -186,9 +186,8 @@ func TestDistributionsService_Add(t *testing.T) {
 	})
 
 	req := &model.DistributionAddRequest{
-		Name:       "Export Bundle",
-		ExportMode: model.ExportModeBundle,
-		BundleIDs:  []int{45, 62},
+		Name:      "Export Bundle",
+		BundleIDs: []int{45, 62},
 	}
 	distribution, resp, err := client.Distributions.Add(context.Background(), 1, req)
 	require.NoError(t, err)
@@ -309,6 +308,46 @@ func TestDistributionsService_GetRelease(t *testing.T) {
 				}
 			}`,
 			expected: &model.DistributionRelease{},
+		},
+		{
+			name: "string-based project",
+			jsonResp: `{
+				"data": {
+					"status": "inProgress",
+					"progress": 50,
+					"currentLanguageId": "uk",
+					"date": "2023-09-23T09:04:29+00:00",
+					"currentBranchId": 12
+				}
+			}`,
+			expected: &model.DistributionRelease{
+				Status:            "inProgress",
+				Progress:          50,
+				CurrentLanguageID: "uk",
+				Date:              "2023-09-23T09:04:29+00:00",
+				CurrentBranchID:   ToPtr(12),
+			},
+		},
+		{
+			name: "failed release",
+			jsonResp: `{
+				"data": {
+					"status": "failed",
+					"progress": 0,
+					"currentLanguageId": null,
+					"date": "2023-09-23T09:04:29+00:00",
+					"error": {
+						"message": "This distribution release has no bundles, or the bundles have been removed."
+					}
+				}
+			}`,
+			expected: &model.DistributionRelease{
+				Status: "failed",
+				Date:   "2023-09-23T09:04:29+00:00",
+				Error: &model.DistributionReleaseError{
+					Message: "This distribution release has no bundles, or the bundles have been removed.",
+				},
+			},
 		},
 	}
 

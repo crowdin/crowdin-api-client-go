@@ -161,6 +161,8 @@ func (s *TranslationsService) BuildProjectTranslation(ctx context.Context, proje
 
 // UploadTranslations uploads translations for a specific language in the project.
 //
+// Deprecated: use ImportTranslations instead.
+//
 // https://developer.crowdin.com/api/v2/#operation/api.projects.translations.postOnLanguage
 func (s *TranslationsService) UploadTranslations(ctx context.Context, projectID int, languageID string, req *model.UploadTranslationsRequest) (
 	*model.UploadTranslations, *Response, error,
@@ -232,4 +234,63 @@ func (s *TranslationsService) BatchPreTranslation(ctx context.Context, projectID
 	}
 
 	return list, resp, err
+}
+
+// ListPreTranslationsWithOptions returns a list of pre-translations for a specific project.
+// Unlike ListPreTranslations, it supports sorting via the `orderBy` query parameter.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Translations/operation/api.projects.pre-translations.getMany
+func (s *TranslationsService) ListPreTranslationsWithOptions(ctx context.Context, projectID int, opts *model.PreTranslationsListOptions) (
+	[]*model.PreTranslation, *Response, error,
+) {
+	res := new(model.PreTranslationsListResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/pre-translations", projectID), opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.PreTranslation, 0, len(res.Data))
+	for _, preTranslation := range res.Data {
+		list = append(list, preTranslation.Data)
+	}
+
+	return list, resp, nil
+}
+
+// ImportTranslations imports translations from a storage into the project.
+// It is an asynchronous operation. Use ImportTranslationsStatus to check the progress.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Translations/operation/api.projects.translations.imports
+func (s *TranslationsService) ImportTranslations(ctx context.Context, projectID int, req *model.TranslationImportRequest) (
+	*model.TranslationImport, *Response, error,
+) {
+	res := new(model.TranslationImportResponse)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/imports", projectID), req, res)
+
+	return res.Data, resp, err
+}
+
+// ImportTranslationsStatus returns the status of a translation import by its identifier.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Translations/operation/api.projects.translations.imports.get
+func (s *TranslationsService) ImportTranslationsStatus(ctx context.Context, projectID int, importID string) (
+	*model.TranslationImport, *Response, error,
+) {
+	res := new(model.TranslationImportResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/imports/%s", projectID, importID), nil, res)
+
+	return res.Data, resp, err
+}
+
+// ImportTranslationsReport returns the report of a translation import by its identifier.
+//
+// https://support.crowdin.com/developer/api/v2/#tag/Translations/operation/api.projects.translations.imports.report.get
+func (s *TranslationsService) ImportTranslationsReport(ctx context.Context, projectID int, importID string) (
+	*model.TranslationImportReport, *Response, error,
+) {
+	res := new(model.TranslationImportReportResponse)
+	path := fmt.Sprintf("/api/v2/projects/%d/translations/imports/%s/report", projectID, importID)
+	resp, err := s.client.Get(ctx, path, nil, res)
+
+	return res.Data, resp, err
 }

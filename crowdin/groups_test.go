@@ -342,3 +342,66 @@ func TestGroupService_Delete(t *testing.T) {
 		t.Errorf("Groups.Delete returned error: %v", err)
 	}
 }
+
+func TestGroupService_ListWithFilterAndOrderBy(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/groups", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, "/api/v2/groups?filter=KB&orderBy=name+desc")
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 1,
+						"name": "KB materials",
+						"savingsReportSettingsTemplateId": 3
+					}
+				}
+			],
+			"pagination": {
+				"offset": 0,
+				"limit": 25
+			}
+		}`)
+	})
+
+	groups, _, err := client.Groups.List(context.Background(), &model.GroupsListOptions{Filter: "KB", OrderBy: "name desc"})
+	require.NoError(t, err)
+
+	want := []*model.Group{
+		{
+			ID:                              1,
+			Name:                            "KB materials",
+			SavingsReportSettingsTemplateID: ToPtr(3),
+		},
+	}
+	assert.Equal(t, want, groups)
+}
+
+func TestGroupService_AddWithSavingsReportSettingsTemplate(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/groups", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, "/api/v2/groups")
+		testJSONBody(t, r, `{"name": "KB materials", "savingsReportSettingsTemplateId": 3}`)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 1,
+				"name": "KB materials",
+				"savingsReportSettingsTemplateId": 3
+			}
+		}`)
+	})
+
+	req := &model.GroupsAddRequest{Name: "KB materials", SavingsReportSettingsTemplateID: 3}
+	group, _, err := client.Groups.Add(context.Background(), req)
+	require.NoError(t, err)
+
+	want := &model.Group{ID: 1, Name: "KB materials", SavingsReportSettingsTemplateID: ToPtr(3)}
+	assert.Equal(t, want, group)
+}

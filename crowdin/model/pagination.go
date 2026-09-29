@@ -36,6 +36,8 @@ func (o *ListOptions) Values() (url.Values, bool) {
 type Pagination struct {
 	Offset int `json:"offset,omitempty"`
 	Limit  int `json:"limit,omitempty"`
+	// Total is the total number of items in the collection. Returned by some list endpoints only.
+	Total int `json:"total,omitempty"`
 }
 
 // PaginationResponse is the pagination response structure from the API.

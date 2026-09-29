@@ -71,6 +71,11 @@ func TestGlossariesListOptionsValues(t *testing.T) {
 			out:  "userId=1",
 		},
 		{
+			name: "with filter",
+			opts: &GlossariesListOptions{Filter: "Glossary"},
+			out:  "filter=Glossary",
+		},
+		{
 			name: "with all options",
 			opts: &GlossariesListOptions{OrderBy: "name", GroupID: toPtr(1),
 				ListOptions: ListOptions{Limit: 10, Offset: 5}},
@@ -117,6 +122,11 @@ func TestTermsListOptionsValues(t *testing.T) {
 			},
 			out: "conceptId=2&croql=croql&languageId=en&limit=10&offset=5&orderBy=name&userId=1",
 		},
+		{
+			name: "with translationOfTermId",
+			opts: &TermsListOptions{TranslationOfTermID: 3},
+			out:  "translationOfTermId=3",
+		},
 	}
 
 	for _, tt := range tests {
@@ -149,10 +159,11 @@ func TestClearGlossaryOptionsValues(t *testing.T) {
 		{
 			name: "with all options",
 			opts: &ClearGlossaryOptions{
-				LanguageID: "en",
-				ConceptID:  2,
+				LanguageID:          "en",
+				ConceptID:           2,
+				TranslationOfTermID: 3,
 			},
-			out: "conceptId=2&languageId=en",
+			out: "conceptId=2&languageId=en&translationOfTermId=3",
 		},
 	}
 
@@ -265,6 +276,61 @@ func TestGlossaryExportRequestValidate(t *testing.T) {
 			name:  "valid request",
 			req:   &GlossaryExportRequest{Format: "xlsx"},
 			valid: true,
+		},
+		{
+			name: "valid request with filters",
+			req: &GlossaryExportRequest{
+				Format:          "csv",
+				ExportType:      "terms",
+				Text:            "value",
+				CaseSensitive:   toPtr(true),
+				SearchStrict:    toPtr(false),
+				SearchFullMatch: toPtr(true),
+				Statuses:        []string{"PREFERRED", "ADMITTED"},
+				PartsOfSpeech:   []string{"NOUN", "VERB"},
+				Types:           []string{"ACRONYM"},
+				Genders:         []string{"MASCULINE"},
+				AuthorIDs:       []int{12, 34},
+				LanguageIDs:     []string{"uk", "de"},
+				DateFrom:        "2024-01-23T07:00:14+00:00",
+				DateTo:          "2024-09-27T07:00:14+00:00",
+			},
+			valid: true,
+		},
+		{
+			name:  "valid exportType concepts",
+			req:   &GlossaryExportRequest{ExportType: "concepts"},
+			valid: true,
+		},
+		{
+			name: "invalid exportType",
+			req:  &GlossaryExportRequest{ExportType: "all"},
+			err:  `invalid exportType: "all", must be one of concepts, terms`,
+		},
+		{
+			name: "caseSensitive without text",
+			req:  &GlossaryExportRequest{CaseSensitive: toPtr(true)},
+			err:  "caseSensitive, searchStrict and searchFullMatch must be used together with text",
+		},
+		{
+			name: "searchStrict without text",
+			req:  &GlossaryExportRequest{SearchStrict: toPtr(true)},
+			err:  "caseSensitive, searchStrict and searchFullMatch must be used together with text",
+		},
+		{
+			name: "searchFullMatch without text",
+			req:  &GlossaryExportRequest{SearchFullMatch: toPtr(false)},
+			err:  "caseSensitive, searchStrict and searchFullMatch must be used together with text",
+		},
+		{
+			name: "too many authorIds",
+			req:  &GlossaryExportRequest{AuthorIDs: make([]int, 51)},
+			err:  "authorIds cannot contain more than 50 values",
+		},
+		{
+			name: "too many languageIds",
+			req:  &GlossaryExportRequest{LanguageIDs: make([]string, 51)},
+			err:  "languageIds cannot contain more than 50 values",
 		},
 	}
 
@@ -400,6 +466,77 @@ func TestTermAddRequestValidate(t *testing.T) {
 		{
 			name:  "valid request",
 			req:   &TermAddRequest{LanguageID: "fr", Text: "term"},
+			valid: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.req.Validate(); tt.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.err)
+			}
+		})
+	}
+}
+
+func TestGlossaryConcordanceSearchAllRequestValidate(t *testing.T) {
+	tests := []struct {
+		name  string
+		req   *GlossaryConcordanceSearchAllRequest
+		err   string
+		valid bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &GlossaryConcordanceSearchAllRequest{},
+			err:  "sourceLanguageId is required",
+		},
+		{
+			name: "required fields missing (targetLanguageId)",
+			req: &GlossaryConcordanceSearchAllRequest{
+				GlossaryConcordanceSearchRequest: GlossaryConcordanceSearchRequest{SourceLanguageID: "en"},
+			},
+			err: "targetLanguageId is required",
+		},
+		{
+			name: "required fields missing (expressions)",
+			req: &GlossaryConcordanceSearchAllRequest{
+				GlossaryConcordanceSearchRequest: GlossaryConcordanceSearchRequest{
+					SourceLanguageID: "en",
+					TargetLanguageID: "de",
+				},
+				UserID: 1,
+			},
+			err: "expressions cannot be empty",
+		},
+		{
+			name: "valid request",
+			req: &GlossaryConcordanceSearchAllRequest{
+				GlossaryConcordanceSearchRequest: GlossaryConcordanceSearchRequest{
+					SourceLanguageID: "en",
+					TargetLanguageID: "de",
+					Expressions:      []string{"term"},
+				},
+			},
+			valid: true,
+		},
+		{
+			name: "valid request with userId",
+			req: &GlossaryConcordanceSearchAllRequest{
+				GlossaryConcordanceSearchRequest: GlossaryConcordanceSearchRequest{
+					SourceLanguageID: "en",
+					TargetLanguageID: "de",
+					Expressions:      []string{"term"},
+				},
+				UserID: 1,
+			},
 			valid: true,
 		},
 	}

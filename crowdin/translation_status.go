@@ -2,6 +2,7 @@ package crowdin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
@@ -73,6 +74,73 @@ func (s *TranslationStatusService) ListQAChecks(ctx context.Context, projectID i
 	}
 
 	issues := make([]*model.QACheck, 0, len(res.Data))
+	for _, i := range res.Data {
+		issues = append(issues, i.Data)
+	}
+
+	return issues, resp, nil
+}
+
+// RevalidateQAChecks triggers revalidation of QA checks for the project.
+// It is an asynchronous operation. Use GetQAChecksRevalidationStatus to check the progress.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.qa-checks.revalidate.post
+func (s *TranslationStatusService) RevalidateQAChecks(ctx context.Context, projectID int, req *model.QACheckRevalidationRequest) (
+	*model.QACheckRevalidation, *Response, error,
+) {
+	if req == nil {
+		req = &model.QACheckRevalidationRequest{}
+	}
+
+	res := new(model.QACheckRevalidationResponse)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/qa-checks/revalidate", projectID), req, res)
+
+	return res.Data, resp, err
+}
+
+// GetQAChecksRevalidationStatus returns the status of a QA checks revalidation job.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.qa-checks.revalidate.get
+func (s *TranslationStatusService) GetQAChecksRevalidationStatus(ctx context.Context, projectID int, revalidationID string) (
+	*model.QACheckRevalidation, *Response, error,
+) {
+	res := new(model.QACheckRevalidationResponse)
+	path := fmt.Sprintf("/api/v2/projects/%d/qa-checks/revalidate/%s", projectID, revalidationID)
+	resp, err := s.client.Get(ctx, path, nil, res)
+
+	return res.Data, resp, err
+}
+
+// CancelQAChecksRevalidation cancels a QA checks revalidation job.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.qa-checks.revalidate.delete
+func (s *TranslationStatusService) CancelQAChecksRevalidation(ctx context.Context, projectID int, revalidationID string) (*Response, error) {
+	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/qa-checks/revalidate/%s", projectID, revalidationID), nil)
+}
+
+// ValidateQAChecks validates text by QA checks without saving translations.
+// Returns the list of found QA check issues.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.translations.validate-qa-checks.post
+func (s *TranslationStatusService) ValidateQAChecks(ctx context.Context, projectID int, req []*model.QACheckValidateRequest) (
+	[]*model.QACheckValidation, *Response, error,
+) {
+	if len(req) == 0 {
+		return nil, nil, errors.New("request cannot be empty")
+	}
+	for _, r := range req {
+		if err := r.Validate(); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	res := new(model.QACheckValidationsResponse)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/translations/validate-qa-checks", projectID), req, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	issues := make([]*model.QACheckValidation, 0, len(res.Data))
 	for _, i := range res.Data {
 		issues = append(issues, i.Data)
 	}

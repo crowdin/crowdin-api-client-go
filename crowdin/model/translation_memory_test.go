@@ -26,6 +26,22 @@ func TestTranslationMemoriesListOptionsValues(t *testing.T) {
 				ListOptions: ListOptions{Limit: 10, Offset: 5}},
 			out: "limit=10&offset=5&orderBy=createdAt+desc%2Cname&userId=1",
 		},
+		{
+			name: "with filter",
+			opts: &TranslationMemoriesListOptions{Filter: "Knowledge Base"},
+			out:  "filter=Knowledge+Base",
+		},
+		{
+			name: "with groupId = 0",
+			opts: &TranslationMemoriesListOptions{GroupID: toPtr(0)},
+			out:  "groupId=0",
+		},
+		{
+			name: "with filter and groupId",
+			opts: &TranslationMemoriesListOptions{Filter: "TM", GroupID: toPtr(2),
+				ListOptions: ListOptions{Limit: 10}},
+			out: "filter=TM&groupId=2&limit=10",
+		},
 	}
 
 	for _, tt := range tests {
@@ -284,6 +300,69 @@ func TestTMSegmentCreateRequestValidate(t *testing.T) {
 		{
 			name:  "valid request",
 			req:   &TMSegmentCreateRequest{Records: []*TMSegmentCreateRecord{{LanguageID: "en", Text: "text"}}},
+			valid: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.req.Validate(); tt.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.err)
+			}
+		})
+	}
+}
+
+func TestTMConcordanceSearchAllRequestValidate(t *testing.T) {
+	tests := []struct {
+		name  string
+		req   *TMConcordanceSearchAllRequest
+		err   string
+		valid bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &TMConcordanceSearchAllRequest{},
+			err:  "sourceLanguageId is required",
+		},
+		{
+			name: "missing autoSubstitution",
+			req: &TMConcordanceSearchAllRequest{
+				TMConcordanceSearchRequest: TMConcordanceSearchRequest{SourceLanguageID: "en", TargetLanguageID: "de"},
+				UserID:                     1,
+			},
+			err: "autoSubstitution is required",
+		},
+		{
+			name: "missing expressions",
+			req: &TMConcordanceSearchAllRequest{
+				TMConcordanceSearchRequest: TMConcordanceSearchRequest{SourceLanguageID: "en", TargetLanguageID: "de",
+					AutoSubstitution: toPtr(true), MinRelevant: 60},
+			},
+			err: "expressions cannot be empty",
+		},
+		{
+			name: "valid request",
+			req: &TMConcordanceSearchAllRequest{
+				TMConcordanceSearchRequest: TMConcordanceSearchRequest{SourceLanguageID: "en", TargetLanguageID: "de",
+					AutoSubstitution: toPtr(false), MinRelevant: 60, Expressions: []string{"expression"}},
+			},
+			valid: true,
+		},
+		{
+			name: "valid request with userId",
+			req: &TMConcordanceSearchAllRequest{
+				TMConcordanceSearchRequest: TMConcordanceSearchRequest{SourceLanguageID: "en", TargetLanguageID: "de",
+					AutoSubstitution: toPtr(true), MinRelevant: 60, Expressions: []string{"expression"}},
+				UserID: 1,
+			},
 			valid: true,
 		},
 	}

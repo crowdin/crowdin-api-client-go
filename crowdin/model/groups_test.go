@@ -30,6 +30,16 @@ func TestGroupsListOptionsValues(t *testing.T) {
 			opts: &GroupsListOptions{ListOptions: ListOptions{Limit: 10, Offset: 5}},
 			out:  "limit=10&offset=5",
 		},
+		{
+			name: "with filter and orderBy",
+			opts: &GroupsListOptions{Filter: "KB", OrderBy: "createdAt desc,name"},
+			out:  "filter=KB&orderBy=createdAt+desc%2Cname",
+		},
+		{
+			name: "all options",
+			opts: &GroupsListOptions{ParentID: 1, Filter: "KB", OrderBy: "name", ListOptions: ListOptions{Limit: 10}},
+			out:  "filter=KB&limit=10&orderBy=name&parentId=1",
+		},
 	}
 
 	for _, tt := range tests {

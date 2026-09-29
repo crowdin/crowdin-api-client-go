@@ -60,7 +60,8 @@ func (s *BundlesService) Add(ctx context.Context, projectID int, req *model.Bund
 //   - op: The operation to perform. Enum: replace, test.
 //   - path (json-pointer): A JSON Pointer as defined by RFC 6901. Enum: "/name", "/format",
 //     "/sourcePatterns", "/ignorePatterns", "/exportPattern", "/isMultilingual", "/labelIds",
-//     "/includeProjectSourceLanguage", "/excludeLabelIds".
+//     "/includeProjectSourceLanguage", "/includeInContextPseudoLanguage", "/excludeLabelIds",
+//     "/labelMatchRule", "/excludeLabelMatchRule".
 //   - value: The value to be used within the operations.
 //     The value must be string or integer.
 //
@@ -102,6 +103,24 @@ func (s *BundlesService) Export(ctx context.Context, projectID, bundleID int) (
 ) {
 	res := new(model.BundleExportResponse)
 	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/bundles/%d/exports", projectID, bundleID), "", res)
+
+	return res.Data, resp, err
+}
+
+// ExportWithRequest starts the export process for the bundle with the given export options
+// (target languages, untranslated strings/files handling, approvals, workflow).
+// A nil request exports the bundle with the default options.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.bundles.exports.post
+func (s *BundlesService) ExportWithRequest(ctx context.Context, projectID, bundleID int, req *model.BundleExportRequest) (
+	*model.BundleExport, *Response, error,
+) {
+	if req == nil {
+		req = &model.BundleExportRequest{}
+	}
+
+	res := new(model.BundleExportResponse)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/bundles/%d/exports", projectID, bundleID), req, res)
 
 	return res.Data, resp, err
 }

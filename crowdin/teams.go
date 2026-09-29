@@ -143,10 +143,60 @@ func (s *TeamsService) AddToProject(ctx context.Context, projectID int, req *mod
 		return nil, resp, err
 	}
 
-	return map[string]*model.ProjectTeam{
+	result := map[string]*model.ProjectTeam{
 		"skipped": res.Skipped,
 		"added":   res.Added,
-	}, resp, nil
+	}
+	if res.Updated != nil {
+		result["updated"] = res.Updated
+	}
+
+	return result, resp, nil
+}
+
+// ListProjectsPermissions returns a list of the team's permissions in projects.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.teams.projects.permissions.getMany
+func (s *TeamsService) ListProjectsPermissions(ctx context.Context, teamID int, opts *model.ListOptions) (
+	[]*model.TeamProjectPermissions, *Response, error,
+) {
+	res := new(model.TeamProjectPermissionsListResponse)
+	resp, err := s.client.Get(ctx, fmt.Sprintf("/api/v2/teams/%d/projects/permissions", teamID), opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.TeamProjectPermissions, 0, len(res.Data))
+	for _, p := range res.Data {
+		list = append(list, p.Data)
+	}
+
+	return list, resp, err
+}
+
+// EditProjectsPermissions updates the team's permissions in projects (batch operations).
+//
+// Request body:
+//   - op (string): Operation to perform. Enum: add, replace, remove.
+//   - path (string <json-pointer>): Path to the field to update. Enum: "/{projectId}/roles".
+//   - value (array of roles): Roles to set. Required for `add` and `replace` operations.
+//
+// https://support.crowdin.com/developer/enterprise/api/v2/#operation/api.teams.projects.permissions.patch
+func (s *TeamsService) EditProjectsPermissions(ctx context.Context, teamID int, req []*model.UpdateRequest) (
+	[]*model.TeamProjectPermissions, *Response, error,
+) {
+	res := new(model.TeamProjectPermissionsListResponse)
+	resp, err := s.client.Patch(ctx, fmt.Sprintf("/api/v2/teams/%d/projects/permissions", teamID), req, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.TeamProjectPermissions, 0, len(res.Data))
+	for _, p := range res.Data {
+		list = append(list, p.Data)
+	}
+
+	return list, resp, err
 }
 
 // ListGroupTeams returns a list of groups teams.

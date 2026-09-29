@@ -66,7 +66,12 @@ func TestStringCommentsAddRequestValidate(t *testing.T) {
 		{
 			name: "missing stringId",
 			req:  &StringCommentsAddRequest{Text: "test text"},
-			err:  "stringId is required",
+			err:  "stringId or fileId is required",
+		},
+		{
+			name: "both stringId and fileId",
+			req:  &StringCommentsAddRequest{Text: "test text", StringID: 1, FileID: 2},
+			err:  "stringId and fileId cannot be used in the same request",
 		},
 		{
 			name: "missing targetLanguageId",
@@ -79,8 +84,31 @@ func TestStringCommentsAddRequestValidate(t *testing.T) {
 			err:  "type is required",
 		},
 		{
+			name: "attachment without id",
+			req: &StringCommentsAddRequest{Text: "test text", StringID: 1, TargetLanguageID: "en", Type: "comment",
+				Attachments: []*StringCommentAttachmentRequest{{ID: 1}, {}}},
+			err: "attachment id is required",
+		},
+		{
+			name: "nil attachment",
+			req: &StringCommentsAddRequest{Text: "test text", StringID: 1, TargetLanguageID: "en", Type: "comment",
+				Attachments: []*StringCommentAttachmentRequest{nil}},
+			err: "attachment id is required",
+		},
+		{
 			name:  "valid request",
 			req:   &StringCommentsAddRequest{Text: "test text", StringID: 1, TargetLanguageID: "en", Type: "comment"},
+			valid: true,
+		},
+		{
+			name: "valid request with attachments",
+			req: &StringCommentsAddRequest{Text: "test text", StringID: 1, TargetLanguageID: "en", Type: "comment",
+				Attachments: []*StringCommentAttachmentRequest{{ID: 1}, {ID: 2}}},
+			valid: true,
+		},
+		{
+			name:  "valid asset comment request",
+			req:   &StringCommentsAddRequest{Text: "test text", FileID: 2, TargetLanguageID: "en", Type: "issue"},
 			valid: true,
 		},
 	}

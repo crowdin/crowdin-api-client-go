@@ -17,15 +17,24 @@ type Group struct {
 	SubgroupsCount int    `json:"subgroupsCount"`
 	ProjectsCount  int    `json:"projectsCount"`
 	WebURL         string `json:"webUrl"`
-	CreatedAt      string `json:"createdAt"`
-	UpdatedAt      string `json:"updatedAt"`
+	// Report settings template identifier. Available only for group
+	// managers and organization admins.
+	SavingsReportSettingsTemplateID *int   `json:"savingsReportSettingsTemplateId,omitempty"`
+	CreatedAt                       string `json:"createdAt"`
+	UpdatedAt                       string `json:"updatedAt"`
 }
 
 // GroupsListOptions specifies the optional parameters to the GroupsService.List method.
 type GroupsListOptions struct {
 	ListOptions
 
+	// Parent group identifier.
 	ParentID int `json:"parentId,omitempty"`
+	// Sort a list of groups by a specified field.
+	// Example: orderBy=createdAt desc,name.
+	OrderBy string `json:"orderBy,omitempty"`
+	// Filter groups by `name`.
+	Filter string `json:"filter,omitempty"`
 }
 
 // Values returns the url.Values representation of the GroupsListOptions.
@@ -38,6 +47,12 @@ func (o *GroupsListOptions) Values() (url.Values, bool) {
 	v, _ := o.ListOptions.Values()
 	if o.ParentID > 0 {
 		v.Add("parentId", fmt.Sprintf("%d", o.ParentID))
+	}
+	if o.OrderBy != "" {
+		v.Add("orderBy", o.OrderBy)
+	}
+	if o.Filter != "" {
+		v.Add("filter", o.Filter)
 	}
 
 	return v, len(v) > 0
@@ -62,6 +77,8 @@ type GroupsAddRequest struct {
 	ParentID int `json:"parentId,omitempty"`
 	// Group description.
 	Description string `json:"description,omitempty"`
+	// Report settings template identifier.
+	SavingsReportSettingsTemplateID int `json:"savingsReportSettingsTemplateId,omitempty"`
 }
 
 // Validate checks if the add request is valid.

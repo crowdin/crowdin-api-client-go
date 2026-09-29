@@ -21,6 +21,11 @@ func TestScreenshotListOptionsValues(t *testing.T) {
 			opts: &ScreenshotListOptions{},
 		},
 		{
+			name: "with search",
+			opts: &ScreenshotListOptions{Search: "siri"},
+			out:  "search=siri",
+		},
+		{
 			name: "with all options",
 			opts: &ScreenshotListOptions{OrderBy: "createdAt desc,name,tagsCount", StringID: 1, // TODO: StringID is deprecated
 				LabelIDs: []string{"1", "2", "3"}, ExcludeLabelIDs: []string{"4", "5", "6"},

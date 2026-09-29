@@ -695,3 +695,44 @@ func TestLabelsService_UnassignFromScreenshots_WithValidationErrors(t *testing.T
 		assert.EqualError(t, err, tt.expectedErr)
 	}
 }
+
+func TestLabelsService_List_SystemLabels(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/labels"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?isSystem=1")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 34,
+						"title": "main",
+						"isShared": false,
+						"isSystem": true
+					}
+				}
+			],
+			"pagination": {
+				"offset": 0,
+				"limit": 25
+			}
+		}`)
+	})
+
+	labels, _, err := client.Labels.List(context.Background(), 1, &model.LabelsListOptions{IsSystem: ToPtr(1)})
+	require.NoError(t, err)
+
+	expected := []*model.Label{
+		{
+			ID:       34,
+			Title:    "main",
+			IsShared: ToPtr(false),
+			IsSystem: ToPtr(true),
+		},
+	}
+	assert.Equal(t, expected, labels)
+}

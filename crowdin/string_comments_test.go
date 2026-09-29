@@ -406,3 +406,213 @@ func getStringComment() *model.StringComment {
 		},
 	}
 }
+
+func TestStringCommentsService_Get_WithAttachments(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/comments/2"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, getJSONResponseWithAttachments())
+	})
+
+	comment, _, err := client.StringComments.Get(context.Background(), 1, 2)
+	require.NoError(t, err)
+
+	assert.Equal(t, 2, comment.ID)
+	assert.Equal(t, getStringCommentAttachments(), comment.Attachments)
+}
+
+func TestStringCommentsService_Get_AssetComment(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/comments/3"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 3,
+				"text": "Please check the layout",
+				"userId": 6,
+				"projectId": 1,
+				"languageId": "uk",
+				"type": "comment",
+				"createdAt": "2023-09-20T11:05:24+00:00",
+				"fileId": 22,
+				"file": {
+					"id": 22,
+					"name": "banner.png",
+					"type": "png",
+					"context": "Main banner"
+				}
+			}
+		}`)
+	})
+
+	comment, _, err := client.StringComments.Get(context.Background(), 1, 3)
+	require.NoError(t, err)
+
+	assert.Equal(t, ToPtr(22), comment.FileID)
+	assert.Equal(t, &model.StringCommentFile{ID: 22, Name: "banner.png", Type: "png", Context: "Main banner"}, comment.File)
+	assert.Nil(t, comment.String)
+}
+
+func TestStringCommentsService_Add_WithAttachments(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/comments"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testBody(t, r, `{"text":"test text","stringId":1,"targetLanguageId":"en","type":"comment","attachments":[{"id":61},{"id":62}]}`+"\n")
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, getJSONResponseWithAttachments())
+	})
+
+	req := &model.StringCommentsAddRequest{
+		Text:             "test text",
+		StringID:         1,
+		TargetLanguageID: "en",
+		Type:             "comment",
+		Attachments:      []*model.StringCommentAttachmentRequest{{ID: 61}, {ID: 62}},
+	}
+	comment, resp, err := client.StringComments.Add(context.Background(), 1, req)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	assert.Equal(t, getStringCommentAttachments(), comment.Attachments)
+}
+
+func TestStringCommentsService_Add_AssetComment(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/comments"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testBody(t, r, `{"text":"test text","fileId":22,"targetLanguageId":"en","type":"comment"}`+"\n")
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{"data": {"id": 3, "text": "test text", "fileId": 22}}`)
+	})
+
+	req := &model.StringCommentsAddRequest{
+		Text:             "test text",
+		FileID:           22,
+		TargetLanguageID: "en",
+		Type:             "comment",
+	}
+	comment, _, err := client.StringComments.Add(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.Equal(t, ToPtr(22), comment.FileID)
+}
+
+func TestStringCommentsService_DeleteAttachment(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/comments/2/attachments/10"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodDelete)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, getJSONResponse())
+	})
+
+	comment, resp, err := client.StringComments.DeleteAttachment(context.Background(), 1, 2, 10)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, getStringComment(), comment)
+}
+
+func TestStringCommentsService_DeleteAttachment_NotFound(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/comments/2/attachments/10"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodDelete)
+		http.Error(w, `{"error": {"code": 404, "message": "Attachment Not Found"}}`, http.StatusNotFound)
+	})
+
+	comment, resp, err := client.StringComments.DeleteAttachment(context.Background(), 1, 2, 10)
+	require.Error(t, err)
+
+	var errResponse *model.ErrorResponse
+	assert.ErrorAs(t, err, &errResponse)
+	assert.Equal(t, "404 Attachment Not Found", errResponse.Error())
+
+	assert.Nil(t, comment)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+}
+
+func getJSONResponseWithAttachments() string {
+	return `{
+		"data": {
+			"id": 2,
+			"text": "Please provide more details",
+			"userId": 6,
+			"stringId": 742,
+			"projectId": 1,
+			"languageId": "bg",
+			"type": "comment",
+			"createdAt": "2023-09-20T11:05:24+00:00",
+			"attachments": [
+				{
+					"id": 10,
+					"name": "screenshot.png",
+					"mime": "image/png",
+					"size": 12345,
+					"category": "image",
+					"thumbnailUrl": "https://example.com/thumbnail.png",
+					"url": "https://example.com/original.png",
+					"downloadUrl": "https://example.com/raw.png"
+				},
+				{
+					"id": 11,
+					"name": "notes.pdf",
+					"mime": "application/pdf",
+					"size": 100,
+					"category": "document",
+					"thumbnailUrl": null,
+					"url": "https://example.com/notes.pdf",
+					"downloadUrl": "https://example.com/notes-raw.pdf"
+				}
+			]
+		}
+	}`
+}
+
+func getStringCommentAttachments() []*model.StringCommentAttachment {
+	return []*model.StringCommentAttachment{
+		{
+			ID:           10,
+			Name:         "screenshot.png",
+			Mime:         "image/png",
+			Size:         12345,
+			Category:     "image",
+			ThumbnailURL: ToPtr("https://example.com/thumbnail.png"),
+			URL:          "https://example.com/original.png",
+			DownloadURL:  "https://example.com/raw.png",
+		},
+		{
+			ID:          11,
+			Name:        "notes.pdf",
+			Mime:        "application/pdf",
+			Size:        100,
+			Category:    "document",
+			URL:         "https://example.com/notes.pdf",
+			DownloadURL: "https://example.com/notes-raw.pdf",
+		},
+	}
+}

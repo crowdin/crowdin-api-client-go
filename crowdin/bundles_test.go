@@ -183,7 +183,12 @@ func TestBundlesService_Add(t *testing.T) {
 			"isMultilingual":false,
 			"includeProjectSourceLanguage":false,
 			"labelIds":[13,27],
-			"excludeLabelIds":[5,8]
+			"excludeLabelIds":[5,8],
+			"sourceLanguageExportPattern":"strings-source.resx",
+			"includeInContextPseudoLanguage":false,
+			"labelMatchRule":"any",
+			"excludeLabelMatchRule":"all",
+			"languageIds":["uk","de"]
 		}`)
 
 		w.WriteHeader(http.StatusCreated)
@@ -203,6 +208,11 @@ func TestBundlesService_Add(t *testing.T) {
 				"includeProjectSourceLanguage": false,
 				"labelIds": [13, 27],
 				"excludeLabelIds": [5, 8],
+				"includeInContextPseudoLanguage": false,
+				"sourceLanguageExportPattern": "strings-source.resx",
+				"labelMatchRule": "any",
+				"excludeLabelMatchRule": "all",
+				"languageIds": ["uk", "de"],
 				"webUrl": "https://crowdin.com/project/test/translations#bundles:100",
 				"createdAt": "2023-09-20T11:11:05+00:00",
 				"updatedAt": "2023-09-20T12:22:20+00:00"
@@ -220,6 +230,12 @@ func TestBundlesService_Add(t *testing.T) {
 		IncludeProjectSourceLanguage: ToPtr(false),
 		LabelIDs:                     []int{13, 27},
 		ExcludeLabelIDs:              []int{5, 8},
+
+		SourceLanguageExportPattern:    "strings-source.resx",
+		IncludeInContextPseudoLanguage: ToPtr(false),
+		LabelMatchRule:                 "any",
+		ExcludeLabelMatchRule:          "all",
+		LanguageIDs:                    []string{"uk", "de"},
 	}
 	bundle, resp, err := client.Bundles.Add(context.Background(), 2, req)
 	require.NoError(t, err)
@@ -239,6 +255,77 @@ func TestBundlesService_Add(t *testing.T) {
 		WebURL:                       "https://crowdin.com/project/test/translations#bundles:100",
 		CreatedAt:                    "2023-09-20T11:11:05+00:00",
 		UpdatedAt:                    "2023-09-20T12:22:20+00:00",
+
+		IncludeInContextPseudoLanguage: false,
+		SourceLanguageExportPattern:    ToPtr("strings-source.resx"),
+		LabelMatchRule:                 ToPtr("any"),
+		ExcludeLabelMatchRule:          ToPtr("all"),
+		LanguageIDs:                    []string{"uk", "de"},
+	}
+	assert.Equal(t, expected, bundle)
+}
+
+func TestBundlesService_Add_WithoutFormat(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/bundles"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"name":"Original format bundle",
+			"sourcePatterns":["/master"],
+			"ignorePatterns":null,
+			"isMultilingual":null,
+			"includeProjectSourceLanguage":null,
+			"labelIds":null,
+			"excludeLabelIds":null
+		}`)
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 1,
+				"name": "Original format bundle",
+				"format": null,
+				"sourcePatterns": ["/master"],
+				"ignorePatterns": [],
+				"exportPattern": null,
+				"isMultilingual": false,
+				"includeProjectSourceLanguage": false,
+				"includeInContextPseudoLanguage": true,
+				"labelMatchRule": null,
+				"excludeLabelMatchRule": null,
+				"languageIds": null,
+				"labelIds": [],
+				"excludeLabelIds": [],
+				"webUrl": "https://crowdin.com/project/test/translations#bundles:1",
+				"createdAt": "2023-09-20T11:11:05+00:00",
+				"updatedAt": "2023-09-20T12:22:20+00:00"
+			}
+		}`)
+	})
+
+	req := &model.BundleAddRequest{
+		Name:           "Original format bundle",
+		SourcePatterns: []string{"/master"},
+	}
+	bundle, resp, err := client.Bundles.Add(context.Background(), 2, req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	expected := &model.Bundle{
+		ID:                             1,
+		Name:                           "Original format bundle",
+		SourcePatterns:                 []string{"/master"},
+		IgnorePatterns:                 []string{},
+		LabelIDs:                       []int{},
+		ExcludeLabelIDs:                []int{},
+		IncludeInContextPseudoLanguage: true,
+		WebURL:                         "https://crowdin.com/project/test/translations#bundles:1",
+		CreatedAt:                      "2023-09-20T11:11:05+00:00",
+		UpdatedAt:                      "2023-09-20T12:22:20+00:00",
 	}
 	assert.Equal(t, expected, bundle)
 }
@@ -344,12 +431,115 @@ func TestBundlesService_Export(t *testing.T) {
 		Attributes: struct {
 			BundleID int `json:"bundleId"`
 		}{BundleID: 38},
-		CreatedAt:  "2023-09-23T11:26:54+00:00",
-		UpdatedAt:  "2023-09-23T11:26:54+00:00",
-		StartedAt:  "2023-09-23T11:26:54+00:00",
-		FinishedAt: "2023-09-23T11:26:54+00:00",
+		CreatedAt:        "2023-09-23T11:26:54+00:00",
+		UpdatedAt:        "2023-09-23T11:26:54+00:00",
+		StartedAt:        "2023-09-23T11:26:54+00:00",
+		FinishedAt:       "2023-09-23T11:26:54+00:00",
+		ExportAttributes: &model.BundleExportAttributes{BundleID: 38},
 	}
 	assert.Equal(t, expected, export)
+}
+
+func TestBundlesService_ExportWithRequest(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/bundles/3/exports"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"targetLanguageIds": ["uk", "de"],
+			"skipUntranslatedStrings": false,
+			"skipUntranslatedFiles": true,
+			"exportWithMinApprovalsCount": 0,
+			"exportStringsThatPassedWorkflow": true
+		}`)
+
+		w.WriteHeader(http.StatusAccepted)
+		fmt.Fprint(w, `{
+			"data": {
+				"identifier": "50fb3506-4127-4ba8-8296-f97dc7e3e0c3",
+				"status": "created",
+				"progress": 0,
+				"attributes": {
+					"bundleId": 3,
+					"targetLanguageIds": ["uk", "de"],
+					"skipUntranslatedStrings": false,
+					"skipUntranslatedFiles": true,
+					"exportWithMinApprovalsCount": 0,
+					"exportStringsThatPassedWorkflow": true
+				},
+				"createdAt": "2023-09-23T11:26:54+00:00",
+				"updatedAt": "2023-09-23T11:26:54+00:00",
+				"startedAt": null,
+				"finishedAt": null
+			}
+		}`)
+	})
+
+	req := &model.BundleExportRequest{
+		TargetLanguageIDs:               []string{"uk", "de"},
+		SkipUntranslatedStrings:         ToPtr(false),
+		SkipUntranslatedFiles:           ToPtr(true),
+		ExportWithMinApprovalsCount:     ToPtr(0),
+		ExportStringsThatPassedWorkflow: ToPtr(true),
+	}
+	export, resp, err := client.Bundles.ExportWithRequest(context.Background(), 2, 3, req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+
+	expected := &model.BundleExport{
+		Identifier: "50fb3506-4127-4ba8-8296-f97dc7e3e0c3",
+		Status:     "created",
+		Progress:   0,
+		Attributes: struct {
+			BundleID int `json:"bundleId"`
+		}{BundleID: 3},
+		CreatedAt: "2023-09-23T11:26:54+00:00",
+		UpdatedAt: "2023-09-23T11:26:54+00:00",
+		ExportAttributes: &model.BundleExportAttributes{
+			BundleID:                        3,
+			TargetLanguageIDs:               []string{"uk", "de"},
+			SkipUntranslatedStrings:         ToPtr(false),
+			SkipUntranslatedFiles:           ToPtr(true),
+			ExportWithMinApprovalsCount:     ToPtr(0),
+			ExportStringsThatPassedWorkflow: ToPtr(true),
+		},
+	}
+	assert.Equal(t, expected, export)
+}
+
+func TestBundlesService_ExportWithRequest_NilRequest(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/bundles/3/exports"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testBody(t, r, "{}\n")
+
+		w.WriteHeader(http.StatusAccepted)
+		fmt.Fprint(w, `{"data": {"identifier": "50fb3506-4127-4ba8-8296-f97dc7e3e0c3", "attributes": {"bundleId": 3}}}`)
+	})
+
+	export, _, err := client.Bundles.ExportWithRequest(context.Background(), 2, 3, nil)
+	require.NoError(t, err)
+	assert.Equal(t, "50fb3506-4127-4ba8-8296-f97dc7e3e0c3", export.Identifier)
+	assert.Equal(t, 3, export.Attributes.BundleID)
+	assert.Equal(t, 3, export.ExportAttributes.BundleID)
+}
+
+func TestBundlesService_ExportWithRequest_ValidationError(t *testing.T) {
+	client, _, teardown := setupClient()
+	defer teardown()
+
+	req := &model.BundleExportRequest{
+		SkipUntranslatedStrings: ToPtr(true),
+		SkipUntranslatedFiles:   ToPtr(true),
+	}
+	_, _, err := client.Bundles.ExportWithRequest(context.Background(), 2, 3, req)
+	require.EqualError(t, err, "skipUntranslatedStrings and skipUntranslatedFiles must not be true at the same request")
 }
 
 func TestBundlesService_Delete(t *testing.T) {
@@ -431,10 +621,11 @@ func TestBundlesService_CheckExportStatus(t *testing.T) {
 		Attributes: struct {
 			BundleID int `json:"bundleId"`
 		}{BundleID: 38},
-		CreatedAt:  "2023-09-23T11:26:54+00:00",
-		UpdatedAt:  "2023-09-23T11:26:54+00:00",
-		StartedAt:  "2023-09-23T11:26:54+00:00",
-		FinishedAt: "2023-09-23T11:26:54+00:00",
+		CreatedAt:        "2023-09-23T11:26:54+00:00",
+		UpdatedAt:        "2023-09-23T11:26:54+00:00",
+		StartedAt:        "2023-09-23T11:26:54+00:00",
+		FinishedAt:       "2023-09-23T11:26:54+00:00",
+		ExportAttributes: &model.BundleExportAttributes{BundleID: 38},
 	}
 	assert.Equal(t, expected, status)
 }

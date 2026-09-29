@@ -60,6 +60,23 @@ func (s *StringTranslationsService) AddApproval(ctx context.Context, projectID, 
 	return res.Data, resp, err
 }
 
+// AddCorrectionApproval adds a new approval for a correction.
+// Available only for Crowdin Enterprise projects with advanced workflow.
+//
+// https://developer.crowdin.com/enterprise/api/v2/#operation/api.projects.approvals.post
+func (s *StringTranslationsService) AddCorrectionApproval(ctx context.Context, projectID, correctionID int) (
+	*model.Approval, *Response, error,
+) {
+	req := struct {
+		CorrectionID int `json:"correctionId"`
+	}{CorrectionID: correctionID}
+
+	res := new(model.ApprovalsGetResponse)
+	resp, err := s.client.Post(ctx, fmt.Sprintf("/api/v2/projects/%d/approvals", projectID), req, res)
+
+	return res.Data, resp, err
+}
+
 // Approval Batch Operations
 //
 // Request body:
@@ -177,6 +194,33 @@ func (s *StringTranslationsService) ListStringTranslations(ctx context.Context, 
 	}
 
 	list := make([]*model.Translation, 0, len(res.Data))
+	for _, translation := range res.Data {
+		list = append(list, translation.Data)
+	}
+
+	return list, resp, nil
+}
+
+// SearchTranslations searches target-language translations by text across projects.
+// The `filter` option is required. Provide up to 50 `projectIds`, or omit them to
+// search all accessible projects. On Crowdin, `userId` can be used to search
+// another owner's accessible projects.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.translations.getMany
+func (s *StringTranslationsService) SearchTranslations(ctx context.Context, opts *model.SearchTranslationsListOptions) (
+	[]*model.SearchTranslation, *Response, error,
+) {
+	if err := opts.Validate(); err != nil {
+		return nil, nil, err
+	}
+
+	res := new(model.SearchTranslationsListResponse)
+	resp, err := s.client.Get(ctx, "/api/v2/translations", opts, res)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	list := make([]*model.SearchTranslation, 0, len(res.Data))
 	for _, translation := range res.Data {
 		list = append(list, translation.Data)
 	}

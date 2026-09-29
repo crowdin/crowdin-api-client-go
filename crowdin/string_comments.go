@@ -62,7 +62,7 @@ func (s *StringCommentsService) BatchOperations(ctx context.Context, projectID i
 
 // Get returns a string comment by its ID.
 //
-// https://developer.crowdin.com/api/v2/#operation/api.projects.comments.post
+// https://developer.crowdin.com/api/v2/#operation/api.projects.comments.get
 func (s *StringCommentsService) Get(ctx context.Context, projectID, commentID int) (
 	*model.StringComment, *Response, error,
 ) {
@@ -107,4 +107,18 @@ func (s *StringCommentsService) Edit(ctx context.Context, projectID, commentID i
 // https://developer.crowdin.com/api/v2/#operation/api.projects.comments.delete
 func (s *StringCommentsService) Delete(ctx context.Context, projectID, commentID int) (*Response, error) {
 	return s.client.Delete(ctx, fmt.Sprintf("/api/v2/projects/%d/comments/%d", projectID, commentID), nil)
+}
+
+// DeleteAttachment removes an attachment from a string comment.
+// It returns the updated string comment.
+//
+// https://developer.crowdin.com/api/v2/#operation/api.projects.comments.attachments.delete
+func (s *StringCommentsService) DeleteAttachment(ctx context.Context, projectID, commentID, attachmentID int) (
+	*model.StringComment, *Response, error,
+) {
+	path := fmt.Sprintf("/api/v2/projects/%d/comments/%d/attachments/%d", projectID, commentID, attachmentID)
+	res := new(model.StringCommentsResponse)
+	resp, err := s.client.Delete(ctx, path, res)
+
+	return res.Data, resp, err
 }

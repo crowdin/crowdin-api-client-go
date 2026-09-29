@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/crowdin/crowdin-api-client-go/crowdin/model"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBranchesService_List(t *testing.T) {
@@ -687,4 +689,274 @@ func TestBranchesService_CheckCloneStatus(t *testing.T) {
 	if !reflect.DeepEqual(status, want) {
 		t.Errorf("Branches.CheckCloneStatus returned %+v, want %+v", status, want)
 	}
+}
+
+func TestBranchesService_GetWithIsProtected(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/branches/34"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 34,
+				"projectId": 2,
+				"name": "develop-master",
+				"title": "Master branch",
+				"createdAt": "2023-09-16T13:48:04+00:00",
+				"updatedAt": "2023-09-19T13:25:27+00:00",
+				"isProtected": true
+			}
+		}`)
+	})
+
+	branch, _, err := client.Branches.Get(context.Background(), 2, 34)
+	require.NoError(t, err)
+	assert.Equal(t, &model.Branch{
+		ID:          34,
+		ProjectID:   2,
+		Name:        "develop-master",
+		Title:       "Master branch",
+		CreatedAt:   "2023-09-16T13:48:04+00:00",
+		UpdatedAt:   "2023-09-19T13:25:27+00:00",
+		IsProtected: ToPtr(true),
+	}, branch)
+}
+
+func TestBranchesService_AddWithIsProtected(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/branches"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{"name":"develop","isProtected":false}`)
+
+		fmt.Fprint(w, `{"data": {"id": 34, "projectId": 2, "name": "develop", "isProtected": false}}`)
+	})
+
+	branch, _, err := client.Branches.Add(context.Background(), 2, &model.BranchesAddRequest{
+		Name:        "develop",
+		IsProtected: ToPtr(false),
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 34, branch.ID)
+	assert.Equal(t, ToPtr(false), branch.IsProtected)
+}
+
+func TestBranchesService_CloneWithIsProtected(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/branches/34/clones"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{"name":"develop","isProtected":true}`)
+
+		fmt.Fprint(w, `{"data": {"identifier": "50fb3506-4127-4ba8-8296-f97dc7e3e0c3", "status": "finished"}}`)
+	})
+
+	clone, _, err := client.Branches.Clone(context.Background(), 2, 34, &model.BranchesCloneRequest{
+		Name:        "develop",
+		IsProtected: ToPtr(true),
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "50fb3506-4127-4ba8-8296-f97dc7e3e0c3", clone.Identifier)
+}
+
+func TestBranchesService_DeleteAsync(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/branches/34"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodDelete)
+		testURL(t, r, path)
+		testHeader(t, r, "Prefer", "respond-async")
+
+		w.WriteHeader(http.StatusAccepted)
+		fmt.Fprint(w, `{
+			"data": {
+				"identifier": "50fb3506-4127-4ba8-8296-f97dc7e3e0c3",
+				"status": "created",
+				"progress": 0,
+				"attributes": {
+					"branchId": 34
+				},
+				"createdAt": "2023-09-23T11:26:54+00:00",
+				"updatedAt": "2023-09-23T11:26:54+00:00",
+				"startedAt": "2023-09-23T11:26:54+00:00",
+				"finishedAt": "2023-09-23T11:26:54+00:00"
+			}
+		}`)
+	})
+
+	job, resp, err := client.Branches.DeleteAsync(context.Background(), 2, 34)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+
+	expected := &model.NodeDeleteJob{
+		Identifier: "50fb3506-4127-4ba8-8296-f97dc7e3e0c3",
+		Status:     "created",
+		Progress:   0,
+		Attributes: model.NodeDeleteJobAttributes{BranchID: ToPtr(34)},
+		CreatedAt:  "2023-09-23T11:26:54+00:00",
+		UpdatedAt:  "2023-09-23T11:26:54+00:00",
+		StartedAt:  "2023-09-23T11:26:54+00:00",
+		FinishedAt: "2023-09-23T11:26:54+00:00",
+	}
+	assert.Equal(t, expected, job)
+}
+
+func TestBranchesService_DeleteAsync_notFound(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/branches/34"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodDelete)
+		http.Error(w, `{"error": {"code": 404, "message": "Branch Not Found"}}`, http.StatusNotFound)
+	})
+
+	job, resp, err := client.Branches.DeleteAsync(context.Background(), 2, 34)
+	require.Error(t, err)
+
+	var errResponse *model.ErrorResponse
+	assert.ErrorAs(t, err, &errResponse)
+	assert.Equal(t, "404 Branch Not Found", errResponse.Error())
+
+	assert.Nil(t, job)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+}
+
+func TestBranchesService_CheckDeleteStatus(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/branches/34/jobs/50fb3506-4127-4ba8-8296-f97dc7e3e0c3"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"identifier": "50fb3506-4127-4ba8-8296-f97dc7e3e0c3",
+				"status": "failed",
+				"progress": 50,
+				"attributes": {
+					"branchId": 34
+				},
+				"createdAt": "2023-09-23T11:26:54+00:00",
+				"updatedAt": "2023-09-23T11:26:54+00:00",
+				"startedAt": "2023-09-23T11:26:54+00:00",
+				"finishedAt": "2023-09-23T11:26:54+00:00",
+				"error": {
+					"message": "2 files are being processed by another process and could not be deleted."
+				}
+			}
+		}`)
+	})
+
+	job, _, err := client.Branches.CheckDeleteStatus(context.Background(), 2, 34, "50fb3506-4127-4ba8-8296-f97dc7e3e0c3")
+	require.NoError(t, err)
+
+	assert.Equal(t, "failed", job.Status)
+	assert.Equal(t, 50, job.Progress)
+	assert.Equal(t, ToPtr(34), job.Attributes.BranchID)
+	assert.Nil(t, job.Attributes.FileID)
+	require.NotNil(t, job.Error)
+	assert.Equal(t, "2 files are being processed by another process and could not be deleted.", job.Error.Message)
+}
+
+func TestBranchesService_Search(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/branches"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?filter=develop&limit=10&offset=5&projectIds=1%2C2&userId=3")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 34,
+						"projectId": 1,
+						"name": "develop",
+						"title": "Develop branch",
+						"createdAt": "2023-09-16T13:48:04+00:00",
+						"updatedAt": "2023-09-19T13:25:27+00:00",
+						"exportPattern": "%_three_letters_code%",
+						"priority": "normal"
+					}
+				},
+				{
+					"data": {
+						"id": 35,
+						"projectId": 2,
+						"name": "develop",
+						"title": "Develop branch",
+						"createdAt": "2023-09-16T13:48:04+00:00",
+						"updatedAt": null,
+						"isProtected": true
+					}
+				}
+			],
+			"pagination": {
+				"offset": 5,
+				"limit": 10
+			}
+		}`)
+	})
+
+	opts := &model.BranchesSearchOptions{
+		Filter:      "develop",
+		ProjectIDs:  []int{1, 2},
+		UserID:      3,
+		ListOptions: model.ListOptions{Limit: 10, Offset: 5},
+	}
+	branches, resp, err := client.Branches.Search(context.Background(), opts)
+	require.NoError(t, err)
+
+	expected := []*model.Branch{
+		{
+			ID:            34,
+			ProjectID:     1,
+			Name:          "develop",
+			Title:         "Develop branch",
+			CreatedAt:     "2023-09-16T13:48:04+00:00",
+			UpdatedAt:     "2023-09-19T13:25:27+00:00",
+			ExportPattern: ToPtr("%_three_letters_code%"),
+			Priority:      ToPtr("normal"),
+		},
+		{
+			ID:          35,
+			ProjectID:   2,
+			Name:        "develop",
+			Title:       "Develop branch",
+			CreatedAt:   "2023-09-16T13:48:04+00:00",
+			IsProtected: ToPtr(true),
+		},
+	}
+	assert.Equal(t, expected, branches)
+	assert.Equal(t, model.Pagination{Offset: 5, Limit: 10}, resp.Pagination)
+}
+
+func TestBranchesService_Search_invalidOptions(t *testing.T) {
+	client, _, teardown := setupClient()
+	defer teardown()
+
+	branches, resp, err := client.Branches.Search(context.Background(), nil)
+	require.ErrorIs(t, err, model.ErrNilRequest)
+	assert.Nil(t, branches)
+	assert.Nil(t, resp)
+
+	_, _, err = client.Branches.Search(context.Background(), &model.BranchesSearchOptions{})
+	require.EqualError(t, err, "filter is required")
 }

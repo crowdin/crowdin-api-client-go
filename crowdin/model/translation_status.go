@@ -1,18 +1,33 @@
 package model
 
-import "net/url"
+import (
+	"errors"
+	"fmt"
+	"net/url"
+)
 
 // TranslationProgress defines the structure of a translations status progress.
 type TranslationProgress struct {
-	Words               map[string]int `json:"words"`
-	Phrases             map[string]int `json:"phrases"`
-	TranslationProgress int            `json:"translationProgress"`
-	ApprovalProgress    int            `json:"approvalProgress"`
-	LanguageID          *string        `json:"languageId,omitempty"`
-	BranchID            *int           `json:"branchId,omitempty"`
-	FileID              *int           `json:"fileId,omitempty"`
-	Language            *Language      `json:"language,omitempty"`
-	Etag                *string        `json:"etag,omitempty"`
+	// Words statistics. Keys: total, translated, preTranslateAppliedTo, approved.
+	Words map[string]int `json:"words"`
+	// Phrases statistics. Keys: total, translated, preTranslateAppliedTo, approved.
+	Phrases             map[string]int  `json:"phrases"`
+	TranslationProgress int             `json:"translationProgress"`
+	ApprovalProgress    int             `json:"approvalProgress"`
+	QAChecksStatus      *QAChecksStatus `json:"qaChecksStatus,omitempty"`
+	LanguageID          *string         `json:"languageId,omitempty"`
+	BranchID            *int            `json:"branchId,omitempty"`
+	FileID              *int            `json:"fileId,omitempty"`
+	Language            *Language       `json:"language,omitempty"`
+	Etag                *string         `json:"etag,omitempty"`
+}
+
+// QAChecksStatus represents the QA checks status statistics of a translation progress.
+type QAChecksStatus struct {
+	Total      int `json:"total"`
+	InProgress int `json:"inProgress"`
+	Passed     int `json:"passed"`
+	Failed     int `json:"failed"`
 }
 
 // TranslationStatusProgressResponse defines the structure of a response when getting
@@ -91,6 +106,10 @@ type QACheckListOptions struct {
 	Validation []string `json:"validation,omitempty"`
 	// Filter progress by Language Identifier.
 	LanguageIDs []string `json:"languageIds,omitempty"`
+	// Filter the collection by the specified task identifier.
+	TaskID int `json:"taskId,omitempty"`
+	// Filter the collection by the specified file identifier.
+	FileID int `json:"fileId,omitempty"`
 
 	ListOptions
 }
@@ -112,6 +131,121 @@ func (o *QACheckListOptions) Values() (url.Values, bool) {
 	if len(o.LanguageIDs) > 0 {
 		v.Add("languageIds", JoinSlice(o.LanguageIDs))
 	}
+	if o.TaskID > 0 {
+		v.Add("taskId", fmt.Sprintf("%d", o.TaskID))
+	}
+	if o.FileID > 0 {
+		v.Add("fileId", fmt.Sprintf("%d", o.FileID))
+	}
 
 	return v, len(v) > 0
+}
+
+// QACheckRevalidationRequest defines the structure of a request
+// to revalidate QA checks.
+type QACheckRevalidationRequest struct {
+	// QA check categories to revalidate. If not specified,
+	// all active categories will be checked. Enum: terms, ai.
+	QACheckCategories []string `json:"qaCheckCategories,omitempty"`
+	// Language IDs to revalidate. If not specified, all languages will be checked.
+	LanguageIDs []string `json:"languageIds,omitempty"`
+	// If true, only languages with failed QA checks will be revalidated.
+	// Default: false.
+	FailedOnly *bool `json:"failedOnly,omitempty"`
+	// External QA check IDs to revalidate.
+	// Note: Available only for Crowdin Enterprise.
+	ExternalQACheckIDs []int `json:"externalQaCheckIds,omitempty"`
+}
+
+// Validate checks if the request is valid.
+// It implements the crowdin.RequestValidator interface.
+func (r *QACheckRevalidationRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
+
+	return nil
+}
+
+type (
+	// QACheckRevalidation represents a QA checks revalidation job.
+	QACheckRevalidation struct {
+		Identifier string                         `json:"identifier"`
+		Status     string                         `json:"status"`
+		Progress   int                            `json:"progress"`
+		Attributes *QACheckRevalidationAttributes `json:"attributes"`
+		CreatedAt  string                         `json:"createdAt"`
+		UpdatedAt  string                         `json:"updatedAt"`
+		StartedAt  *string                        `json:"startedAt"`
+		FinishedAt *string                        `json:"finishedAt"`
+	}
+
+	// QACheckRevalidationAttributes represents the attributes
+	// of a QA checks revalidation job.
+	QACheckRevalidationAttributes struct {
+		LanguageIDs        []string `json:"languageIds"`
+		QACheckCategories  []string `json:"qaCheckCategories"`
+		FailedOnly         bool     `json:"failedOnly"`
+		ExternalQACheckIDs []int    `json:"externalQaCheckIds,omitempty"`
+	}
+
+	// QACheckRevalidationResponse defines the structure of a response
+	// when revalidating QA checks or getting a revalidation status.
+	QACheckRevalidationResponse struct {
+		Data *QACheckRevalidation `json:"data"`
+	}
+)
+
+// QACheckValidateRequest defines the structure of a single item of the
+// request to validate text by QA checks.
+type QACheckValidateRequest struct {
+	// String Identifier.
+	StringID int `json:"stringId"`
+	// Language Identifier.
+	LanguageID string `json:"languageId"`
+	// Translation text.
+	Text string `json:"text"`
+	// Plural form. Enum: zero, one, two, few, many, other.
+	PluralCategoryName string `json:"pluralCategoryName,omitempty"`
+}
+
+// Validate checks if the request is valid.
+// It implements the crowdin.RequestValidator interface.
+func (r *QACheckValidateRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
+	if r.StringID == 0 {
+		return errors.New("stringId is required")
+	}
+	if r.LanguageID == "" {
+		return errors.New("languageId is required")
+	}
+	if r.Text == "" {
+		return errors.New("text is required")
+	}
+
+	return nil
+}
+
+// QACheckValidation represents a QA check issue found when validating text.
+type QACheckValidation struct {
+	StringID              int    `json:"stringId"`
+	LanguageID            string `json:"languageId"`
+	Category              string `json:"category"`
+	CategoryDescription   string `json:"categoryDescription"`
+	Validation            string `json:"validation"`
+	ValidationDescription string `json:"validationDescription"`
+	PluralID              int    `json:"pluralId"`
+	PluralCategoryName    string `json:"pluralCategoryName"`
+	Text                  string `json:"text"`
+	Translation           string `json:"translation"`
+}
+
+// QACheckValidationsResponse defines the structure of a response
+// when validating text by QA checks.
+type QACheckValidationsResponse struct {
+	Data []struct {
+		Data *QACheckValidation `json:"data"`
+	} `json:"data"`
 }

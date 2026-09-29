@@ -14,6 +14,7 @@ type Language struct {
 	ThreeLettersCode    string   `json:"threeLettersCode"`
 	Locale              string   `json:"locale"`
 	AndroidCode         string   `json:"androidCode"`
+	BCP47Code           string   `json:"bcp47Code"`
 	OSXCode             string   `json:"osxCode"`
 	OSXLocale           string   `json:"osxLocale"`
 	PluralCategoryNames []string `json:"pluralCategoryNames"`

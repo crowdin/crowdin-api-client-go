@@ -781,3 +781,66 @@ func TestScreenshotsService_DeleteTag(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
+
+func TestScreenshotsService_ListScreenshot_WithSearch(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/screenshots"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?orderBy=name&search=siri")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 2,
+						"name": "translate_with_siri.jpg"
+					}
+				}
+			],
+			"pagination": {
+				"offset": 0,
+				"limit": 25
+			}
+		}`)
+	})
+
+	screenshots, _, err := client.Screenshots.ListScreenshots(context.Background(), 2, &model.ScreenshotListOptions{
+		Search:  "siri",
+		OrderBy: "name",
+	})
+	require.NoError(t, err)
+
+	expected := []*model.Screenshot{{ID: 2, Name: "translate_with_siri.jpg"}}
+	assert.Equal(t, expected, screenshots)
+}
+
+func TestScreenshotsService_UpdateScreenshot_WithUsePreviousTags(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/screenshots/3"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPut)
+		testURL(t, r, path)
+		testBody(t, r, `{"storageId":2,"name":"translate_with_siri.jpg","usePreviousTags":false}`+"\n")
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 3,
+				"name": "translate_with_siri.jpg"
+			}
+		}`)
+	})
+
+	req := &model.ScreenshotUpdateRequest{
+		StorageID:       2,
+		Name:            "translate_with_siri.jpg",
+		UsePreviousTags: ToPtr(false),
+	}
+	screenshot, _, err := client.Screenshots.UpdateScreenshot(context.Background(), 2, 3, req)
+	require.NoError(t, err)
+	assert.Equal(t, &model.Screenshot{ID: 3, Name: "translate_with_siri.jpg"}, screenshot)
+}

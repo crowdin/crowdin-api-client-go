@@ -17,9 +17,9 @@ type DictionariesService struct {
 	client *Client
 }
 
-// List returns a list of organization dictionaries.
+// List returns a list of project dictionaries.
 //
-// https://developer.crowdin.com/api/v2/#tag/Dictionaries
+// https://developer.crowdin.com/api/v2/#operation/api.projects.dictionaries.getMany
 func (s *DictionariesService) List(ctx context.Context, projectID int, opts *model.DictionariesListOptions) (
 	[]*model.Dictionary, *Response, error,
 ) {

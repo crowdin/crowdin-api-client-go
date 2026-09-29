@@ -1106,3 +1106,441 @@ func TestStringTranslationsService_CancelVote(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
+
+func TestStringTranslationsService_GetApproval_Enterprise(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/approvals/190695"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 190695,
+				"user": {
+					"id": 19,
+					"username": "john_doe",
+					"fullName": "John Smith",
+					"avatarUrl": ""
+				},
+				"translationId": 190695,
+				"stringId": 2345,
+				"fileId": 12,
+				"languageId": "uk",
+				"workflowStepId": 77,
+				"createdAt": "2023-09-19T12:42:12+00:00"
+			}
+		}`)
+	})
+
+	approval, _, err := client.StringTranslations.GetApproval(context.Background(), 1, 190695)
+	require.NoError(t, err)
+
+	expected := &model.Approval{
+		ID: 190695,
+		User: &model.ShortUser{
+			ID:       19,
+			Username: "john_doe",
+			FullName: "John Smith",
+		},
+		TranslationID:  190695,
+		StringID:       2345,
+		FileID:         12,
+		LanguageID:     "uk",
+		WorkflowStepID: 77,
+		CreatedAt:      "2023-09-19T12:42:12+00:00",
+	}
+	assert.Equal(t, expected, approval)
+}
+
+func TestStringTranslationsService_AddCorrectionApproval(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/approvals"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testBody(t, r, `{"correctionId":35}`+"\n")
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 190695,
+				"user": {
+					"id": 19,
+					"username": "john_doe",
+					"fullName": "John Smith",
+					"avatarUrl": ""
+				},
+				"correctionId": 35,
+				"stringId": 2345,
+				"languageId": "uk",
+				"createdAt": "2023-09-19T12:42:12+00:00"
+			}
+		}`)
+	})
+
+	approval, resp, err := client.StringTranslations.AddCorrectionApproval(context.Background(), 1, 35)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	expected := &model.Approval{
+		ID: 190695,
+		User: &model.ShortUser{
+			ID:       19,
+			Username: "john_doe",
+			FullName: "John Smith",
+		},
+		CorrectionID: 35,
+		StringID:     2345,
+		LanguageID:   "uk",
+		CreatedAt:    "2023-09-19T12:42:12+00:00",
+	}
+	assert.Equal(t, expected, approval)
+}
+
+func TestStringTranslationsService_ListApprovals_ByCorrection(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/approvals"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?correctionId=35")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 1,
+						"user": {"id": 19, "username": "john_doe", "fullName": "John Smith", "avatarUrl": ""},
+						"correctionId": 35,
+						"stringId": 2345,
+						"languageId": "uk",
+						"createdAt": "2023-09-19T12:42:12+00:00"
+					}
+				}
+			],
+			"pagination": {"offset": 0, "limit": 25}
+		}`)
+	})
+
+	approvals, _, err := client.StringTranslations.ListApprovals(context.Background(), 1, &model.ApprovalsListOptions{CorrectionID: 35})
+	require.NoError(t, err)
+	require.Len(t, approvals, 1)
+	assert.Equal(t, 35, approvals[0].CorrectionID)
+}
+
+func TestStringTranslationsService_ListLanguageTranslations_ExtendedFields(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/languages/uk/translations"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?minApprovalCount=1&passedWorkflow=0")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"stringId": 6356,
+						"contentType": "text/plain",
+						"translationId": 732,
+						"text": "Confirm New Password",
+						"user": {"id": 19, "username": "john_doe", "fullName": "John Smith", "avatarUrl": ""},
+						"createdAt": "2023-09-23T11:26:54+00:00",
+						"provider": "tm",
+						"providerId": 17,
+						"isPreTranslated": true,
+						"matchRate": 75,
+						"matchType": "fuzzy",
+						"qaIssuesStatus": "passed"
+					}
+				},
+				{
+					"data": {
+						"stringId": 6357,
+						"contentType": "application/vnd.crowdin.text+plural",
+						"plurals": [
+							{
+								"translationId": 733,
+								"text": "String",
+								"pluralForm": "one",
+								"user": {"id": 19, "username": "john_doe", "fullName": "John Smith", "avatarUrl": ""},
+								"createdAt": "2023-09-23T11:26:54+00:00",
+								"provider": null,
+								"providerId": null,
+								"isPreTranslated": false,
+								"matchRate": null,
+								"matchType": null
+							}
+						],
+						"qaIssuesStatus": "failed"
+					}
+				},
+				{
+					"data": {
+						"stringId": 6358,
+						"contentType": "image/jpeg",
+						"url": "https://example.com/file.jpg",
+						"qaIssuesStatus": "inProgress"
+					}
+				}
+			],
+			"pagination": {"offset": 0, "limit": 25}
+		}`)
+	})
+
+	opts := &model.LanguageTranslationsListOptions{PassedWorkflow: ToPtr(0), MinApprovalCount: 1}
+	translations, _, err := client.StringTranslations.ListLanguageTranslations(context.Background(), 1, "uk", opts)
+	require.NoError(t, err)
+
+	user := &model.ShortUser{ID: 19, Username: "john_doe", FullName: "John Smith"}
+	expected := []*model.LanguageTranslation{
+		{
+			StringID:        6356,
+			ContentType:     "text/plain",
+			TranslationID:   ToPtr(732),
+			Text:            ToPtr("Confirm New Password"),
+			User:            user,
+			CreatedAt:       ToPtr("2023-09-23T11:26:54+00:00"),
+			Provider:        ToPtr("tm"),
+			ProviderID:      ToPtr(17),
+			IsPreTranslated: ToPtr(true),
+			MatchRate:       ToPtr(75),
+			MatchType:       ToPtr("fuzzy"),
+			QAIssuesStatus:  ToPtr("passed"),
+		},
+		{
+			StringID:    6357,
+			ContentType: "application/vnd.crowdin.text+plural",
+			Plurals: []*model.LanguageTranslationPlural{
+				{
+					TranslationID:   733,
+					Text:            "String",
+					PluralForm:      "one",
+					User:            user,
+					CreatedAt:       "2023-09-23T11:26:54+00:00",
+					IsPreTranslated: ToPtr(false),
+				},
+			},
+			QAIssuesStatus: ToPtr("failed"),
+		},
+		{
+			StringID:       6358,
+			ContentType:    "image/jpeg",
+			URL:            ToPtr("https://example.com/file.jpg"),
+			QAIssuesStatus: ToPtr("inProgress"),
+		},
+	}
+	assert.Equal(t, expected, translations)
+}
+
+func TestStringTranslationsService_GetTranslation_ExtendedFields(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/translations/190695"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 190695,
+				"text": "Цю стрічку перекладено",
+				"pluralCategoryName": "few",
+				"user": {"id": 19, "username": "john_doe", "fullName": "John Smith", "avatarUrl": ""},
+				"rating": 10,
+				"provider": "ai",
+				"providerId": 17,
+				"isPreTranslated": true,
+				"matchRate": 75,
+				"matchType": "fuzzy",
+				"workflowStepId": 77,
+				"createdAt": "2023-09-23T11:26:54+00:00"
+			}
+		}`)
+	})
+
+	translation, _, err := client.StringTranslations.GetTranslation(context.Background(), 1, 190695, nil)
+	require.NoError(t, err)
+
+	expected := &model.Translation{
+		ID:                 190695,
+		Text:               "Цю стрічку перекладено",
+		PluralCategoryName: "few",
+		User:               &model.ShortUser{ID: 19, Username: "john_doe", FullName: "John Smith"},
+		Rating:             10,
+		Provider:           ToPtr("ai"),
+		ProviderID:         ToPtr(17),
+		IsPreTranslated:    true,
+		MatchRate:          ToPtr(75),
+		MatchType:          ToPtr("fuzzy"),
+		WorkflowStepID:     77,
+		CreatedAt:          "2023-09-23T11:26:54+00:00",
+	}
+	assert.Equal(t, expected, translation)
+}
+
+func TestStringTranslationsService_AddTranslation_WithProvider(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/translations"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"stringId": 35434,
+			"languageId": "uk",
+			"text": "Цю стрічку перекладено",
+			"provider": "tm",
+			"providerId": 123,
+			"isPreTranslated": true
+		}`)
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 190695,
+				"text": "Цю стрічку перекладено",
+				"provider": "tm",
+				"providerId": 123,
+				"isPreTranslated": true,
+				"createdAt": "2023-09-23T11:26:54+00:00"
+			}
+		}`)
+	})
+
+	req := &model.TranslationAddRequest{
+		StringID:        35434,
+		LanguageID:      "uk",
+		Text:            "Цю стрічку перекладено",
+		Provider:        "tm",
+		ProviderID:      123,
+		IsPreTranslated: ToPtr(true),
+	}
+	translation, resp, err := client.StringTranslations.AddTranslation(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	assert.Equal(t, ToPtr(123), translation.ProviderID)
+}
+
+func TestStringTranslationsService_AddTranslation_Asset(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/translations"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testBody(t, r, `{"languageId":"uk","fileId":12345,"storageId":6789}`+"\n")
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 190695,
+				"user": {"id": 19, "username": "john_doe", "fullName": "John Smith", "avatarUrl": ""},
+				"rating": 0,
+				"url": "https://example.com/file.jpg",
+				"createdAt": "2023-09-23T11:26:54+00:00"
+			}
+		}`)
+	})
+
+	req := &model.TranslationAddRequest{LanguageID: "uk", FileID: 12345, StorageID: 6789}
+	translation, _, err := client.StringTranslations.AddTranslation(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.Equal(t, "https://example.com/file.jpg", translation.URL)
+}
+
+func TestStringTranslationsService_SearchTranslations(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/translations"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?filter=Hello&languageIds=uk&limit=10&projectIds=8%2C9&userId=3")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 190695,
+						"text": "Привіт",
+						"pluralCategoryName": "one",
+						"user": {"id": 19, "username": "john_doe", "fullName": "John Smith", "avatarUrl": ""},
+						"rating": 10,
+						"provider": null,
+						"providerId": null,
+						"isPreTranslated": false,
+						"matchRate": null,
+						"matchType": null,
+						"createdAt": "2023-09-23T11:26:54+00:00",
+						"projectId": 8,
+						"stringId": 35,
+						"languageId": "uk"
+					}
+				}
+			],
+			"pagination": {"offset": 0, "limit": 10}
+		}`)
+	})
+
+	opts := &model.SearchTranslationsListOptions{
+		Filter:      "Hello",
+		ProjectIDs:  []int{8, 9},
+		UserID:      3,
+		LanguageIDs: []string{"uk"},
+		ListOptions: model.ListOptions{Limit: 10},
+	}
+	translations, resp, err := client.StringTranslations.SearchTranslations(context.Background(), opts)
+	require.NoError(t, err)
+
+	expected := []*model.SearchTranslation{
+		{
+			Translation: model.Translation{
+				ID:                 190695,
+				Text:               "Привіт",
+				PluralCategoryName: "one",
+				User:               &model.ShortUser{ID: 19, Username: "john_doe", FullName: "John Smith"},
+				Rating:             10,
+				CreatedAt:          "2023-09-23T11:26:54+00:00",
+			},
+			ProjectID:  8,
+			StringID:   35,
+			LanguageID: "uk",
+		},
+	}
+	assert.Equal(t, expected, translations)
+	assert.Equal(t, 10, resp.Pagination.Limit)
+}
+
+func TestStringTranslationsService_SearchTranslations_MissingFilter(t *testing.T) {
+	client, _, teardown := setupClient()
+	defer teardown()
+
+	translations, _, err := client.StringTranslations.SearchTranslations(context.Background(), nil)
+	require.EqualError(t, err, "filter is required")
+	assert.Nil(t, translations)
+}
+
+func TestStringTranslationsService_SearchTranslations_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/translations", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	translations, _, err := client.StringTranslations.SearchTranslations(context.Background(),
+		&model.SearchTranslationsListOptions{Filter: "Hello"})
+	require.Error(t, err)
+	assert.Nil(t, translations)
+}

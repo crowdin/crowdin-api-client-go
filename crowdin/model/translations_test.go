@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,9 +25,24 @@ func TestPreTranslationRequestValidate(t *testing.T) {
 			err:  "languageIds is required",
 		},
 		{
-			name: "missing fileIds",
-			req:  &PreTranslationRequest{LanguageIDs: []string{"uk"}},
-			err:  "fileIds is required",
+			name:  "fileIds are not required",
+			req:   &PreTranslationRequest{LanguageIDs: []string{"uk"}},
+			valid: true,
+		},
+		{
+			name:  "valid request with directoryIds",
+			req:   &PreTranslationRequest{LanguageIDs: []string{"uk"}, DirectoryIDs: []int{1}},
+			valid: true,
+		},
+		{
+			name:  "valid request with branchIds",
+			req:   &PreTranslationRequest{LanguageIDs: []string{"uk"}, BranchIDs: []int{1}},
+			valid: true,
+		},
+		{
+			name:  "valid request by task without languageIds",
+			req:   &PreTranslationRequest{TaskID: 5},
+			valid: true,
 		},
 		{
 			name: "valid request",
@@ -354,6 +370,258 @@ func TestExportTranslationRequestValidate(t *testing.T) {
 			name: "valid request",
 			req: &ExportTranslationRequest{TargetLanguageID: "uk", Format: "xliff", FileIDs: []int{1}, LabelIDs: []int{4},
 				SkipUntranslatedFiles: toPtr(false), ExportApprovedOnly: toPtr(false)},
+			valid: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.req.Validate(); tt.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.err)
+			}
+		})
+	}
+}
+
+func TestPreTranslationRequestValidate_Scope(t *testing.T) {
+	tests := []struct {
+		name  string
+		req   *PreTranslationRequest
+		err   string
+		valid bool
+	}{
+		{
+			name:  "valid scope untranslated",
+			req:   &PreTranslationRequest{LanguageIDs: []string{"uk"}, Scope: PreTranslationScopeUntranslated},
+			valid: true,
+		},
+		{
+			name: "invalid scope",
+			req:  &PreTranslationRequest{LanguageIDs: []string{"uk"}, Scope: "some"},
+			err:  `invalid scope: "some"`,
+		},
+		{
+			name: "scope with deprecated translateUntranslatedOnly",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, Scope: PreTranslationScopeAll,
+				TranslateUntranslatedOnly: toPtr(false)},
+			err: "scope and translateUntranslatedOnly cannot be used together",
+		},
+		{
+			name: "invalid replaceTranslationsOption",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, Scope: PreTranslationScopeAll,
+				ReplaceTranslationsOption: "some"},
+			err: `invalid replaceTranslationsOption: "some"`,
+		},
+		{
+			name: "replaceTranslationsOption requires re-translation scope",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"},
+				ReplaceTranslationsOption: ReplaceTranslationsOptionAutoTranslated},
+			err: "replaceTranslationsOption requires scope to be translated or all",
+		},
+		{
+			name: "replaceTranslationsOption none without scope",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"},
+				ReplaceTranslationsOption: ReplaceTranslationsOptionNone},
+			valid: true,
+		},
+		{
+			name: "replaceTranslationsOption with deprecated translateUntranslatedOnly false",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, TranslateUntranslatedOnly: toPtr(false),
+				ReplaceTranslationsOption: ReplaceTranslationsOptionAll},
+			valid: true,
+		},
+		{
+			name: "replaceTranslationsOption with deprecated translateUntranslatedOnly true",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, TranslateUntranslatedOnly: toPtr(true),
+				ReplaceTranslationsOption: ReplaceTranslationsOptionAll},
+			err: "replaceTranslationsOption requires scope to be translated or all",
+		},
+		{
+			name: "translationModifiedBefore requires re-translation scope",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, Scope: PreTranslationScopeUntranslated,
+				TranslationModifiedBefore: "2026-01-01T00:00:00+00:00"},
+			err: "translationModifiedBefore and translationModifiedAfter require scope to be translated or all",
+		},
+		{
+			name: "translationModifiedAfter requires re-translation scope",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"},
+				TranslationModifiedAfter: "2026-01-01T00:00:00+00:00"},
+			err: "translationModifiedBefore and translationModifiedAfter require scope to be translated or all",
+		},
+		{
+			name: "translationModifiedAfter later than translationModifiedBefore",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, Scope: PreTranslationScopeTranslated,
+				TranslationModifiedBefore: "2026-01-01T00:00:00+00:00",
+				TranslationModifiedAfter:  "2026-02-01T00:00:00+00:00"},
+			err: "translationModifiedAfter cannot be later than translationModifiedBefore",
+		},
+		{
+			name: "valid translation modified date range",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, Scope: PreTranslationScopeAll,
+				TranslationModifiedBefore: "2026-02-01T00:00:00+00:00",
+				TranslationModifiedAfter:  "2026-01-01T00:00:00+00:00"},
+			valid: true,
+		},
+		{
+			name: "duplicateTranslations with replace all",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, Scope: PreTranslationScopeAll,
+				ReplaceTranslationsOption: ReplaceTranslationsOptionAll, DuplicateTranslations: toPtr(true)},
+			err: "duplicateTranslations cannot be used when replaceTranslationsOption is all",
+		},
+		{
+			name: "resetApprovalStatus requires re-translation scope",
+			req:  &PreTranslationRequest{LanguageIDs: []string{"uk"}, ResetApprovalStatus: toPtr(true)},
+			err:  "resetApprovalStatus requires scope to be translated or all",
+		},
+		{
+			name: "resetApprovalStatus with skipApprovedTranslations",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, Scope: PreTranslationScopeTranslated,
+				ResetApprovalStatus: toPtr(true), SkipApprovedTranslations: toPtr(true)},
+			err: "resetApprovalStatus cannot be used together with skipApprovedTranslations",
+		},
+		{
+			name: "resetApprovalStatus with autoApproveOption",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, Scope: PreTranslationScopeTranslated,
+				ResetApprovalStatus: toPtr(true), AutoApproveOption: "all"},
+			err: "resetApprovalStatus cannot be used together with autoApproveOption",
+		},
+		{
+			name: "resetApprovalStatus with replace all",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, Scope: PreTranslationScopeTranslated,
+				ResetApprovalStatus: toPtr(true), ReplaceTranslationsOption: ReplaceTranslationsOptionAll},
+			err: "resetApprovalStatus cannot be used when replaceTranslationsOption is all",
+		},
+		{
+			name: "valid resetApprovalStatus",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, Scope: PreTranslationScopeTranslated,
+				ResetApprovalStatus: toPtr(true), AutoApproveOption: "none",
+				ReplaceTranslationsOption: ReplaceTranslationsOptionAutoTranslated, SkipApprovedTranslations: toPtr(false)},
+			valid: true,
+		},
+		{
+			name:  "resetApprovalStatus false is ignored",
+			req:   &PreTranslationRequest{LanguageIDs: []string{"uk"}, ResetApprovalStatus: toPtr(false)},
+			valid: true,
+		},
+		{
+			name: "minimumMatchRatio too low",
+			req:  &PreTranslationRequest{LanguageIDs: []string{"uk"}, MinimumMatchRatio: 39},
+			err:  "minimumMatchRatio must be from 40 to 100",
+		},
+		{
+			name: "minimumMatchRatio too high",
+			req:  &PreTranslationRequest{LanguageIDs: []string{"uk"}, MinimumMatchRatio: 101},
+			err:  "minimumMatchRatio must be from 40 to 100",
+		},
+		{
+			name:  "valid minimumMatchRatio",
+			req:   &PreTranslationRequest{LanguageIDs: []string{"uk"}, MinimumMatchRatio: 40},
+			valid: true,
+		},
+		{
+			name: "customInstruction too long",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, Method: "ai", AIPromptID: 1,
+				CustomInstruction: strings.Repeat("a", 10001)},
+			err: "customInstruction must not exceed 10000 characters",
+		},
+		{
+			name: "valid customInstruction",
+			req: &PreTranslationRequest{LanguageIDs: []string{"uk"}, Method: "ai", AIPromptID: 1,
+				CustomInstruction: strings.Repeat("a", 10000), NotifyOnCompletion: toPtr(true), SourceLanguageID: "en"},
+			valid: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.req.Validate(); tt.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.err)
+			}
+		})
+	}
+}
+
+func TestPreTranslationsListOptionsValues(t *testing.T) {
+	tests := []struct {
+		name     string
+		opts     *PreTranslationsListOptions
+		expected string
+		isSet    bool
+	}{
+		{
+			name: "nil options",
+			opts: nil,
+		},
+		{
+			name: "empty options",
+			opts: &PreTranslationsListOptions{},
+		},
+		{
+			name:     "with orderBy",
+			opts:     &PreTranslationsListOptions{OrderBy: "createdAt desc"},
+			expected: "orderBy=createdAt+desc",
+			isSet:    true,
+		},
+		{
+			name: "with all options",
+			opts: &PreTranslationsListOptions{OrderBy: "createdAt desc",
+				ListOptions: ListOptions{Limit: 10, Offset: 5}},
+			expected: "limit=10&offset=5&orderBy=createdAt+desc",
+			isSet:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v, ok := tt.opts.Values()
+			assert.Equal(t, tt.isSet, ok)
+			assert.Equal(t, tt.expected, v.Encode())
+		})
+	}
+}
+
+func TestTranslationImportRequestValidate(t *testing.T) {
+	tests := []struct {
+		name  string
+		req   *TranslationImportRequest
+		err   string
+		valid bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &TranslationImportRequest{},
+			err:  "storageId is required",
+		},
+		{
+			name: "fileId and branchId at the same request",
+			req:  &TranslationImportRequest{StorageID: 1, FileID: 2, BranchID: 3},
+			err:  "fileId and branchId can not be used at the same request",
+		},
+		{
+			name:  "valid request with storageId only",
+			req:   &TranslationImportRequest{StorageID: 1},
+			valid: true,
+		},
+		{
+			name: "valid file-based request",
+			req: &TranslationImportRequest{StorageID: 1, FileID: 2, LanguageIDs: []string{"uk"},
+				ImportEqSuggestions: toPtr(true), AutoApproveImported: toPtr(true), TranslateHidden: toPtr(false),
+				AddToTM: toPtr(false)},
+			valid: true,
+		},
+		{
+			name: "valid string-based request",
+			req: &TranslationImportRequest{StorageID: 1, BranchID: 3,
+				ImportOptions: &TranslationImportOptions{Scheme: map[string]int{"identifier": 0, "uk": 1}}},
 			valid: true,
 		},
 	}

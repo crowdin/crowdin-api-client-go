@@ -31,6 +31,20 @@ func TestLabelsListOptionsValues(t *testing.T) {
 			},
 			out: "limit=10&offset=5&orderBy=title+desc%2Cid",
 		},
+		{
+			name: "with isSystem = 0",
+			opts: &LabelsListOptions{IsSystem: toPtr(0)},
+			out:  "isSystem=0",
+		},
+		{
+			name: "with isSystem = 1",
+			opts: &LabelsListOptions{IsSystem: toPtr(1)},
+			out:  "isSystem=1",
+		},
+		{
+			name: "with invalid isSystem",
+			opts: &LabelsListOptions{IsSystem: toPtr(2)},
+		},
 	}
 
 	for _, tt := range tests {

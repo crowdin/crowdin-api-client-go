@@ -17,7 +17,7 @@ import (
 const (
 	baseURL = "https://api.crowdin.com/"
 
-	userAgent = "crowdin-api-client-go/0.18.0"
+	userAgent = "crowdin-api-client-go/0.19.0"
 )
 
 // Client is a Crowdin API client.
@@ -31,11 +31,16 @@ type Client struct {
 	GraphQL *GraphQL
 
 	AI                        *AIService
+	Advisors                  *AdvisorsService
 	Applications              *ApplicationsService
 	Branches                  *BranchesService
 	Bundles                   *BundlesService
+	Clients                   *ClientsService
+	CustomPlaceholders        *CustomPlaceholdersService
+	CustomSpellcheckers       *CustomSpellcheckersService
 	Dictionaries              *DictionariesService
 	Distributions             *DistributionsService
+	ExternalQAChecks          *ExternalQAChecksService
 	Fields                    *FieldsService
 	Groups                    *GroupsService
 	Glossaries                *GlossariesService
@@ -43,7 +48,9 @@ type Client struct {
 	Languages                 *LanguagesService
 	MachineTranslationEngines *MachineTranslationEnginesService
 	Notifications             *NotificationsService
+	Organization              *OrganizationService
 	OrganizationWebhooks      *OrganizationWebhooksService
+	ProjectPlaceholders       *ProjectPlaceholdersService
 	Projects                  *ProjectsService
 	Reports                   *ReportsService
 	Screenshots               *ScreenshotsService
@@ -52,7 +59,9 @@ type Client struct {
 	SourceStrings             *SourceStringsService
 	Storages                  *StorageService
 	StringComments            *StringCommentsService
+	StringCorrections         *StringCorrectionsService
 	StringTranslations        *StringTranslationsService
+	StyleGuides               *StyleGuidesService
 	Tasks                     *TasksService
 	Teams                     *TeamsService
 	TranslationMemory         *TranslationMemoryService
@@ -98,11 +107,16 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 
 	// Initialize services.
 	c.AI = &AIService{client: c}
+	c.Advisors = &AdvisorsService{client: c}
 	c.Applications = &ApplicationsService{client: c}
 	c.Branches = &BranchesService{client: c}
 	c.Bundles = &BundlesService{client: c}
+	c.Clients = &ClientsService{client: c}
+	c.CustomPlaceholders = &CustomPlaceholdersService{client: c}
+	c.CustomSpellcheckers = &CustomSpellcheckersService{client: c}
 	c.Dictionaries = &DictionariesService{client: c}
 	c.Distributions = &DistributionsService{client: c}
+	c.ExternalQAChecks = &ExternalQAChecksService{client: c}
 	c.Fields = &FieldsService{client: c}
 	c.Groups = &GroupsService{client: c}
 	c.Glossaries = &GlossariesService{client: c}
@@ -110,7 +124,9 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.Languages = &LanguagesService{client: c}
 	c.MachineTranslationEngines = &MachineTranslationEnginesService{client: c}
 	c.Notifications = &NotificationsService{client: c}
+	c.Organization = &OrganizationService{client: c}
 	c.OrganizationWebhooks = &OrganizationWebhooksService{client: c}
+	c.ProjectPlaceholders = &ProjectPlaceholdersService{client: c}
 	c.Projects = &ProjectsService{client: c}
 	c.Reports = &ReportsService{client: c}
 	c.Screenshots = &ScreenshotsService{client: c}
@@ -119,7 +135,9 @@ func NewClient(token string, opts ...ClientOption) (*Client, error) {
 	c.SourceStrings = &SourceStringsService{client: c}
 	c.Storages = &StorageService{client: c}
 	c.StringComments = &StringCommentsService{client: c}
+	c.StringCorrections = &StringCorrectionsService{client: c}
 	c.StringTranslations = &StringTranslationsService{client: c}
+	c.StyleGuides = &StyleGuidesService{client: c}
 	c.Tasks = &TasksService{client: c}
 	c.Teams = &TeamsService{client: c}
 	c.TranslationMemory = &TranslationMemoryService{client: c}
@@ -251,7 +269,7 @@ func (c *Client) do(r *http.Request, v any) (*Response, error) {
 		return response, fmt.Errorf("client: error reading response body: %w", err)
 	}
 
-	if resp.StatusCode == http.StatusNoContent {
+	if code := resp.StatusCode; code == http.StatusNoContent || (code < http.StatusBadRequest && len(body) == 0) {
 		return response, nil
 	}
 

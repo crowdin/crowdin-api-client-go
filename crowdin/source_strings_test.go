@@ -976,3 +976,279 @@ func TestSourceStringsService_UploadWithValidationError(t *testing.T) {
 		})
 	}
 }
+
+func TestSourceStringsService_Get_PluralText(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/strings/2814"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2814,
+				"projectId": 2,
+				"identifier": "videos",
+				"text": {
+					"one": "1 video is shown to users",
+					"other": "{count} videos are shown to users"
+				},
+				"type": "plural"
+			}
+		}`)
+	})
+
+	sourceString, _, err := client.SourceStrings.Get(context.Background(), 2, 2814, nil)
+	require.NoError(t, err)
+
+	assert.Equal(t, "plural", sourceString.Type)
+	assert.Empty(t, sourceString.Text)
+	assert.Equal(t, map[string]string{
+		"one":   "1 video is shown to users",
+		"other": "{count} videos are shown to users",
+	}, sourceString.PluralText)
+}
+
+func TestSourceStringsService_ListWithOrderBy(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/strings"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?orderBy=createdAt+desc%2Cidentifier")
+
+		fmt.Fprint(w, `{"data": [], "pagination": {"offset": 0, "limit": 25}}`)
+	})
+
+	list, _, err := client.SourceStrings.List(context.Background(), 2, &model.SourceStringsListOptions{
+		OrderBy: "createdAt desc,identifier",
+	})
+	require.NoError(t, err)
+	assert.Empty(t, list)
+}
+
+func TestSourceStringsService_EditWithOptions(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/strings/2814"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPatch)
+		testURL(t, r, path+"?updateOption=keep_translations")
+		testBody(t, r, `[{"op":"replace","path":"/text","value":"Updated text"}]`+"\n")
+
+		fmt.Fprint(w, `{
+			"data": {
+				"id": 2814,
+				"projectId": 2,
+				"identifier": "name",
+				"text": "Updated text",
+				"type": "text"
+			}
+		}`)
+	})
+
+	req := []*model.UpdateRequest{{Op: "replace", Path: "/text", Value: "Updated text"}}
+	opts := &model.SourceStringsEditOptions{UpdateOption: "keep_translations"}
+	sourceString, _, err := client.SourceStrings.EditWithOptions(context.Background(), 2, 2814, req, opts)
+	require.NoError(t, err)
+
+	assert.Equal(t, &model.SourceString{
+		ID:         2814,
+		ProjectID:  2,
+		Identifier: "name",
+		Text:       "Updated text",
+		Type:       "text",
+	}, sourceString)
+}
+
+func TestSourceStringsService_EditWithOptions_nilOptions(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/strings/2814"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPatch)
+		testURL(t, r, path)
+
+		fmt.Fprint(w, `{"data": {"id": 2814, "projectId": 2, "text": "Updated text"}}`)
+	})
+
+	req := []*model.UpdateRequest{{Op: "replace", Path: "/text", Value: "Updated text"}}
+	sourceString, _, err := client.SourceStrings.EditWithOptions(context.Background(), 2, 2814, req, nil)
+	require.NoError(t, err)
+	assert.Equal(t, 2814, sourceString.ID)
+}
+
+func TestSourceStringsService_BatchOperationsWithOptions(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/2/strings"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPatch)
+		testURL(t, r, path+"?updateOption=clear_translations_and_approvals")
+		testBody(t, r, `[{"op":"replace","path":"/2814/text","value":"Updated text"}]`+"\n")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 2814,
+						"projectId": 2,
+						"identifier": "name",
+						"text": "Updated text",
+						"type": "text"
+					}
+				}
+			]
+		}`)
+	})
+
+	req := []*model.UpdateRequest{{Op: "replace", Path: "/2814/text", Value: "Updated text"}}
+	opts := &model.SourceStringsEditOptions{UpdateOption: "clear_translations_and_approvals"}
+	list, _, err := client.SourceStrings.BatchOperationsWithOptions(context.Background(), 2, req, opts)
+	require.NoError(t, err)
+
+	require.Len(t, list, 1)
+	assert.Equal(t, 2814, list[0].ID)
+	assert.Equal(t, "Updated text", list[0].Text)
+}
+
+func TestSourceStringsService_BatchOperationsWithOptions_invalidJSON(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	mux.HandleFunc("/api/v2/projects/2/strings", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `invalid json`)
+	})
+
+	req := []*model.UpdateRequest{{Op: "replace", Path: "/2814/text", Value: "Updated text"}}
+	list, _, err := client.SourceStrings.BatchOperationsWithOptions(context.Background(), 2, req, nil)
+	require.Error(t, err)
+	assert.Nil(t, list)
+}
+
+func TestSourceStringsService_Search(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/strings"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, path+"?denormalizePlaceholders=1&filter=videos&limit=10&projectIds=2%2C3&scope=text&userId=1")
+
+		fmt.Fprint(w, `{
+			"data": [
+				{
+					"data": {
+						"id": 2814,
+						"projectId": 2,
+						"branchId": 12,
+						"identifier": "name",
+						"text": "Not all videos are shown to users. See more",
+						"type": "text",
+						"context": "shown on main page",
+						"maxLength": 35,
+						"isHidden": false,
+						"isDuplicate": true,
+						"masterStringId": 1,
+						"labelIds": [3],
+						"webUrl": "https://example.crowdin.com/editor/1/all/en-pl",
+						"createdAt": "2023-09-20T12:43:57+00:00",
+						"updatedAt": null,
+						"fileId": 48,
+						"directoryId": 13,
+						"revision": 1
+					}
+				}
+			],
+			"pagination": {
+				"offset": 0,
+				"limit": 10
+			}
+		}`)
+	})
+
+	opts := &model.SourceStringsSearchOptions{
+		Filter:                  "videos",
+		ProjectIDs:              []int{2, 3},
+		UserID:                  1,
+		Scope:                   "text",
+		DenormalizePlaceholders: ToPtr(1),
+		ListOptions:             model.ListOptions{Limit: 10},
+	}
+	list, resp, err := client.SourceStrings.Search(context.Background(), opts)
+	require.NoError(t, err)
+
+	expected := []*model.SourceString{
+		{
+			ID:             2814,
+			ProjectID:      2,
+			BranchID:       ToPtr(12),
+			Identifier:     "name",
+			Text:           "Not all videos are shown to users. See more",
+			Type:           "text",
+			Context:        "shown on main page",
+			MaxLength:      35,
+			IsDuplicate:    true,
+			MasterStringID: ToPtr(1),
+			LabelIDs:       []int{3},
+			WebURL:         "https://example.crowdin.com/editor/1/all/en-pl",
+			CreatedAt:      ToPtr("2023-09-20T12:43:57+00:00"),
+			FileID:         ToPtr(48),
+			DirectoryID:    ToPtr(13),
+			Revision:       ToPtr(1),
+		},
+	}
+	assert.Equal(t, expected, list)
+	assert.Equal(t, 10, resp.Pagination.Limit)
+}
+
+func TestSourceStringsService_Search_invalidOptions(t *testing.T) {
+	client, _, teardown := setupClient()
+	defer teardown()
+
+	list, resp, err := client.SourceStrings.Search(context.Background(), &model.SourceStringsSearchOptions{Scope: "text"})
+	require.EqualError(t, err, "filter is required")
+	assert.Nil(t, list)
+	assert.Nil(t, resp)
+}
+
+func TestSourceStringsService_UploadWithImportOptions(t *testing.T) {
+	client, mux, teardown := setupClient()
+	defer teardown()
+
+	const path = "/api/v2/projects/1/strings/uploads"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodPost)
+		testURL(t, r, path)
+		testJSONBody(t, r, `{
+			"storageId": 61,
+			"branchId": 34,
+			"importOptions": {
+				"importKeyAsSource": false,
+				"contentSegmentation": true,
+				"srxStorageId": 62
+			}
+		}`)
+
+		fmt.Fprint(w, `{"data": {"identifier": "50fb3506-4127-4ba8-8296-f97dc7e3e0c3", "status": "created"}}`)
+	})
+
+	req := &model.SourceStringsUploadRequest{
+		StorageID: 61,
+		BranchID:  34,
+		ImportOptions: &model.SourceStringsImportOptions{
+			ImportKeyAsSource:   ToPtr(false),
+			ContentSegmentation: ToPtr(true),
+			SRXStorageID:        ToPtr(62),
+		},
+	}
+	upload, _, err := client.SourceStrings.Upload(context.Background(), 1, req)
+	require.NoError(t, err)
+	assert.Equal(t, "50fb3506-4127-4ba8-8296-f97dc7e3e0c3", upload.Identifier)
+}

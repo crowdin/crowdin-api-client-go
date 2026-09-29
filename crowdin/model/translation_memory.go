@@ -9,6 +9,7 @@ import (
 // TranslationMemory represents a Crowdin Translation Memory (TM).
 type TranslationMemory struct {
 	ID                int      `json:"id"`
+	GroupID           *int     `json:"groupId,omitempty"`
 	UserID            int      `json:"userId"`
 	Name              string   `json:"name"`
 	LanguageID        string   `json:"languageId"`
@@ -16,6 +17,7 @@ type TranslationMemory struct {
 	SegmentsCount     int      `json:"segmentsCount"`
 	DefaultProjectIDs []int    `json:"defaultProjectIds"`
 	ProjectIDs        []int    `json:"projectIds"`
+	IsShared          bool     `json:"isShared"`
 	WebURL            string   `json:"webUrl"`
 	CreatedAt         string   `json:"createdAt"`
 }
@@ -41,6 +43,11 @@ type TranslationMemoriesListOptions struct {
 	OrderBy string `json:"orderBy,omitempty"`
 	// Project Member Identifier.
 	UserID int `json:"userId,omitempty"`
+	// Filter TMs by name.
+	Filter string `json:"filter,omitempty"`
+	// Group Identifier (Enterprise only).
+	// Note: Set 0 to see TMs of root group.
+	GroupID *int `json:"groupId,omitempty"`
 
 	ListOptions
 }
@@ -60,6 +67,12 @@ func (o *TranslationMemoriesListOptions) Values() (url.Values, bool) {
 	if o.UserID > 0 {
 		v.Add("userId", fmt.Sprintf("%d", o.UserID))
 	}
+	if o.Filter != "" {
+		v.Add("filter", o.Filter)
+	}
+	if o.GroupID != nil {
+		v.Add("groupId", fmt.Sprintf("%d", *o.GroupID))
+	}
 
 	return v, len(v) > 0
 }
@@ -71,6 +84,13 @@ type TranslationMemoryAddRequest struct {
 	Name string `json:"name"`
 	// Translation Memory Language Identifier.
 	LanguageID string `json:"languageId"`
+	// Group Identifier - defines group to which TM is added (Enterprise only).
+	// If `0` – TM will be available for all projects and groups in your workspace.
+	// Default: 0.
+	GroupID *int `json:"groupId,omitempty"`
+	// Whether the TM should be shared across all projects within
+	// the account (Crowdin) or the group (Crowdin Enterprise).
+	IsShared *bool `json:"isShared,omitempty"`
 }
 
 // Validate checks if the TranslationMemoryAddRequest is valid.
@@ -240,6 +260,27 @@ func (r *TMConcordanceSearchRequest) Validate() error {
 	}
 
 	return nil
+}
+
+// TMConcordanceSearchAllRequest defines the structure of the request
+// when searching for concordance in all Translation Memories available to the user.
+type TMConcordanceSearchAllRequest struct {
+	TMConcordanceSearchRequest
+
+	// Owner (user) whose translation memories to search. Only translation memories
+	// you own or manage are searched. Defaults to your own account.
+	// Note: Crowdin only.
+	UserID int `json:"userId,omitempty"`
+}
+
+// Validate checks if the TMConcordanceSearchAllRequest is valid.
+// It implements the crowdin.Validator interface.
+func (r *TMConcordanceSearchAllRequest) Validate() error {
+	if r == nil {
+		return ErrNilRequest
+	}
+
+	return r.TMConcordanceSearchRequest.Validate()
 }
 
 // TMConcordanceSearch represents a Translation Memory

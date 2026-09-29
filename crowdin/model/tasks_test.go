@@ -23,8 +23,66 @@ func TestTasksListOptionsValues(t *testing.T) {
 		{
 			name: "all options",
 			opts: &TasksListOptions{OrderBy: "createdAt desc,name", Status: []TaskStatus{TaskStatusTodo, TaskStatusDone},
-				AssigneeID: 1, ListOptions: ListOptions{Limit: 10, Offset: 5}},
-			out: "assigneeId=1&limit=10&offset=5&orderBy=createdAt+desc%2Cname&status=todo%2Cdone",
+				AssigneeID: 1, BatchID: 7, ListOptions: ListOptions{Limit: 10, Offset: 5}},
+			out: "assigneeId=1&batchId=7&limit=10&offset=5&orderBy=createdAt+desc%2Cname&status=todo%2Cdone",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v, ok := tt.opts.Values()
+			if len(tt.out) > 0 {
+				assert.True(t, ok)
+				assert.Equal(t, tt.out, v.Encode())
+			} else {
+				assert.False(t, ok)
+				assert.Empty(t, v.Encode())
+			}
+		})
+	}
+}
+
+func TestAllTasksListOptionsValues(t *testing.T) {
+	tests := []struct {
+		name string
+		opts *AllTasksListOptions
+		out  string
+	}{
+		{
+			name: "nil options",
+			opts: nil,
+		},
+		{
+			name: "empty options",
+			opts: &AllTasksListOptions{},
+		},
+		{
+			name: "with type translate",
+			opts: &AllTasksListOptions{Type: []TaskType{TaskTypeTranslate}},
+			out:  "type=0",
+		},
+		{
+			name: "all options",
+			opts: &AllTasksListOptions{
+				OrderBy:           "createdAt desc,title",
+				Status:            []TaskStatus{TaskStatusTodo, TaskStatusInProgress},
+				Type:              []TaskType{TaskTypeTranslate, TaskTypeProofreadByVendor},
+				ProjectIDs:        []int{1, 2},
+				GroupIDs:          []int{3},
+				AssigneeIDs:       []int{4, 5},
+				CreatorIDs:        []int{6},
+				TargetLanguageIDs: []string{"uk", "de"},
+				SourceLanguageIDs: []string{"en"},
+				CreatedAtFrom:     "2024-01-01T00:00:00+00:00",
+				CreatedAtTo:       "2024-02-01T00:00:00+00:00",
+				DeadlineFrom:      "2024-03-01T00:00:00+00:00",
+				DeadlineTo:        "2024-04-01T00:00:00+00:00",
+				ListOptions:       ListOptions{Limit: 10, Offset: 5},
+			},
+			out: "assigneeIds=4%2C5&createdAtFrom=2024-01-01T00%3A00%3A00%2B00%3A00&createdAtTo=2024-02-01T00%3A00%3A00%2B00%3A00" +
+				"&creatorIds=6&deadlineFrom=2024-03-01T00%3A00%3A00%2B00%3A00&deadlineTo=2024-04-01T00%3A00%3A00%2B00%3A00" +
+				"&groupIds=3&limit=10&offset=5&orderBy=createdAt+desc%2Ctitle&projectIds=1%2C2&sourceLanguageIds=en" +
+				"&status=todo%2Cin_progress&targetLanguageIds=uk%2Cde&type=0%2C3",
 		},
 	}
 
@@ -169,7 +227,7 @@ func TestTaskCreateFormValidate(t *testing.T) {
 		{
 			name: "missing one of stringIds, fileIds, branchIds",
 			req:  &TaskCreateForm{Title: "Test task", LanguageID: "uk", Type: toPtr(TaskTypeProofread)},
-			err:  "one of stringIds, fileIds or branchIds is required",
+			err:  "one of stringIds, fileIds, directoryIds or branchIds is required",
 		},
 		{
 			name: "valid request",
@@ -472,7 +530,7 @@ func TestPendingTaskCreateFormValidate(t *testing.T) {
 		{
 			name: "invalid type",
 			req:  &PendingTaskCreateForm{PrecedingTaskID: 1},
-			err:  "type is required and must be 1",
+			err:  "type is required and must be one of 1, 3",
 		},
 		{
 			name: "required title",
@@ -480,8 +538,82 @@ func TestPendingTaskCreateFormValidate(t *testing.T) {
 			err:  "title is required",
 		},
 		{
+			name: "vendor required for type 3",
+			req:  &PendingTaskCreateForm{PrecedingTaskID: 1, Type: TaskTypeProofreadByVendor, Title: "French"},
+			err:  "vendor is required when type is 3",
+		},
+		{
 			name:  "valid validation",
 			req:   &PendingTaskCreateForm{PrecedingTaskID: 1, Type: TaskTypeProofread, Title: "French"},
+			valid: true,
+		},
+		{
+			name: "valid validation with vendor",
+			req: &PendingTaskCreateForm{PrecedingTaskID: 1, Type: TaskTypeProofreadByVendor, Title: "French",
+				Vendor: TaskVendorGengo},
+			valid: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.req.Validate(); tt.valid {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.err)
+			}
+		})
+	}
+}
+
+func TestVendorTaskCreateFormValidate(t *testing.T) {
+	tests := []struct {
+		name  string
+		req   *VendorTaskCreateForm
+		err   string
+		valid bool
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  "request cannot be nil",
+		},
+		{
+			name: "empty request",
+			req:  &VendorTaskCreateForm{},
+			err:  "title is required",
+		},
+		{
+			name: "required languageId",
+			req:  &VendorTaskCreateForm{Title: "French"},
+			err:  "languageId is required",
+		},
+		{
+			name: "invalid type",
+			req:  &VendorTaskCreateForm{Title: "French", LanguageID: "fr", Type: TaskTypeProofread},
+			err:  "type is required and must be one of 2, 3",
+		},
+		{
+			name: "required vendor",
+			req:  &VendorTaskCreateForm{Title: "French", LanguageID: "fr", Type: TaskTypeTranslateByVendor},
+			err:  "vendor is required",
+		},
+		{
+			name: "required content",
+			req: &VendorTaskCreateForm{Title: "French", LanguageID: "fr", Type: TaskTypeTranslateByVendor,
+				Vendor: TaskVendorUndertow},
+			err: "one of stringIds, fileIds, directoryIds or branchIds is required",
+		},
+		{
+			name: "valid with directoryIds",
+			req: &VendorTaskCreateForm{Title: "French", LanguageID: "fr", Type: TaskTypeProofreadByVendor,
+				Vendor: TaskVendor("custom_vendor"), DirectoryIDs: []int{1}},
+			valid: true,
+		},
+		{
+			name: "valid with stringIds",
+			req: &VendorTaskCreateForm{Title: "French", LanguageID: "fr", Type: TaskTypeTranslateByVendor,
+				Vendor: TaskVendorCrowdinLanguageService, StringIDs: []int{1, 2}},
 			valid: true,
 		},
 	}
@@ -634,7 +766,7 @@ func TestEnterpriseTaskCreateFormValidate(t *testing.T) {
 		{
 			name: "stringIds or fileIds is required",
 			req:  &EnterpriseTaskCreateForm{WorkflowStepID: 1, Title: "French", LanguageID: "en"},
-			err:  "one of stringIds or fileIds is required",
+			err:  "one of stringIds, fileIds, directoryIds or branchIds is required",
 		},
 		{
 			name: "valid data validation",
@@ -695,7 +827,7 @@ func TestEnterpriseVendorTaskCreateFormValidate(t *testing.T) {
 		{
 			name: "stringIds or fileIds is required",
 			req:  &EnterpriseVendorTaskCreateForm{WorkflowStepID: 1, Title: "French", LanguageID: "en"},
-			err:  "one of stringIds or fileIds is required",
+			err:  "one of stringIds, fileIds, directoryIds or branchIds is required",
 		},
 		{
 			name: "valid data validation",
@@ -741,7 +873,7 @@ func TestTasksService_Add_EnterprisePendingTaskCreateForm_WithRequestValidation(
 		{
 			name: "invalid type",
 			req:  &EnterprisePendingTaskCreateForm{PrecedingTaskID: 1},
-			err:  "type is required and must be 1",
+			err:  "type (one of 1, 3) or workflowStepId is required",
 		},
 		{
 			name: "invalid title",
@@ -749,8 +881,30 @@ func TestTasksService_Add_EnterprisePendingTaskCreateForm_WithRequestValidation(
 			err:  "title is required",
 		},
 		{
+			name: "type and workflowStepId together",
+			req: &EnterprisePendingTaskCreateForm{PrecedingTaskID: 1, Type: TaskTypeProofread, WorkflowStepID: 2,
+				Title: "French"},
+			err: "workflowStepId and type can't be used in the same request",
+		},
+		{
+			name: "vendor required for type 3",
+			req:  &EnterprisePendingTaskCreateForm{PrecedingTaskID: 1, Type: TaskTypeProofreadByVendor, Title: "French"},
+			err:  "vendor is required when type is 3",
+		},
+		{
 			name:  "pass validation",
 			req:   &EnterprisePendingTaskCreateForm{PrecedingTaskID: 1, Type: TaskTypeProofread, Title: "French"},
+			valid: true,
+		},
+		{
+			name:  "pass validation with workflowStepId",
+			req:   &EnterprisePendingTaskCreateForm{PrecedingTaskID: 1, WorkflowStepID: 2, Title: "French"},
+			valid: true,
+		},
+		{
+			name: "pass validation with vendor",
+			req: &EnterprisePendingTaskCreateForm{PrecedingTaskID: 1, Type: TaskTypeProofreadByVendor,
+				Vendor: "gengo", Title: "French"},
 			valid: true,
 		},
 	}
